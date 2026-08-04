@@ -1,20 +1,42 @@
 import React, { useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { parseExcelData } from '../utils/excelParser';
-import { Home, UploadCloud } from 'lucide-react';
+import { parseExcelData, fetchExcelData } from '../utils/excelParser';
+import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette } from 'lucide-react';
+import trialSheetUrl from '../assets/trial_iQz_sheet.xlsx?url';
+import { ScreenLayout } from './ScreenLayout';
 
 export const SettingsScreen: React.FC = () => {
-  const { setGameState, seed, setSeed, theme, setThemeColor, loadQuestions } = useQuizStore();
+  const { 
+    setGameState, 
+    seed, 
+    setSeed, 
+    theme, 
+    setThemeColor, 
+    questions, 
+    loadQuestions, 
+    resetAllQuestionsUsed 
+  } = useQuizStore();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
+
+  const totalQuestions = questions.length;
+  const usedQuestions = questions.filter(q => q.used).length;
+  const unusedQuestions = totalQuestions - usedQuestions;
+
+  // Round counts
+  const roundCounts = questions.reduce((acc, q) => {
+    const code = q.roundCode || 'Other';
+    acc[code] = (acc[code] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   const processFile = async (file: File) => {
     try {
       setMsg('Parsing file...');
       const parsedQuestions = await parseExcelData(file);
       
-      // Excel Verification
       if (!parsedQuestions || parsedQuestions.length === 0) {
         throw new Error("No questions found. Check Excel format.");
       }
@@ -29,6 +51,33 @@ export const SettingsScreen: React.FC = () => {
       setMsg(err.message || 'Failed to parse Excel file.');
       console.error(err);
     }
+  };
+
+  const handleReloadDefault = async () => {
+    try {
+      setMsg('Reloading default questions...');
+      const defaultQs = await fetchExcelData(trialSheetUrl);
+      loadQuestions(defaultQs);
+      setMsg(`Reloaded default dataset (${defaultQs.length} questions)!`);
+    } catch (err: any) {
+      setMsg("Failed to reload default dataset.");
+      console.error(err);
+    }
+  };
+
+  const handleDownloadSample = () => {
+    const link = document.createElement('a');
+    link.href = trialSheetUrl;
+    link.download = 'sample_inQUIZitive_sheet.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setMsg('Sample Excel template downloaded!');
+  };
+
+  const handleResetUsedStatus = () => {
+    resetAllQuestionsUsed();
+    setMsg('Reset all question used statuses!');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +101,7 @@ export const SettingsScreen: React.FC = () => {
     const file = e.dataTransfer.files?.[0];
     if (file) {
       if (!file.name.match(/\.(xls|xlsx)$/i)) {
-        setMsg("Invalid file type. Please upload an Excel (.xlsx or .xls) file.");
+        setMsg("Invalid file type. Upload .xlsx or .xls file.");
         return;
       }
       processFile(file);
@@ -60,7 +109,7 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const ColorPickerDot = ({ label, colorKey }: { label: string, colorKey: keyof typeof theme }) => (
-    <div title={label} style={{ display: 'inline-block' }}>
+    <div title={label} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <input 
           type="color" 
@@ -69,23 +118,26 @@ export const SettingsScreen: React.FC = () => {
           style={{ opacity: 0, position: 'absolute', width: '0', height: '0' }}
         />
         <div style={{ 
-          width: '40px', height: '40px', 
+          width: '32px', height: '32px', 
           backgroundColor: theme[colorKey],
           borderRadius: '50%',
-          border: '3px solid var(--white)',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
+          border: '2px solid var(--white)',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
           transition: 'transform 0.2s'
         }} 
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         />
       </label>
+      <span style={{ fontSize: '0.75rem', opacity: 0.8, maxWidth: '65px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {label.split(' ')[0]}
+      </span>
     </div>
   );
 
   const inputStyle = { 
-    padding: '12px', 
-    fontSize: '1.2rem', 
+    padding: '10px 14px', 
+    fontSize: '1rem', 
     width: '100%', 
     boxSizing: 'border-box' as const, 
     borderRadius: '10px', 
@@ -99,133 +151,224 @@ export const SettingsScreen: React.FC = () => {
   const cardStyle = { 
     display: 'flex', 
     flexDirection: 'column' as const, 
-    gap: '15px',
+    gap: '12px',
     backgroundColor: 'var(--dark-teal)',
-    border: `3px solid var(--teal)`
+    border: `2px solid var(--teal)`,
+    padding: '20px',
+    margin: 0,
+    borderRadius: '20px'
   };
 
   return (
-    <div className="projector-container" style={{ padding: 'max(20px, 4vw)', overflowY: 'auto' }}>
-      <button 
-        onClick={() => setGameState('MENU')}
-        style={{ 
-          position: 'absolute', top: '20px', left: '20px', 
-          width: '60px', height: '60px', borderRadius: '15px', 
-          padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
-          backgroundColor: 'var(--yellow)',
-          border: 'none'
-        }}
-        aria-label="Home"
-      >
-        <Home size={30} color="var(--dark-green)" strokeWidth={3} />
-      </button>
+    <ScreenLayout
+      showHomeButton={true}
+      onHomeClick={() => setGameState('MENU')}
+      hideTitle={true}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1400px', margin: 'auto' }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '15px' }}>
+          SETTINGS
+        </h1>
 
-      <h1 className="title" style={{ marginTop: '20px', fontSize: 'clamp(2rem, 8vw, 4rem)' }}>SETTINGS</h1>
-
-      <div className="settings-grid" style={{ marginTop: '20px' }}>
-        
-        {/* Section: Event Configuration */}
-        <div className="card settings-card" style={cardStyle}>
-          <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--yellow)', textAlign: 'center' }}>Event Setup</h2>
+        {/* 2-COLUMN DESKTOP GRID */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', 
+          gap: '20px', 
+          width: '100%', 
+          alignItems: 'start'
+        }}>
           
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', fontWeight: 'bold' }}>Event Subtitle</label>
-            <input 
-              type="text" 
-              value={useQuizStore(s => s.subtitle)} 
-              onChange={e => useQuizStore.getState().setSubtitle(e.target.value)}
-              style={inputStyle}
-              placeholder="e.g., Annual Tech Quiz 2026"
-            />
-          </div>
-        </div>
+          {/* LEFT COLUMN: Setup, Mechanics & Theme */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            
+            {/* Event & Mechanics Card */}
+            <div className="card" style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
+                <Sliders size={24} />
+                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Setup & Mechanics</h2>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.95rem', fontWeight: 'bold' }}>Event Subtitle</label>
+                <input 
+                  type="text" 
+                  value={useQuizStore(s => s.subtitle)} 
+                  onChange={e => useQuizStore.getState().setSubtitle(e.target.value)}
+                  style={inputStyle}
+                  placeholder="e.g., Annual Tech Quiz 2026"
+                />
+              </div>
 
-        {/* Section: Game Mechanics */}
-        <div className="card settings-card" style={cardStyle}>
-          <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--yellow)', textAlign: 'center' }}>Mechanics</h2>
-          
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', fontWeight: 'bold' }}>Random Seed</label>
-            <input 
-              type="number" 
-              value={seed} 
-              onChange={e => setSeed(Number(e.target.value))}
-              style={inputStyle}
-            />
-            <p style={{ fontSize: '0.9rem', color: 'var(--white)', opacity: 0.8, marginTop: '10px' }}>
-              Setting the same seed guarantees the same random question order across sessions.
-            </p>
-          </div>
-        </div>
-
-        {/* Section: Data Management */}
-        <div className="card settings-card" style={cardStyle}>
-          <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--yellow)', textAlign: 'center' }}>Data Management</h2>
-          
-          <div 
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            style={{
-              border: `3px dashed ${isDragging ? 'var(--yellow)' : 'var(--teal)'}`,
-              borderRadius: '15px',
-              padding: '30px 20px',
-              textAlign: 'center',
-              backgroundColor: isDragging ? 'rgba(255,255,255,0.1)' : 'transparent',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer'
-            }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <UploadCloud size={48} color={isDragging ? 'var(--yellow)' : 'var(--white)'} style={{ marginBottom: '10px' }} />
-            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--white)' }}>
-              Drag & Drop Excel File
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.95rem', fontWeight: 'bold' }}>Random Seed</label>
+                <input 
+                  type="number" 
+                  value={seed} 
+                  onChange={e => setSeed(Number(e.target.value))}
+                  style={inputStyle}
+                />
+              </div>
             </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--white)', opacity: 0.8, marginTop: '5px' }}>
-              or click to browse (.xlsx, .xls)
+
+            {/* Theme Palette Card */}
+            <div className="card" style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
+                <Palette size={24} />
+                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Theme Palette</h2>
+              </div>
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-around', paddingTop: '5px' }}>
+                <ColorPickerDot label="Background" colorKey="darkGreen" />
+                <ColorPickerDot label="Teal" colorKey="teal" />
+                <ColorPickerDot label="Dark Teal" colorKey="darkTeal" />
+                <ColorPickerDot label="Yellow" colorKey="yellow" />
+                <ColorPickerDot label="Orange" colorKey="orange" />
+                <ColorPickerDot label="White" colorKey="white" />
+                <ColorPickerDot label="Correct" colorKey="correctGreen" />
+                <ColorPickerDot label="Wrong" colorKey="wrongRed" />
+              </div>
             </div>
-            <input 
-              type="file" 
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-            />
+
           </div>
 
-          {msg && (
-            <div style={{ 
-              marginTop: '15px', 
-              padding: '10px', 
-              backgroundColor: msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('error') ? 'var(--wrong-red)' : 'var(--correct-green)', 
-              color: 'var(--white)',
-              borderRadius: '8px',
-              textAlign: 'center',
-              fontWeight: 'bold'
-            }}>
-              {msg}
+          {/* RIGHT COLUMN: Dataset Manager */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="card" style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
+                <FileSpreadsheet size={24} />
+                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Dataset Manager</h2>
+              </div>
+
+              {/* Status Counters */}
+              <div style={{ 
+                backgroundColor: 'rgba(0,0,0,0.25)', 
+                padding: '12px 15px', 
+                borderRadius: '12px', 
+                border: '1px solid var(--teal)' 
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center', marginBottom: '10px' }}>
+                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--light-orange)' }}>Total</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{totalQuestions}</div>
+                  </div>
+                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--correct-green)' }}>Available</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{unusedQuestions}</div>
+                  </div>
+                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--wrong-red)' }}>Used</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{usedQuestions}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {Object.entries(roundCounts).map(([code, count]) => (
+                    <span key={code} style={{ backgroundColor: 'var(--teal)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                      {code}: {count} Qs
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button 
+                  onClick={handleResetUsedStatus} 
+                  disabled={usedQuestions === 0}
+                  style={{ 
+                    fontSize: '0.9rem', 
+                    padding: '8px 12px', 
+                    backgroundColor: usedQuestions === 0 ? 'var(--dark-teal)' : 'var(--orange)',
+                    opacity: usedQuestions === 0 ? 0.6 : 1,
+                    cursor: usedQuestions === 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  <RotateCcw size={16} />
+                  Reset Used
+                </button>
+
+                <button 
+                  onClick={handleReloadDefault} 
+                  style={{ 
+                    fontSize: '0.9rem', 
+                    padding: '8px 12px', 
+                    backgroundColor: 'var(--teal)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  <RefreshCw size={16} />
+                  Reload Default
+                </button>
+              </div>
+
+              <button 
+                onClick={handleDownloadSample} 
+                style={{ 
+                  fontSize: '0.9rem', 
+                  padding: '8px 12px', 
+                  backgroundColor: 'var(--yellow)',
+                  color: 'var(--dark-green)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  width: '100%'
+                }}
+              >
+                <Download size={16} />
+                Download Sample Template (.xlsx)
+              </button>
+
+              {/* Drag & Drop File Upload */}
+              <div 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{
+                  border: `2px dashed ${isDragging ? 'var(--yellow)' : 'var(--teal)'}`,
+                  borderRadius: '12px',
+                  padding: '15px 10px',
+                  textAlign: 'center',
+                  backgroundColor: isDragging ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <UploadCloud size={28} color={isDragging ? 'var(--yellow)' : 'var(--white)'} style={{ marginBottom: '4px' }} />
+                <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--white)' }}>
+                  Upload Custom Excel File
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--white)', opacity: 0.8 }}>
+                  Drag & Drop or click to browse (.xlsx)
+                </div>
+                <input 
+                  type="file" 
+                  accept=".xlsx, .xls"
+                  onChange={handleFileUpload}
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                />
+              </div>
+
+              {msg && (
+                <div style={{ 
+                  padding: '8px', 
+                  backgroundColor: msg.toLowerCase().includes('fail') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('error') ? 'var(--wrong-red)' : 'var(--correct-green)', 
+                  color: 'var(--white)',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold'
+                }}>
+                  {msg}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Section: Theme Palette (Minimalist) */}
-        <div className="card settings-card" style={{ ...cardStyle, flex: '1 1 100%', maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 10px 0', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--yellow)', textAlign: 'center' }}>Theme Palette</h2>
-          <p style={{ textAlign: 'center', fontSize: '0.9rem', opacity: 0.8, margin: '0 0 20px 0' }}>Hover over colors to see their role, click to change.</p>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-            <ColorPickerDot label="Dark Green (Background)" colorKey="darkGreen" />
-            <ColorPickerDot label="Teal (Cards & UI)" colorKey="teal" />
-            <ColorPickerDot label="Dark Teal (Hover Effects)" colorKey="darkTeal" />
-            <ColorPickerDot label="Yellow (Accents)" colorKey="yellow" />
-            <ColorPickerDot label="Orange (Buttons)" colorKey="orange" />
-            <ColorPickerDot label="White (Text)" colorKey="white" />
-            <ColorPickerDot label="Correct Green" colorKey="correctGreen" />
-            <ColorPickerDot label="Wrong Red" colorKey="wrongRed" />
           </div>
-        </div>
 
+        </div>
       </div>
-    </div>
+    </ScreenLayout>
   );
 };
+

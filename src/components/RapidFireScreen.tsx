@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Home, Settings, Play, Pause } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
+import { ScreenLayout } from './ScreenLayout';
 
 type RFState = 'READY' | 'PLAYING' | 'FEEDBACK' | 'END';
 
 export const RapidFireScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed } = useQuizStore();
 
-  // 1. Data Setup (Max 10 unused RF questions)
-  const rfQuestions = useMemo(() => {
+  // 1. Data Setup (Fixed list of 10 questions for this round instance)
+  const [rfQuestions] = useState(() => {
     const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
-    // Shuffle logic (deterministic by random is fine for now, or just slice since excelParser shuffled)
     return available.slice(0, 10);
-  }, [questions]);
+  });
 
   // 2. Local State
   const [rfState, setRfState] = useState<RFState>('READY');
@@ -58,6 +58,16 @@ export const RapidFireScreen: React.FC = () => {
     }
   }, [rfState, isPaused, currentIdx, rfQuestions.length, timer]);
 
+  // Mark question as used as soon as it is shown to the user
+  useEffect(() => {
+    if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && rfQuestions[currentIdx]) {
+      const q = rfQuestions[currentIdx];
+      if (q.index >= 0) {
+        markQuestionUsed(q.index);
+      }
+    }
+  }, [rfState, currentIdx, rfQuestions, markQuestionUsed]);
+
   // 5. Answer Handler
   const handleAnswer = useCallback((optIndex: number) => {
     if (rfState !== 'PLAYING' || isPaused) return;
@@ -68,7 +78,6 @@ export const RapidFireScreen: React.FC = () => {
 
     setSelectedOptIdx(optIndex);
     setIsCorrect(correct);
-    markQuestionUsed(currentQ.index);
 
     if (correct) {
       setScore(prev => prev + currentQ.scoreVal);
@@ -76,7 +85,7 @@ export const RapidFireScreen: React.FC = () => {
     }
 
     setRfState('FEEDBACK');
-  }, [rfState, isPaused, rfQuestions, currentIdx, markQuestionUsed]);
+  }, [rfState, isPaused, rfQuestions, currentIdx]);
 
   // 6. Keyboard Controls
   useEffect(() => {
@@ -102,119 +111,142 @@ export const RapidFireScreen: React.FC = () => {
   const currentQ = rfQuestions[currentIdx];
 
   return (
-    <div className="projector-container">
-      {/* Header & Nav */}
-      <div style={{ position: 'absolute', top: '50px', left: '50px', display: 'flex', gap: '20px', zIndex: 10 }}>
-        <button 
-          onClick={() => setGameState('MENU')} 
-          style={{ width: '80px', height: '80px', borderRadius: '15px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-          aria-label="Home"
-        >
-          <Home size={40} color="var(--dark-green)" strokeWidth={3} />
-        </button>
-        <button 
-          onClick={() => setGameState('SETTINGS')} 
-          style={{ width: '80px', height: '80px', borderRadius: '15px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-          aria-label="Settings"
-        >
-          <Settings size={40} color="var(--dark-green)" strokeWidth={3} />
-        </button>
-      </div>
+    <ScreenLayout
+      showHomeButton={true}
+      onHomeClick={() => setGameState('MENU')}
+      showSettingsButton={true}
+      onSettingsClick={() => setGameState('SETTINGS')}
+      hideTitle={true}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', flex: 1 }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)', marginBottom: '20px' }}>
+          Rapid Fire Round
+        </h1>
 
-      <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)' }}>Rapid Fire Round</h1>
+        {/* READY STATE */}
+        {rfState === 'READY' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, margin: 'auto' }}>
+            <button onClick={() => setRfState('PLAYING')} style={{ padding: '20px 60px', fontSize: '3rem', backgroundColor: 'var(--teal)' }}>
+              Start Timer
+            </button>
+            <p style={{ color: 'var(--light-orange)', fontSize: '1.5rem', marginTop: '20px' }}>Press Start to begin 60s timer.</p>
+            <p style={{ color: 'var(--yellow)', fontSize: '1.5rem', marginTop: '20px' }}>Questions Loaded: {rfQuestions.length}</p>
+          </div>
+        )}
 
-      {/* READY STATE */}
-      {rfState === 'READY' && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-          <button onClick={() => setRfState('PLAYING')} style={{ padding: '20px 60px', fontSize: '3rem', backgroundColor: 'var(--teal)' }}>
-            Start Timer
-          </button>
-          <p style={{ color: 'var(--light-orange)', fontSize: '1.5rem', marginTop: '20px' }}>Press Start to begin 60s timer.</p>
-          <p style={{ color: 'var(--yellow)', fontSize: '1.5rem', marginTop: '40px' }}>Questions Loaded: {rfQuestions.length}</p>
-        </div>
-      )}
-
-      {/* PLAYING / FEEDBACK STATE */}
-      {(rfState === 'PLAYING' || rfState === 'FEEDBACK') && currentQ && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(20px, 5vw, 100px)', alignItems: 'center' }}>
-            <div className="card" style={{ padding: '10px 30px', margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>
-              Score: {score}
-            </div>
+        {/* PLAYING / FEEDBACK STATE */}
+        {(rfState === 'PLAYING' || rfState === 'FEEDBACK') && currentQ && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', paddingBottom: '90px', boxSizing: 'border-box' }}>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-              <div style={{ 
-                fontSize: 'clamp(3rem, 6vw, 4rem)', 
-                fontWeight: 900, 
-                color: isPaused ? 'var(--wrong-red)' : timer <= 10 ? 'var(--orange)' : 'var(--white)',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-              }}>
-                {timer}s
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(10px, 3vw, 50px)', alignItems: 'center' }}>
+              <div className="card" style={{ padding: '10px 30px', margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>
+                Score: {score}
               </div>
-              <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '15px', borderRadius: '20px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>
-                {isPaused ? <Play size={32} color="var(--dark-green)" /> : <Pause size={32} color="var(--white)" />}
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                <div style={{ 
+                  fontSize: 'clamp(3rem, 6vw, 4rem)', 
+                  fontWeight: 900, 
+                  color: isPaused ? 'var(--wrong-red)' : timer <= 10 ? 'var(--orange)' : 'var(--white)',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                }}>
+                  {timer}s
+                </div>
+                <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '15px', borderRadius: '20px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>
+                  {isPaused ? <Play size={32} color="var(--dark-green)" /> : <Pause size={32} color="var(--white)" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="card" style={{ margin: '20px clamp(10px, 3vw, 50px)', minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '15px', left: '25px', color: 'var(--light-orange)', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                {currentIdx + 1}/{rfQuestions.length}
+              </div>
+              <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0 }}>{currentQ.question}</h2>
+            </div>
+
+            <div className="options-grid">
+              {currentQ.options.map((opt, i) => {
+                let bgColor = 'rgba(42, 157, 143, 0.5)';
+                const isSelected = i === selectedOptIdx;
+                const isRightAnswer = opt === currentQ.answer;
+
+                if (rfState === 'FEEDBACK') {
+                  if (isSelected) {
+                    bgColor = isCorrect ? 'var(--correct-green)' : 'var(--wrong-red)';
+                  } else if (!isCorrect && isRightAnswer) {
+                    bgColor = 'var(--correct-green)';
+                  }
+                }
+
+                return (
+                  <div 
+                    key={i} 
+                    className="option-card"
+                    onClick={() => handleAnswer(i)}
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    <span style={{ color: 'var(--yellow)', marginRight: '20px' }}>{String.fromCharCode(65 + i)}</span>
+                    {opt}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* END STATE POPUP */}
+        {rfState === 'END' && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 
+          }}>
+            <div className="card" style={{ 
+              backgroundColor: 'var(--teal)', border: '5px solid var(--yellow)', borderRadius: '30px', 
+              width: '90%', maxWidth: '800px', padding: '40px', textAlign: 'center',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            }}>
+              <h2 style={{ fontSize: 'clamp(3rem, 6vw, 4rem)', color: 'var(--white)', margin: '0 0 20px 0' }}>TIME UP!</h2>
+              <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--white)', margin: '10px 0' }}>Correct Answers: {correctCount}/{rfQuestions.length}</p>
+              <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--yellow)', margin: '10px 0 20px 0' }}>Bonus: +{bonus}</p>
+              <p style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--white)', fontWeight: 'bold', margin: '10px 0' }}>Total: {score + bonus}</p>
+              <button 
+                className="menu-btn" 
+                onClick={() => setGameState('MENU')} 
+                style={{ marginTop: '30px', maxWidth: '300px', backgroundColor: 'var(--orange)' }}
+              >
+                Return to Menu
               </button>
             </div>
           </div>
+        )}
+      </div>
 
-          <div className="card" style={{ margin: '20px clamp(20px, 5vw, 100px)', minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '15px', left: '25px', color: 'var(--light-orange)', fontSize: '1.2rem', fontWeight: 'bold' }}>
-              {currentIdx + 1}/{rfQuestions.length}
-            </div>
-            <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', margin: 0 }}>{currentQ.question}</h2>
-          </div>
+      {/* BOTTOM-LEFT INQUIZITIVE BRANDING */}
+      <div style={{ 
+        position: 'fixed', 
+        bottom: 'clamp(15px, 3vh, 30px)', 
+        left: 'clamp(20px, 4vw, 40px)', 
+        zIndex: 40, 
+        fontSize: 'clamp(1.6rem, 3.8vw, 2.8rem)', 
+        fontWeight: 900, 
+        letterSpacing: '3px', 
+        userSelect: 'none',
+        pointerEvents: 'none',
+        textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+      }}>
+        <span style={{ color: 'var(--white)' }}>IN</span>
+        <span style={{ color: 'var(--yellow)' }}>QUIZ</span>
+        <span style={{ color: 'var(--white)' }}>ITIVE</span>
+      </div>
 
-          <div className="options-grid">
-            {currentQ.options.map((opt, i) => {
-              let bgColor = 'rgba(42, 157, 143, 0.5)';
-              if (rfState === 'FEEDBACK' && i === selectedOptIdx) {
-                bgColor = isCorrect ? 'var(--correct-green)' : 'var(--wrong-red)';
-              }
-
-              return (
-                <div 
-                  key={i} 
-                  className="option-card"
-                  onClick={() => handleAnswer(i)}
-                  style={{ backgroundColor: bgColor }}
-                >
-                  <span style={{ color: 'var(--yellow)', marginRight: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                  {opt}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* END STATE POPUP */}
-      {rfState === 'END' && (
-        <div style={{ 
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-          backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 
-        }}>
-          <div className="card" style={{ 
-            backgroundColor: 'var(--teal)', border: '5px solid var(--yellow)', borderRadius: '30px', 
-            width: '90%', maxWidth: '800px', padding: '60px', textAlign: 'center',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-            animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-          }}>
-            <h2 style={{ fontSize: 'clamp(3rem, 6vw, 4rem)', color: 'var(--white)', margin: '0 0 40px 0' }}>TIME UP!</h2>
-            <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--white)' }}>Correct Answers: {correctCount}/{rfQuestions.length}</p>
-            <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--yellow)', margin: '20px 0 40px 0' }}>Bonus: +{bonus}</p>
-            <p style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--white)', fontWeight: 'bold' }}>Total: {score + bonus}</p>
-            <p style={{ color: 'var(--light-orange)', marginTop: '40px', fontSize: '1.2rem' }}>Press ESC to return to Menu</p>
-          </div>
-        </div>
-      )}
-      
       <style>{`
         @keyframes popIn {
           0% { transform: scale(0.5); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
-    </div>
+    </ScreenLayout>
   );
 };

@@ -11,6 +11,8 @@ import { AboutScreen } from './components/AboutScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { RapidFireScreen } from './components/RapidFireScreen';
 import { SpinWheelScreen } from './components/SpinWheelScreen';
+import { TicTacToeScreen } from './components/TicTacToeScreen';
+import { BuzzerScreen } from './components/BuzzerScreen';
 import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
 
 function App() {
@@ -30,6 +32,17 @@ function App() {
     root.style.setProperty('--correct-green', theme.correctGreen);
     root.style.setProperty('--wrong-red', theme.wrongRed);
   }, [theme]);
+
+  // Reset scroll position on screen transitions
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const elements = document.querySelectorAll('.projector-container, #root, body, div');
+    elements.forEach(el => {
+      if (el.scrollTop > 0) el.scrollTop = 0;
+    });
+  }, [gameState]);
 
   // Initialize keyboard controls
   useGameControls();
@@ -170,6 +183,8 @@ function App() {
       case 'PLAYING':
         if (activeRound === 'RF') return <RapidFireScreen />;
         if (activeRound === 'SWJ') return <SpinWheelScreen />;
+        if (activeRound === 'TTT') return <TicTacToeScreen />;
+        if (activeRound === 'B') return <BuzzerScreen />;
         // Fallbacks
         return (
           <div className="projector-container" style={{ justifyContent: 'center', alignItems: 'center' }}>

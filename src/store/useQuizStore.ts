@@ -49,6 +49,7 @@ export interface QuizState {
   loadQuestions: (questions: Question[]) => void;
   startRound: (roundCode: string) => void;
   markQuestionUsed: (index: number) => void;
+  resetAllQuestionsUsed: () => void;
   
   // Actions - Gameplay
   nextQuestion: () => void;
@@ -115,6 +116,10 @@ export const useQuizStore = create<QuizState>((set) => ({
     questions: state.questions.map(q => 
       q.index === index ? { ...q, used: true } : q
     )
+  })),
+
+  resetAllQuestionsUsed: () => set((state) => ({
+    questions: state.questions.map(q => ({ ...q, used: false }))
   })),
 
   nextQuestion: () => set((state) => {

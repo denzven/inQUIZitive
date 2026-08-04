@@ -24,6 +24,13 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   hideTitle
 }) => {
   const { subtitle } = useQuizStore();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [children]);
 
   return (
     <div className="projector-container animate-fade-in" style={{ justifyContent: 'flex-start', alignItems: 'center', overflow: 'hidden' }}>
@@ -68,8 +75,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       <div style={{ height: 'clamp(20px, 5vh, 60px)', flexShrink: 0 }}></div>
 
       {/* Main Content Area: Centered Title + Children */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(5px, 2vh, 20px)', paddingTop: '5px', minHeight: 'min-content', flex: 1 }}>
+      <div ref={scrollRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '100%', flex: 1, boxSizing: 'border-box' }}>
           {!hideTitle && (
             <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
               <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{subtitle}</h2>
