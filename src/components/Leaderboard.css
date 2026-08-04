@@ -1,0 +1,239 @@
+/* src/components/Leaderboard.css */
+.test-grid-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.test-title {
+  color: var(--yellow);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  margin: 0 0 20px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.leaderboard-global-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
+  width: 100%;
+}
+
+.global-btn {
+  padding: 10px 20px;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  border-radius: 10px;
+  background-color: var(--teal);
+  color: var(--white);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.global-btn:hover {
+  transform: translateY(-2px);
+  background-color: var(--dark-teal);
+  border-color: var(--yellow);
+}
+
+.global-btn.active {
+  background-color: var(--yellow);
+  color: var(--dark-green);
+}
+
+.global-btn.btn-reset {
+  background-color: var(--wrong-red);
+}
+
+.global-btn.btn-reset:hover {
+  background-color: #ff3b30;
+  border-color: var(--white);
+}
+
+.test-grid {
+  display: grid;
+  /* Fixed 240px columns that wrap automatically based on screen width */
+  grid-template-columns: repeat(auto-fit, 240px);
+  /* Centers the entire grid inside the container */
+  justify-content: center;
+  /* Controls spacing between columns and rows */
+  gap: 30px; 
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
+}
+
+.test-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--dark-teal);
+  border: 4px solid var(--teal);
+  border-radius: 20px;
+  height: 280px;
+  color: var(--yellow);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  margin: 0; 
+  transition: transform 0.2s;
+  box-sizing: border-box;
+}
+
+.test-box:hover {
+  transform: scale(1.02);
+}
+
+.team-name-input {
+  background: transparent;
+  border: none;
+  color: var(--yellow);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: bold;
+  text-align: center;
+  outline: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  min-width: 0;
+  font-family: inherit;
+  box-sizing: border-box;
+  padding-bottom: 5px;
+}
+
+.test-box-content {
+  font-size: 5rem;
+  font-weight: 900;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.score-controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.test-btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 1.2rem;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.btn-minus {
+  background-color: var(--wrong-red);
+}
+
+.btn-plus {
+  background-color: var(--correct-green);
+}
+
+.btn-delete-corner {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--wrong-red);
+  color: var(--white);
+  border: 3px solid var(--dark-green);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.btn-delete-corner:hover {
+  transform: scale(1.15) rotate(90deg);
+}
+
+.test-add-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(42, 157, 143, 0.1);
+  border: 4px dashed var(--teal);
+  border-radius: 20px;
+  height: 280px;
+  color: var(--teal);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.test-add-box:hover {
+  background-color: rgba(42, 157, 143, 0.2);
+  transform: scale(1.02);
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* translate(-50%, -50%) is handled by .animate-pop-in */
+  background-color: var(--dark-green);
+  border: 4px solid var(--teal);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 90%;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h3 {
+  color: var(--yellow);
+  font-size: 2.5rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.modal-content p {
+  color: var(--white);
+  font-size: 1.2rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}

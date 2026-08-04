@@ -39,35 +39,43 @@ export const StartScreen: React.FC = () => {
       onHomeClick={() => setGameState('MENU')}
       showSettingsButton={true}
       onSettingsClick={() => setGameState('SETTINGS')}
+      hideTitle={true}
     >
-      <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box' }}>
-        {roundsData.map((round, idx) => {
-          const isDisabled = round.code === null;
-          return (
-            <button 
-              key={idx}
-              className="menu-btn"
-              onClick={() => {
-                if (!isDisabled && round.code) {
-                  startRound(round.code);
-                }
-              }}
-              style={{ 
-                textAlign: 'center', 
-                backgroundColor: isDisabled ? 'var(--dark-teal)' : 'var(--teal)',
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                opacity: isDisabled ? 0.7 : 1,
-                transform: isDisabled ? 'none' : undefined,
-                boxShadow: isDisabled ? 'none' : undefined
-              }}
-              onMouseEnter={(e) => {
-                if (isDisabled) e.currentTarget.style.borderColor = 'transparent';
-              }}
-            >
-              {round.name}
-            </button>
-          );
-        })}
+      <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
+          <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+        </div>
+
+        <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box', margin: 0 }}>
+          {roundsData.map((round, idx) => {
+            const isDisabled = round.code === null;
+            return (
+              <button 
+                key={idx}
+                className="menu-btn"
+                onClick={() => {
+                  if (!isDisabled && round.code) {
+                    startRound(round.code);
+                  }
+                }}
+                style={{ 
+                  textAlign: 'center', 
+                  backgroundColor: isDisabled ? 'var(--dark-teal)' : 'var(--teal)',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  opacity: isDisabled ? 0.7 : 1,
+                  transform: isDisabled ? 'none' : undefined,
+                  boxShadow: isDisabled ? 'none' : undefined
+                }}
+                onMouseEnter={(e) => {
+                  if (isDisabled) e.currentTarget.style.borderColor = 'transparent';
+                }}
+              >
+                {round.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </ScreenLayout>
   );

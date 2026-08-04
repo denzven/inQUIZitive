@@ -129,14 +129,12 @@ button:focus-visible {
 .title span:nth-child(3) { color: var(--white); }
 
 .card {
-  background-color: rgba(42, 157, 143, 0.2);
+  background-color: var(--dark-teal);
   border-radius: 30px;
   padding: clamp(1rem, 4vw, 2rem);
   margin: 1rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--teal);
 }
 
 /* Specific layout adjustments for responsive views */

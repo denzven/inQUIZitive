@@ -42,20 +42,28 @@ export const MenuScreen: React.FC = () => {
     <ScreenLayout 
       backgroundDecor={decorCircles}
       footerText="Made with Love by Denzven and AI using React and Vite"
+      hideTitle={true}
     >
-      <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box' }}>
-        <button className="menu-btn" onClick={() => setGameState('START')}>
-          Start
-        </button>
-        <button className="menu-btn" onClick={() => setGameState('LEADERBOARD')}>
-          Leaderboard
-        </button>
-        <button className="menu-btn" onClick={() => setGameState('SETTINGS')}>
-          Settings
-        </button>
-        <button className="menu-btn" onClick={() => setGameState('ABOUT')}>
-          About
-        </button>
+      <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
+          <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+        </div>
+        
+        <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box', margin: 0 }}>
+          <button className="menu-btn" onClick={() => setGameState('START')}>
+            Start
+          </button>
+          <button className="menu-btn" onClick={() => setGameState('LEADERBOARD')}>
+            Leaderboard
+          </button>
+          <button className="menu-btn" onClick={() => setGameState('SETTINGS')}>
+            Settings
+          </button>
+          <button className="menu-btn" onClick={() => setGameState('ABOUT')}>
+            About
+          </button>
+        </div>
       </div>
     </ScreenLayout>
   );

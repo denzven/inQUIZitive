@@ -10,6 +10,7 @@ interface ScreenLayoutProps {
   showSettingsButton?: boolean;
   onSettingsClick?: () => void;
   footerText?: React.ReactNode;
+  hideTitle?: boolean;
 }
 
 export const ScreenLayout: React.FC<ScreenLayoutProps> = ({ 
@@ -19,7 +20,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   onHomeClick,
   showSettingsButton,
   onSettingsClick,
-  footerText
+  footerText,
+  hideTitle
 }) => {
   const { subtitle } = useQuizStore();
 
@@ -44,7 +46,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
             }}
             aria-label="Home"
           >
-            <Home size={'clamp(24px, 3vw, 40px)'} color="var(--dark-green)" strokeWidth={1.5} />
+            <Home style={{ width: 'clamp(24px, 3vw, 40px)', height: 'clamp(24px, 3vw, 40px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
         )}
 
@@ -57,7 +59,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
             }}
             aria-label="Settings"
           >
-            <Settings size={'clamp(24px, 3vw, 40px)'} color="var(--dark-green)" strokeWidth={1.5} />
+            <Settings style={{ width: 'clamp(24px, 3vw, 40px)', height: 'clamp(24px, 3vw, 40px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
         )}
       </div>
@@ -66,12 +68,14 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       <div style={{ height: 'clamp(20px, 5vh, 60px)', flexShrink: 0 }}></div>
 
       {/* Main Content Area: Centered Title + Children */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0, overflow: 'hidden' }}>
-        <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(5px, 2vh, 20px)', paddingTop: '5px' }}>
-          <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-            <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{subtitle}</h2>
-            <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(5px, 2vh, 20px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
-          </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(5px, 2vh, 20px)', paddingTop: '5px', minHeight: 'min-content', flex: 1 }}>
+          {!hideTitle && (
+            <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+              <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{subtitle}</h2>
+              <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(5px, 2vh, 20px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+            </div>
+          )}
           
           {children}
         </div>
