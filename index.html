@@ -5,9 +5,67 @@
     <link rel="icon" type="image/x-icon" href="/Q.ico" />
     <link rel="apple-touch-icon" href="/Q.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
     <title>INQUIZITIVE</title>
+    <meta name="title" content="inQUIZitive" />
+    <meta name="description" content="A sleek, highly customizable interactive quiz platform." />
+    <meta name="keywords" content="quiz, interactive, inquisitive, inQUIZitive, trivia, game, pwa" />
+    <meta name="author" content="Denzven" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://denzven.github.io/inQUIZitive/" />
+    <meta property="og:title" content="inQUIZitive" />
+    <meta property="og:description" content="A sleek, highly customizable interactive quiz platform." />
+    <meta property="og:image" content="https://denzven.github.io/inQUIZitive/banner.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://denzven.github.io/inQUIZitive/" />
+    <meta property="twitter:title" content="inQUIZitive" />
+    <meta property="twitter:description" content="A sleek, highly customizable interactive quiz platform." />
+    <meta property="twitter:image" content="https://denzven.github.io/inQUIZitive/banner.png" />
   </head>
   <body>
+    <div id="preloader" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:#264653; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999; transition: opacity 0.5s ease;">
+      <style>
+        @keyframes spinPulse {
+          0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+          50% { transform: scale(1.1) rotate(180deg); opacity: 1; }
+          100% { transform: scale(1) rotate(360deg); opacity: 0.8; }
+        }
+        .preloader-spinner {
+          width: 60px;
+          height: 60px;
+          border: 6px solid #2a9d8f;
+          border-top-color: #e9c46a;
+          border-radius: 50%;
+          animation: spinPulse 1.5s ease-in-out infinite;
+          margin-bottom: 20px;
+        }
+        .preloader-text {
+          color: #e8eddf;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 2.5rem;
+          font-weight: bold;
+          letter-spacing: 2px;
+          margin: 0;
+        }
+        .preloader-text span {
+          color: #e9c46a;
+        }
+        .preloader-subtext {
+          color: #2a9d8f;
+          font-family: system-ui, -apple-system, sans-serif;
+          margin-top: 10px;
+          font-size: 1.2rem;
+        }
+      </style>
+      <div class="preloader-spinner"></div>
+      <h1 class="preloader-text">in<span>QUIZ</span>itive</h1>
+      <p class="preloader-subtext">Initializing Assets...</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

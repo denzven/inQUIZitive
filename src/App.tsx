@@ -94,17 +94,31 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState]);
 
-  // Auto-load bundled Excel file
+  // Auto-load bundled Excel file and wait for fonts
   useEffect(() => {
     if (init) return;
     const loadDefaultData = async () => {
       try {
-        const parsed = await fetchExcelData(trialSheetUrl);
+        // Wait for both the excel parsing and fonts loading
+        const [parsed] = await Promise.all([
+          fetchExcelData(trialSheetUrl),
+          document.fonts ? document.fonts.ready : Promise.resolve()
+        ]);
         loadQuestions(parsed);
       } catch (err) {
         console.error("Failed to load default trial excel:", err);
       } finally {
         setInit(true);
+        
+        // Remove preloader with fade out
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+          preloader.style.opacity = '0';
+          setTimeout(() => {
+            preloader.remove();
+          }, 500); // matches the transition duration in index.html
+        }
+
         // Ensure we bypass SETUP since we auto-load, or if it fails they can go to Settings.
         if (gameState === 'SETUP') {
           setGameState('MENU');
@@ -115,10 +129,7 @@ function App() {
   }, [init, loadQuestions, setGameState, gameState]);
 
   if (!init) {
-    return (
-      <div className="projector-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
-      </div>
-    );
+    return null; // The true preloader in index.html is visible
   }
 
   // Modal rendering logic
