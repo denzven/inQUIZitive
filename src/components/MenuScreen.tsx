@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import QLogo from '../assets/Q.png';
+import { Maximize, Minimize } from 'lucide-react';
 
 import { ScreenLayout } from './ScreenLayout';
 
 export const MenuScreen: React.FC = () => {
   const { setGameState, hasLoaded, setHasLoaded } = useQuizStore();
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!hasLoaded) {
@@ -15,6 +17,22 @@ export const MenuScreen: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [hasLoaded, setHasLoaded]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(console.error);
+    } else {
+      document.exitFullscreen().catch(console.error);
+    }
+  };
 
   if (!hasLoaded) {
     return (
@@ -44,6 +62,20 @@ export const MenuScreen: React.FC = () => {
       footerText="Made with Love by Denzven and AI using React and Vite"
       hideTitle={true}
     >
+      <button 
+        onClick={toggleFullScreen}
+        style={{ 
+          position: 'absolute', top: '20px', right: '20px', 
+          width: '50px', height: '50px', borderRadius: '15px', 
+          padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
+          backgroundColor: 'var(--dark-teal)',
+          border: '2px solid var(--teal)'
+        }}
+        aria-label="Toggle Fullscreen"
+      >
+        {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
+      </button>
+
       <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
           <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
