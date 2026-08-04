@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import QLogo from '../assets/Q.png';
-import { Maximize, Minimize } from 'lucide-react';
+import { Maximize, Minimize, Download } from 'lucide-react';
 
 import { ScreenLayout } from './ScreenLayout';
 
 export const MenuScreen: React.FC = () => {
   const { setGameState, hasLoaded, setHasLoaded } = useQuizStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     if (!hasLoaded) {
@@ -25,6 +26,25 @@ export const MenuScreen: React.FC = () => {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -62,19 +82,36 @@ export const MenuScreen: React.FC = () => {
       footerText="Made with Love by Denzven and AI using React and Vite"
       hideTitle={true}
     >
-      <button 
-        onClick={toggleFullScreen}
-        style={{ 
-          position: 'absolute', top: '20px', right: '20px', 
-          width: '50px', height: '50px', borderRadius: '15px', 
-          padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
-          backgroundColor: 'var(--dark-teal)',
-          border: '2px solid var(--teal)'
-        }}
-        aria-label="Toggle Fullscreen"
-      >
-        {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
-      </button>
+      <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '10px', zIndex: 10 }}>
+        {deferredPrompt && (
+          <button 
+            onClick={handleInstallClick}
+            style={{ 
+              width: '50px', height: '50px', borderRadius: '15px', 
+              padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'var(--yellow)',
+              border: '2px solid var(--orange)'
+            }}
+            aria-label="Install App"
+            title="Install App"
+          >
+            <Download size={24} color="var(--dark-green)" />
+          </button>
+        )}
+        <button 
+          onClick={toggleFullScreen}
+          style={{ 
+            width: '50px', height: '50px', borderRadius: '15px', 
+            padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'var(--dark-teal)',
+            border: '2px solid var(--teal)'
+          }}
+          aria-label="Toggle Fullscreen"
+          title="Toggle Fullscreen"
+        >
+          {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
+        </button>
+      </div>
 
       <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
