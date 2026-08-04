@@ -1,0 +1,262 @@
+@font-face {
+  font-family: 'League Spartan';
+  src: url('/fonts/LeagueSpartan-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'League Spartan';
+  src: url('/fonts/LeagueSpartan-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+:root {
+  --dark-green: #264653;
+  --teal: #2a9d8f;
+  --dark-teal: #1c695f;
+  --yellow: #e9c46a;
+  --light-orange: #f4a261;
+  --orange: #e76f51;
+  --white: #e8eddf;
+  --correct-green: #2ecc71;
+  --wrong-red: #e74c3c;
+  
+  --font-main: 'League Spartan', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--dark-green);
+  color: var(--white);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 
+  Projector Container now adapts. 
+  On large screens, it behaves like a letterboxed projector.
+  On mobile, it fills the viewport and scrolls if necessary.
+*/
+.projector-container {
+  width: 100%;
+  max-width: 1920px;
+  height: 100%;
+  margin: auto;
+  position: relative;
+  background-color: var(--dark-green);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1024px) {
+  .projector-container {
+    height: 100%;
+    padding: 0; /* Let inner components manage padding on large screens */
+  }
+}
+
+button {
+  border-radius: 15px;
+  border: 2px solid transparent;
+  padding: 0.8em 1.6em;
+  font-size: clamp(1rem, 4vw, 1.5rem);
+  font-weight: bold;
+  font-family: inherit;
+  background-color: var(--teal);
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+button:hover {
+  border-color: var(--yellow);
+  background-color: var(--dark-teal);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+button:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--yellow);
+}
+
+/* Specific class for giant menu buttons */
+.menu-btn {
+  padding: clamp(5px, 1.5vh, 20px) clamp(15px, 4vw, 30px);
+  font-size: clamp(1.2rem, 3.5vh, 2.2rem);
+  width: 100%;
+}
+
+.title {
+  font-size: clamp(2.5rem, min(14vw, 12vh), 7rem);
+  font-weight: 900;
+  text-align: center;
+  margin-top: 5px;
+  letter-spacing: clamp(1px, 1vw, 6px);
+  white-space: nowrap;
+}
+
+.title span:nth-child(1) { color: var(--white); }
+.title span:nth-child(2) { color: var(--yellow); }
+.title span:nth-child(3) { color: var(--white); }
+
+.card {
+  background-color: rgba(42, 157, 143, 0.2);
+  border-radius: 30px;
+  padding: clamp(1rem, 4vw, 2rem);
+  margin: 1rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Specific layout adjustments for responsive views */
+.menu-grid {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 1.5vh, 20px);
+  width: 90%;
+  max-width: 500px;
+  margin: auto;
+  padding: 5px 10px;
+}
+
+.settings-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(20px, 4vw, 40px);
+  justify-content: center;
+  margin-top: 40px;
+  width: 100%;
+}
+
+.settings-card {
+  flex: 1 1 300px;
+  max-width: 400px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Default mobile */
+  gap: clamp(10px, 2vw, 20px);
+  margin: clamp(10px, 2vw, 20px) auto;
+  width: 100%;
+  max-width: 1700px;
+  padding: 0 clamp(10px, 3vw, 50px);
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .options-grid {
+    grid-template-columns: 1fr 1fr; /* Strict 2x2 on larger screens */
+  }
+}
+
+.option-card {
+  border-radius: 20px;
+  padding: clamp(15px, 3vw, 20px) clamp(20px, 4vw, 30px);
+  display: flex;
+  align-items: center;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: bold;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.option-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+.option-card:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+input[type="file"] {
+  display: none;
+}
+.file-upload-label {
+  display: inline-block;
+  background-color: var(--orange);
+  color: var(--white);
+  padding: 1rem 2rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+.file-upload-label:hover {
+  background-color: var(--yellow);
+  color: var(--dark-green);
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  opacity: 0; /* hide before animation */
+  animation: slideUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popInScale {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  80% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.animate-pop-in {
+  opacity: 0;
+  animation: popInScale 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 2s linear infinite;
+}
