@@ -9,6 +9,7 @@ import { SettingsScreen } from './components/SettingsScreen';
 import { StartScreen } from './components/StartScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
+import { RulesScreen } from './components/RulesScreen';
 import { RapidFireScreen } from './components/RapidFireScreen';
 import { SpinWheelScreen } from './components/SpinWheelScreen';
 import { TicTacToeScreen } from './components/TicTacToeScreen';
@@ -178,6 +179,8 @@ function App() {
         return <SettingsScreen />;
       case 'LEADERBOARD':
         return <LeaderboardScreen />;
+      case 'RULES':
+        return <RulesScreen />;
       case 'ABOUT':
         return <AboutScreen />;
       case 'PLAYING':

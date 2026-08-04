@@ -275,7 +275,7 @@ export const TicTacToeScreen: React.FC = () => {
                 Tile #{selectedIdx! + 1} Question
               </h3>
               
-              <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', color: 'var(--white)', margin: '10px auto 25px auto', textAlign: 'center', width: '100%' }}>
+              <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', color: 'var(--white)', margin: '10px auto 25px auto', textAlign: 'center', width: '100%', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {activeQuestion.question}
               </h2>
 
@@ -293,17 +293,17 @@ export const TicTacToeScreen: React.FC = () => {
                     key={i} 
                     className="option-card"
                     style={{ 
-                      backgroundColor: isAnswerRevealed && opt === activeQuestion.answer ? 'var(--correct-green)' : 'rgba(42, 157, 143, 0.5)',
+                      backgroundColor: isAnswerRevealed && opt === activeQuestion.answer ? 'var(--correct-green)' : 'var(--dark-teal)',
                       color: 'var(--white)',
                       fontSize: '1.3rem',
                       padding: '14px 18px',
-                      textAlign: 'center',
-                      justifyContent: 'center',
-                      margin: 0
+                      display: 'flex',
+                      alignItems: 'center',
+                      textAlign: 'left'
                     }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '15px' }}>{String.fromCharCode(65 + i)}</span>
-                    {opt}
+                    <span style={{ color: 'var(--yellow)', marginRight: '15px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ wordBreak: 'break-word' }}>{opt}</span>
                   </div>
                 ))}
               </div>

@@ -126,6 +126,9 @@ export const MenuScreen: React.FC = () => {
           <button className="menu-btn" onClick={() => setGameState('LEADERBOARD')}>
             Leaderboard
           </button>
+          <button className="menu-btn" onClick={() => setGameState('RULES')}>
+            Rules
+          </button>
           <button className="menu-btn" onClick={() => setGameState('SETTINGS')}>
             Settings
           </button>

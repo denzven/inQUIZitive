@@ -413,13 +413,13 @@ export const SpinWheelScreen: React.FC = () => {
                 Topic: {currentQ.topic} | Points: {currentQ.scoreVal}
               </p>
               <div className="card" style={{ minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', margin: 0 }}>
-                <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0 }}>{currentQ.question}</h2>
+                <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.2 }}>{currentQ.question}</h2>
               </div>
             </div>
 
             <div className="options-grid">
               {currentQ.options.map((opt, i) => {
-                let bgColor = 'rgba(42, 157, 143, 0.5)';
+                let bgColor = 'var(--dark-teal)';
                 const isSelected = i === selectedOptIdx;
                 const isRightAnswer = opt === currentQ.answer;
 
@@ -438,8 +438,8 @@ export const SpinWheelScreen: React.FC = () => {
                     onClick={() => handleAnswer(i)}
                     style={{ backgroundColor: bgColor }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                    {opt}
+                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
               })}

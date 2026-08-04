@@ -19,7 +19,7 @@ export interface Question {
 
 export interface QuizState {
   // Navigation States
-  gameState: 'SETUP' | 'MENU' | 'START' | 'SETTINGS' | 'ABOUT' | 'LEADERBOARD' | 'PLAYING' | 'END';
+  gameState: 'SETUP' | 'MENU' | 'START' | 'SETTINGS' | 'ABOUT' | 'LEADERBOARD' | 'PLAYING' | 'END' | 'RULES';
   
   // Game Data
   teams: Team[];

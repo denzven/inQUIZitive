@@ -62,7 +62,7 @@ export const RapidFireScreen: React.FC = () => {
   useEffect(() => {
     if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && rfQuestions[currentIdx]) {
       const q = rfQuestions[currentIdx];
-      if (q.index >= 0) {
+      if (q.index >= 0 && !q.used) {
         markQuestionUsed(q.index);
       }
     }
@@ -162,12 +162,12 @@ export const RapidFireScreen: React.FC = () => {
               <div style={{ position: 'absolute', top: '15px', left: '25px', color: 'var(--light-orange)', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {currentIdx + 1}/{rfQuestions.length}
               </div>
-              <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0 }}>{currentQ.question}</h2>
+              <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.2 }}>{currentQ.question}</h2>
             </div>
 
             <div className="options-grid">
               {currentQ.options.map((opt, i) => {
-                let bgColor = 'rgba(42, 157, 143, 0.5)';
+                let bgColor = 'var(--dark-teal)';
                 const isSelected = i === selectedOptIdx;
                 const isRightAnswer = opt === currentQ.answer;
 
@@ -186,8 +186,8 @@ export const RapidFireScreen: React.FC = () => {
                     onClick={() => handleAnswer(i)}
                     style={{ backgroundColor: bgColor }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                    {opt}
+                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
               })}
@@ -228,13 +228,13 @@ export const RapidFireScreen: React.FC = () => {
         position: 'fixed', 
         bottom: 'clamp(15px, 3vh, 30px)', 
         left: 'clamp(20px, 4vw, 40px)', 
-        zIndex: 40, 
+        zIndex: -1, 
         fontSize: 'clamp(1.6rem, 3.8vw, 2.8rem)', 
         fontWeight: 900, 
         letterSpacing: '3px', 
         userSelect: 'none',
         pointerEvents: 'none',
-        textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+        opacity: 0.3
       }}>
         <span style={{ color: 'var(--white)' }}>IN</span>
         <span style={{ color: 'var(--yellow)' }}>QUIZ</span>

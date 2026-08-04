@@ -1,27 +1,31 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
+type BuzzerState = 'READY' | 'PLAYING';
+
 export const BuzzerScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed } = useQuizStore();
 
-  // 1. Data Setup (Buzzer round questions)
-  const buzzerQuestions = useMemo(() => {
-    return questions.filter(q => q.roundCode === 'B');
-  }, [questions]);
+  // 1. Data Setup (Buzzer round questions - max 20)
+  const [buzzerQuestions] = useState(() => {
+    const available = questions.filter(q => q.roundCode === 'B' && !q.used);
+    return available.slice(0, 20);
+  });
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+  const [buzzerState, setBuzzerState] = useState<BuzzerState>('READY');
 
   const currentQ = buzzerQuestions[currentIdx];
 
   // Mark question as used immediately when displayed/shown
-  React.useEffect(() => {
-    if (currentQ && currentQ.index >= 0) {
+  useEffect(() => {
+    if (buzzerState === 'PLAYING' && currentQ && currentQ.index >= 0 && !currentQ.used) {
       markQuestionUsed(currentQ.index);
     }
-  }, [currentIdx, currentQ, markQuestionUsed]);
+  }, [buzzerState, currentIdx, currentQ, markQuestionUsed]);
 
   const handleNext = () => {
     if (currentIdx < buzzerQuestions.length - 1) {
@@ -58,12 +62,21 @@ export const BuzzerScreen: React.FC = () => {
           <div style={{ margin: 'auto', textAlign: 'center' }}>
             <p style={{ fontSize: '2rem', color: 'var(--yellow)' }}>No Buzzer round questions loaded!</p>
           </div>
+        ) : buzzerState === 'READY' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, margin: 'auto' }}>
+            <button onClick={() => setBuzzerState('PLAYING')} style={{ padding: '20px 60px', fontSize: '3rem', backgroundColor: 'var(--teal)' }}>
+              Start Quiz
+            </button>
+            <p style={{ color: 'var(--light-orange)', fontSize: '1.5rem', marginTop: '20px' }}>Press Start to begin.</p>
+            <p style={{ color: 'var(--yellow)', fontSize: '1.5rem', marginTop: '20px' }}>Questions Loaded: {buzzerQuestions.length}</p>
+          </div>
         ) : (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1200px', margin: 'auto', justifyContent: 'center' }}>
             
             {/* QUESTION CARD */}
             <div className="card" style={{ 
-              minHeight: '220px', 
+              flex: 1,
+              minHeight: 'clamp(150px, 20vh, 220px)', 
               display: 'flex', 
               flexDirection: 'column', 
               justifyContent: 'center', 
@@ -71,12 +84,12 @@ export const BuzzerScreen: React.FC = () => {
               textAlign: 'center', 
               position: 'relative',
               margin: '0 0 30px 0',
-              padding: '40px'
+              padding: 'clamp(20px, 4vw, 40px)'
             }}>
               <div style={{ position: 'absolute', top: '15px', left: '25px', color: 'var(--light-orange)', fontSize: '1.3rem', fontWeight: 'bold' }}>
                 Question {currentIdx + 1} / {buzzerQuestions.length}
               </div>
-              <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', margin: 0, color: 'var(--white)' }}>
+              <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.2, color: 'var(--white)' }}>
                 {currentQ.question}
               </h2>
             </div>
@@ -85,7 +98,7 @@ export const BuzzerScreen: React.FC = () => {
             <div className="options-grid" style={{ marginBottom: '40px' }}>
               {currentQ.options.map((opt, i) => {
                 const isCorrect = opt === currentQ.answer;
-                let bgColor = 'rgba(42, 157, 143, 0.5)';
+                let bgColor = 'var(--dark-teal)';
                 
                 if (isAnswerRevealed && isCorrect) {
                   bgColor = 'var(--correct-green)';
@@ -97,8 +110,8 @@ export const BuzzerScreen: React.FC = () => {
                     className="option-card"
                     style={{ backgroundColor: bgColor }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                    {opt}
+                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
               })}
@@ -157,15 +170,15 @@ export const BuzzerScreen: React.FC = () => {
       {/* BOTTOM-LEFT INQUIZITIVE BRANDING */}
       <div style={{ 
         position: 'fixed', 
-        bottom: 'clamp(12px, 2.5vw, 24px)', 
-        left: 'clamp(15px, 3vw, 30px)', 
-        zIndex: 40, 
-        fontSize: 'clamp(1.1rem, 2.5vw, 1.6rem)', 
+        bottom: 'clamp(15px, 3vh, 30px)', 
+        left: 'clamp(20px, 4vw, 40px)', 
+        zIndex: -1, 
+        fontSize: 'clamp(1.6rem, 3.8vw, 2.8rem)', 
         fontWeight: 900, 
-        letterSpacing: '2px', 
+        letterSpacing: '3px', 
         userSelect: 'none',
         pointerEvents: 'none',
-        textShadow: '0 2px 8px rgba(0,0,0,0.4)'
+        opacity: 0.3
       }}>
         <span style={{ color: 'var(--white)' }}>IN</span>
         <span style={{ color: 'var(--yellow)' }}>QUIZ</span>
