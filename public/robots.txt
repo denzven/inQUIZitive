@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://denzven.github.io/inQUIZitive/sitemap.xml
