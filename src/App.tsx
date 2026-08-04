@@ -16,8 +16,12 @@ import { TicTacToeScreen } from './components/TicTacToeScreen';
 import { BuzzerScreen } from './components/BuzzerScreen';
 import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
 
+import { useRapidFireStore } from './store/useRapidFireStore';
+import { useTicTacToeStore } from './store/useTicTacToeStore';
+import { useSpinWheelStore } from './store/useSpinWheelStore';
+
 function App() {
-  const { gameState, setGameState, loadQuestions, activeRound, theme } = useQuizStore();
+  const { gameState, setGameState, loadQuestions, activeRound, theme, hasLoaded, setHasLoaded } = useQuizStore();
   const [init, setInit] = useState(false);
 
   // Apply theme to document root
@@ -49,6 +53,7 @@ function App() {
   useGameControls();
 
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showCrashModal, setShowCrashModal] = useState(false);
   const previousState = useRef(gameState);
 
   // 1. Prevent Refresh / Tab Close (ONLY during PLAYING)
@@ -113,12 +118,17 @@ function App() {
     if (init) return;
     const loadDefaultData = async () => {
       try {
-        // Wait for both the excel parsing and fonts loading
-        const [parsed] = await Promise.all([
-          fetchExcelData(trialSheetUrl),
-          document.fonts ? document.fonts.ready : Promise.resolve()
-        ]);
-        loadQuestions(parsed);
+        if (!hasLoaded) {
+          const [parsed] = await Promise.all([
+            fetchExcelData(trialSheetUrl),
+            document.fonts ? document.fonts.ready : Promise.resolve()
+          ]);
+          loadQuestions(parsed);
+          setHasLoaded();
+        } else {
+          // If we already loaded data from local storage, just wait for fonts
+          await (document.fonts ? document.fonts.ready : Promise.resolve());
+        }
       } catch (err) {
         console.error("Failed to load default trial excel:", err);
       } finally {
@@ -136,15 +146,63 @@ function App() {
         // Ensure we bypass SETUP since we auto-load, or if it fails they can go to Settings.
         if (gameState === 'SETUP') {
           setGameState('MENU');
+        } else if (gameState === 'PLAYING') {
+          // If we reloaded straight into a playing state, we show crash modal
+          setShowCrashModal(true);
+          // Automatically pause the Rapid Fire timer in the background
+          useRapidFireStore.getState().setIsPaused(true);
+          // If Spin Wheel was interrupted mid-spin, reset it so they can spin again
+          const swStore = useSpinWheelStore.getState();
+          if (swStore.swState === 'SPINNING') {
+            swStore.setSwState('SPIN_DONE');
+          }
         }
       }
     };
     loadDefaultData();
-  }, [init, loadQuestions, setGameState, gameState]);
+  }, [init, loadQuestions, setGameState, gameState, hasLoaded, setHasLoaded]);
 
   if (!init) {
     return null; // The true preloader in index.html is visible
   }
+
+  // Crash Modal
+  const renderCrashModal = () => {
+    if (!showCrashModal) return null;
+    return createPortal(
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)' }}>
+        <div className="animate-pop-in" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'var(--dark-green)', margin: 0, padding: 'clamp(20px, 4vh, 40px)', borderRadius: '24px', border: '1px solid var(--orange)', textAlign: 'center', maxWidth: '90%', width: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', boxSizing: 'border-box' }}>
+          <h2 style={{ color: 'var(--yellow)', marginBottom: '15px', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Crash Recovered</h2>
+          <p style={{ color: 'var(--white)', fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', marginBottom: '30px' }}>
+            It looks like the app was closed unexpectedly during an active round. Do you want to resume?
+          </p>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <button 
+              className="menu-btn" 
+              onClick={() => {
+                useRapidFireStore.getState().resetRf();
+                useTicTacToeStore.getState().resetTtt();
+                useSpinWheelStore.getState().resetSw();
+                setGameState('MENU');
+                setShowCrashModal(false);
+              }}
+              style={{ flex: 1, backgroundColor: 'var(--dark-teal)', color: 'var(--white)' }}
+            >
+              Main Menu
+            </button>
+            <button 
+              className="menu-btn" 
+              onClick={() => setShowCrashModal(false)}
+              style={{ flex: 1, backgroundColor: 'var(--correct-green)', color: 'var(--dark-green)' }}
+            >
+              Resume
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
 
   // Modal rendering logic
   const renderExitModal = () => {
@@ -220,6 +278,7 @@ function App() {
     <>
       {renderScreen()}
       {renderExitModal()}
+      {renderCrashModal()}
     </>
   );
 }

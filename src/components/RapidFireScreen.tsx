@@ -1,29 +1,34 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { Play, Pause } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 
-type RFState = 'READY' | 'PLAYING' | 'FEEDBACK' | 'END';
+import { useRapidFireStore } from '../store/useRapidFireStore';
 
 export const RapidFireScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed } = useQuizStore();
 
-  // 1. Data Setup (Fixed list of 10 questions for this round instance)
-  const [rfQuestions] = useState(() => {
-    const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
-    return available.slice(0, 10);
-  });
+  // Use the persisted Rapid Fire store
+  const {
+    rfQuestions, setRfQuestions,
+    rfState, setRfState,
+    timer, setTimer,
+    isPaused, setIsPaused,
+    currentIdx, setCurrentIdx,
+    score, setScore,
+    correctCount, setCorrectCount,
+    selectedOptIdx, setSelectedOptIdx,
+    isCorrect, setIsCorrect,
+    resetRf
+  } = useRapidFireStore();
 
-  // 2. Local State
-  const [rfState, setRfState] = useState<RFState>('READY');
-  const [timer, setTimer] = useState(60);
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  
-  const [score, setScore] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [selectedOptIdx, setSelectedOptIdx] = useState<number>(-1);
-  const [isCorrect, setIsCorrect] = useState(false);
+  // Initialize questions ONLY if we haven't already (prevents overwriting on crash recovery)
+  useEffect(() => {
+    if (rfQuestions.length === 0) {
+      const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
+      setRfQuestions(available.slice(0, 10));
+    }
+  }, [rfQuestions.length, questions, setRfQuestions]);
 
   // 3. Timer Logic
   useEffect(() => {
@@ -88,6 +93,12 @@ export const RapidFireScreen: React.FC = () => {
   }, [rfState, isPaused, rfQuestions, currentIdx]);
 
   // 6. Keyboard Controls
+  // 7. Cleanup & Return Handler
+  const handleReturnToMenu = useCallback(() => {
+    resetRf();
+    setGameState('MENU');
+  }, [resetRf, setGameState]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (rfState === 'PLAYING' && !isPaused) {
@@ -96,11 +107,11 @@ export const RapidFireScreen: React.FC = () => {
         if (e.key === '3') handleAnswer(2);
         if (e.key === '4') handleAnswer(3);
       }
-      if (e.key === 'Escape') setGameState('MENU');
+      if (e.key === 'Escape') handleReturnToMenu();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [rfState, isPaused, handleAnswer, setGameState]);
+  }, [rfState, isPaused, handleAnswer, handleReturnToMenu]);
 
   const bonus = useMemo(() => {
     if (correctCount === rfQuestions.length && rfQuestions.length >= 5) return 20;
@@ -113,7 +124,7 @@ export const RapidFireScreen: React.FC = () => {
   return (
     <ScreenLayout
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={handleReturnToMenu}
       showSettingsButton={true}
       onSettingsClick={() => setGameState('SETTINGS')}
       hideTitle={true}
@@ -213,7 +224,7 @@ export const RapidFireScreen: React.FC = () => {
               <p style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--white)', fontWeight: 'bold', margin: '10px 0' }}>Total: {score + bonus}</p>
               <button 
                 className="menu-btn" 
-                onClick={() => setGameState('MENU')} 
+                onClick={handleReturnToMenu} 
                 style={{ marginTop: '30px', maxWidth: '300px', backgroundColor: 'var(--orange)' }}
               >
                 Return to Menu

@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { Trophy, X, Circle, RotateCcw, Home } from 'lucide-react';
 
-type TileState = 'X' | 'O' | null;
+import { useTicTacToeStore } from '../store/useTicTacToeStore';
 
 export const TicTacToeScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed, teams } = useQuizStore();
@@ -34,12 +34,15 @@ export const TicTacToeScreen: React.FC = () => {
     return list.slice(0, 9);
   }, [questions]);
 
-  // Board state: Array of 9 tiles (X, O, or null)
-  const [board, setBoard] = useState<TileState[]>(Array(9).fill(null));
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+  // Persisted Store State
+  const {
+    board, setBoard,
+    selectedIdx, setSelectedIdx,
+    isAnswerRevealed, setIsAnswerRevealed,
+    resetTtt
+  } = useTicTacToeStore();
 
-  const checkWinner = (b: TileState[]) => {
+  const checkWinner = (b: Array<string | null>) => {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
       [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
@@ -71,23 +74,23 @@ export const TicTacToeScreen: React.FC = () => {
     }
   };
 
-  const handleAssignTile = (claim: TileState) => {
-    if (selectedIdx === null) return;
+  const handleAssignTile = (claim: 'X' | 'O' | null) => {
+    if (selectedIdx === null || selectedIdx === -1) return;
 
     const newBoard = [...board];
     newBoard[selectedIdx] = claim;
     setBoard(newBoard);
 
-    setSelectedIdx(null);
+    setSelectedIdx(-1);
     setIsAnswerRevealed(false);
   };
 
-  const activeQuestion = selectedIdx !== null ? tttQuestions[selectedIdx] : null;
+  const activeQuestion = selectedIdx !== -1 ? tttQuestions[selectedIdx] : null;
 
   return (
     <ScreenLayout
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { resetTtt(); setGameState('MENU'); }}
       showSettingsButton={true}
       onSettingsClick={() => setGameState('SETTINGS')}
       hideTitle={true}
@@ -190,14 +193,8 @@ export const TicTacToeScreen: React.FC = () => {
                 >
                   <RotateCcw size={20} /> Play Again
                 </button>
-                <button 
-                  onClick={() => setGameState('MENU')} 
-                  style={{ 
-                    padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--orange)', color: 'var(--white)', borderRadius: '16px',
-                    display: 'flex', alignItems: 'center', gap: '8px'
-                  }}
-                >
-                  <Home size={20} /> Main Menu
+                <button className="menu-btn" onClick={() => { resetTtt(); setGameState('MENU'); }} style={{ flex: 1, backgroundColor: 'var(--orange)' }}>
+                  <Home size={24} /> Main Menu
                 </button>
               </div>
             </div>

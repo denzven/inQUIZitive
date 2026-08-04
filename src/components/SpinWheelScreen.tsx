@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 
-type SWState = 'SPIN_READY' | 'SPINNING' | 'SPIN_DONE' | 'BOARD' | 'QUESTION_VIEW' | 'FEEDBACK';
-
+import { useSpinWheelStore } from '../store/useSpinWheelStore';
 export const SpinWheelScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed } = useQuizStore();
 
@@ -31,13 +30,18 @@ export const SpinWheelScreen: React.FC = () => {
     return { allTopics: topics, topicMap: map };
   }, [questions]);
 
-  // 2. State
-  const [swState, setSwState] = useState<SWState>('SPIN_READY');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [currentQ, setCurrentQ] = useState<Question | null>(null);
-  
-  const [selectedOptIdx, setSelectedOptIdx] = useState<number>(-1);
-  const [isCorrect, setIsCorrect] = useState(false);
+  // 2. Persisted State
+  const {
+    swState, setSwState,
+    selectedTopics, setSelectedTopics,
+    boardQuestions, setBoardQuestions,
+    currentQ, setCurrentQ,
+    selectedOptIdx, setSelectedOptIdx,
+    isCorrect, setIsCorrect,
+    isReviewing, setIsReviewing,
+    userAnswers, setUserAnswer,
+    resetSw
+  } = useSpinWheelStore();
 
   // 3. Python Slot Machine Reel Engine (Ported from round_spin_wheel.py)
   const slotH = 270;
@@ -55,8 +59,6 @@ export const SpinWheelScreen: React.FC = () => {
   const spinStartTimeRef = useRef<number>(0);
   const animFrameRef = useRef<number | null>(null);
 
-  // Board Questions State (stores the active 4 unused questions for each selected topic)
-  const [boardQuestionsMap, setBoardQuestionsMap] = useState<Map<string, Question[]>>(new Map());
 
   const startSpin = () => {
     setSwState('SPINNING');
@@ -72,6 +74,15 @@ export const SpinWheelScreen: React.FC = () => {
     const chosenIndices = chosenTopics.map(t => Math.max(0, allTopics.indexOf(t)));
     
     finalIndicesRef.current = chosenIndices;
+
+    // PRE-SAVE topics to store in case of crash during animation
+    setSelectedTopics(chosenTopics);
+    const bMap: Record<string, Question[]> = {};
+    chosenTopics.forEach(t => {
+      const qs = (topicMap.get(t) || []).filter(q => !q.used);
+      bMap[t] = qs.slice(0, 4);
+    });
+    setBoardQuestions(bMap);
 
     statesRef.current = [1, 1, 1, 1];
     speedsRef.current = [35, 35, 35, 35]; // Continuous 60fps scroll speed
@@ -125,20 +136,6 @@ export const SpinWheelScreen: React.FC = () => {
       setSlotStates([...newStates]);
 
       if (completed === 4) {
-        const chosenTopics = finalIndicesRef.current.map((idx: number) => allTopics[idx] || 'Topic');
-        setSelectedTopics(chosenTopics);
-
-        // Populate Jeopardy Board with ONLY UNUSED questions for each selected topic
-        const newBoardMap = new Map<string, Question[]>();
-        chosenTopics.forEach(topic => {
-          const allForTopic = topicMap.get(topic) || [];
-          const unused = allForTopic.filter(q => !q.used);
-          // Load only unused questions (or fallback to all if all are used)
-          const chosenQs = unused.length > 0 ? unused.slice(0, 4) : allForTopic.slice(0, 4);
-          newBoardMap.set(topic, chosenQs);
-        });
-        setBoardQuestionsMap(newBoardMap);
-
         setSwState('SPIN_DONE');
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       } else {
@@ -165,39 +162,55 @@ export const SpinWheelScreen: React.FC = () => {
 
     setSelectedOptIdx(optIndex);
     setIsCorrect(correct);
+    setIsReviewing(false);
+    if (currentQ.index !== undefined && currentQ.index !== -1) {
+      setUserAnswer(currentQ.index, optIndex);
+    }
 
     setSwState('FEEDBACK');
-  }, [swState, currentQ]);
+  }, [swState, currentQ, setSelectedOptIdx, setIsCorrect, setIsReviewing, setUserAnswer, setSwState]);
 
   // 5. Feedback Auto-Advance
   useEffect(() => {
-    if (swState === 'FEEDBACK') {
+    if (swState === 'FEEDBACK' && !isReviewing) {
       const timeout = setTimeout(() => {
         setSwState('BOARD');
         setCurrentQ(null);
       }, 1500);
       return () => clearTimeout(timeout);
     }
-  }, [swState]);
+  }, [swState, isReviewing, setSwState, setCurrentQ]);
 
   const handleTileClick = (q: Question) => {
     setCurrentQ(q);
-    setSwState('QUESTION_VIEW');
     
-    // Mark question as used immediately when shown
-    if (q.index !== -1) {
-      markQuestionUsed(q.index);
-    }
-    q.used = true;
+    if (q.used) {
+      // Reviewing an already answered question
+      setIsReviewing(true);
+      const prevOptIdx = userAnswers[q.index] ?? -1;
+      setSelectedOptIdx(prevOptIdx);
+      const right = prevOptIdx !== -1 ? q.options[prevOptIdx] === q.answer : true;
+      setIsCorrect(right);
+      setSwState('FEEDBACK');
+    } else {
+      // Fresh unanswered question
+      setIsReviewing(false);
+      setSwState('QUESTION_VIEW');
+      
+      if (q.index !== -1) {
+        markQuestionUsed(q.index);
+      }
+      q.used = true;
 
-    setSelectedOptIdx(-1);
-    setIsCorrect(false);
+      setSelectedOptIdx(-1);
+      setIsCorrect(false);
+    }
   };
 
   return (
     <ScreenLayout
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { resetSw(); setGameState('MENU'); }}
       showSettingsButton={true}
       onSettingsClick={() => setGameState('SETTINGS')}
       hideTitle={true}
@@ -373,7 +386,7 @@ export const SpinWheelScreen: React.FC = () => {
         {swState === 'BOARD' && (
           <div style={{ display: 'flex', gap: 'clamp(10px, 2vw, 30px)', marginTop: '20px', width: '100%', maxWidth: '1400px', justifyContent: 'center' }}>
             {selectedTopics.map((topic, colIdx) => {
-              const questionsForTopic = boardQuestionsMap.get(topic) || (topicMap.get(topic) || []).filter(q => !q.used).slice(0, 4);
+              const list = boardQuestions[topic] || (topicMap.get(topic) || []).filter(q => !q.used).slice(0, 4);
 
               return (
                 <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vw, 20px)', flex: 1, maxWidth: '280px' }}>
@@ -381,7 +394,7 @@ export const SpinWheelScreen: React.FC = () => {
                     {topic}
                   </div>
                   
-                  {questionsForTopic.map((q, rowIdx) => (
+                  {list.map((q, rowIdx) => (
                     <button 
                       key={rowIdx} 
                       onClick={() => handleTileClick(q)}
@@ -445,10 +458,7 @@ export const SpinWheelScreen: React.FC = () => {
               })}
             </div>
 
-            <button 
-              onClick={() => setSwState('BOARD')} 
-              style={{ position: 'fixed', bottom: '30px', right: '30px', backgroundColor: 'var(--orange)', zIndex: 20 }}
-            >
+            <button className="menu-btn" onClick={() => setSwState('BOARD')} style={{ position: 'fixed', bottom: '30px', right: '30px', flex: 1, backgroundColor: 'var(--orange)', zIndex: 20 }}>
               Back to Board
             </button>
           </div>

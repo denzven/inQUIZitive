@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Team {
   id: number;
@@ -81,7 +82,9 @@ const defaultTheme = {
   wrongRed: '#e74c3c',
 };
 
-export const useQuizStore = create<QuizState>((set) => ({
+export const useQuizStore = create<QuizState>()(
+  persist(
+    (set) => ({
   gameState: 'SETUP',
   teams: [
     { id: 1, name: 'Team 1', score: 0 },
@@ -194,4 +197,9 @@ export const useQuizStore = create<QuizState>((set) => ({
   setSubtitle: (subtitle) => set({ subtitle }),
 
   setHasLoaded: () => set({ hasLoaded: true }),
-}));
+    }),
+    {
+      name: 'inquizitive-storage', // name of item in localStorage
+    }
+  )
+);

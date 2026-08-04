@@ -71,3 +71,32 @@ export const fetchExcelData = async (url: string): Promise<Question[]> => {
   const arrayBuffer = await response.arrayBuffer();
   return parseExcelData(arrayBuffer);
 };
+
+export const exportProgressToExcel = (questions: Question[], teams: any[]) => {
+  const wsQuestions = XLSX.utils.json_to_sheet(questions.map(q => {
+    const incorrectOptions = q.options.filter(o => o !== q.answer);
+    return {
+      'Round Code': q.roundCode,
+      'Topic': q.topic,
+      'Questions': q.question,
+      'Answer': q.answer,
+      '2': incorrectOptions[0] || '',
+      '3': incorrectOptions[1] || '',
+      '4': incorrectOptions[2] || '',
+      'Cost (Score)': q.scoreVal,
+      'Used': q.used ? 'Yes' : 'No'
+    };
+  }));
+
+  const wsTeams = XLSX.utils.json_to_sheet(teams.map(t => ({
+    'Team ID': t.id,
+    'Team Name': t.name,
+    'Score': t.score
+  })));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wsQuestions, "Questions_Progress");
+  XLSX.utils.book_append_sheet(wb, wsTeams, "Teams_Progress");
+
+  XLSX.writeFile(wb, "InQUIZitive_Progress.xlsx");
+};

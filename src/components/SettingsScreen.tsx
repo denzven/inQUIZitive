@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { parseExcelData, fetchExcelData } from '../utils/excelParser';
+import { parseExcelData, fetchExcelData, exportProgressToExcel } from '../utils/excelParser';
 import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette } from 'lucide-react';
 import trialSheetUrl from '../assets/trial_iQz_sheet.xlsx?url';
 import { ScreenLayout } from './ScreenLayout';
@@ -73,6 +73,12 @@ export const SettingsScreen: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     setMsg('Sample Excel template downloaded!');
+  };
+
+  const handleExportProgress = () => {
+    const state = useQuizStore.getState();
+    exportProgressToExcel(state.questions, state.teams);
+    setMsg('Progress exported to Excel!');
   };
 
   const handleResetUsedStatus = () => {
@@ -303,21 +309,37 @@ export const SettingsScreen: React.FC = () => {
                 </button>
               </div>
 
-              <button 
-                onClick={handleDownloadSample} 
-                style={{ 
-                  fontSize: '0.9rem', 
-                  padding: '8px 12px', 
-                  backgroundColor: 'var(--yellow)',
-                  color: 'var(--dark-green)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                  width: '100%'
-                }}
-              >
-                <Download size={16} />
-                Download Sample Template (.xlsx)
-              </button>
-
+              {/* Download Buttons */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button 
+                  onClick={handleDownloadSample} 
+                  style={{ 
+                    flex: 1,
+                    fontSize: '0.9rem', 
+                    padding: '8px 12px', 
+                    backgroundColor: 'var(--yellow)',
+                    color: 'var(--dark-green)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  <FileSpreadsheet size={16} />
+                  Template
+                </button>
+                <button 
+                  onClick={handleExportProgress} 
+                  style={{ 
+                    flex: 1,
+                    fontSize: '0.9rem', 
+                    padding: '8px 12px', 
+                    backgroundColor: 'var(--correct-green)',
+                    color: 'var(--dark-green)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  <Download size={16} />
+                  Backup Progress
+                </button>
+              </div>
               {/* Drag & Drop File Upload */}
               <div 
                 onDragOver={handleDragOver}
