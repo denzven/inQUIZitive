@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/inQUIZitive/dev-sw.js?dev-sw', { scope: '/inQUIZitive/', type: 'classic' })
