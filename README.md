@@ -1,32 +1,49 @@
-# React + TypeScript + Vite
+# InQUIZitive 🎯
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+An automated, modern, and interactive multi-round quiz application designed for live events.
 
-Currently, two official plugins are available:
+## Features 🚀
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Multiple Dynamic Rounds**: Play through diverse rounds including Rapid Fire, Spin Wheel, and more.
+- **Live Scoreboard**: Keep track of teams and scores in real-time.
+- **Excel Question Import**: Effortlessly load your quiz questions directly from an `.xlsx` file.
+- **Progressive Web App (PWA)**: Installable on your devices as a standalone app, providing a native-like experience.
+- **Responsive & Beautiful UI**: A highly polished, dynamic user interface built for engagement.
 
-## React Compiler
+## Tech Stack 💻
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **PWA**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
+- **Data Parsing**: [SheetJS (xlsx)](https://docs.sheetjs.com/)
 
-## Expanding the Oxlint configuration
+## Getting Started 🛠️
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+To run this project locally:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/denzven/inQUIZitive.git
+   ```
+2. Navigate to the directory:
+   ```bash
+   cd inQUIZitive_pwa
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Deployment 🌐
+
+This project is configured to be automatically deployed to GitHub Pages.
+
+To deploy manually, simply run:
+```bash
+npm run deploy
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
