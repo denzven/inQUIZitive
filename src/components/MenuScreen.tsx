@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Settings } from 'lucide-react';
+
 
 import { ScreenLayout } from './ScreenLayout';
 

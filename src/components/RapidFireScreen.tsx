@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuizStore, type Question } from '../store/useQuizStore';
+import { useQuizStore } from '../store/useQuizStore';
 import { Home, Settings, Play, Pause } from 'lucide-react';
 
 type RFState = 'READY' | 'PLAYING' | 'FEEDBACK' | 'END';

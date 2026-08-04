@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Home } from 'lucide-react';
+
 
 import { ScreenLayout } from './ScreenLayout';
 
