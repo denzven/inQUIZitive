@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-
+import QLogo from '../assets/Q.png';
 
 import { ScreenLayout } from './ScreenLayout';
 
@@ -20,7 +20,7 @@ export const MenuScreen: React.FC = () => {
     return (
       <div className="projector-container" style={{ backgroundColor: 'var(--dark-green)' }}>
         <img 
-          src="/Q.png" 
+          src={QLogo} 
           alt="InQuizitive Logo" 
           className="animate-pop-in" 
           style={{ position: 'absolute', top: '50%', left: '50%', width: '150px', height: '150px' }} 

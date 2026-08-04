@@ -11,6 +11,7 @@ import { AboutScreen } from './components/AboutScreen';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { RapidFireScreen } from './components/RapidFireScreen';
 import { SpinWheelScreen } from './components/SpinWheelScreen';
+import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
 
 function App() {
   const { gameState, setGameState, loadQuestions, activeRound, theme } = useQuizStore();
@@ -98,7 +99,7 @@ function App() {
     if (init) return;
     const loadDefaultData = async () => {
       try {
-        const parsed = await fetchExcelData('/trial_iQz_sheet.xlsx');
+        const parsed = await fetchExcelData(trialSheetUrl);
         loadQuestions(parsed);
       } catch (err) {
         console.error("Failed to load default trial excel:", err);
