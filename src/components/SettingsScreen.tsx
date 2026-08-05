@@ -172,7 +172,7 @@ export const SettingsScreen: React.FC = () => {
       hideTitle={true}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1400px', margin: 'auto' }}>
-        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '15px' }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2.2rem, min(6vw, 5vh), 4.2rem)', marginBottom: '15px' }}>
           SETTINGS
         </h1>
 

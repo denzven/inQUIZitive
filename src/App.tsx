@@ -170,7 +170,7 @@ function App() {
   const renderCrashModal = () => {
     if (!showCrashModal) return null;
     return createPortal(
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)', padding: 'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)' }}>
         <div className="animate-pop-in" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'var(--dark-green)', margin: 0, padding: 'clamp(20px, 4vh, 40px)', borderRadius: '24px', border: '1px solid var(--orange)', textAlign: 'center', maxWidth: '90%', width: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', boxSizing: 'border-box' }}>
           <h2 style={{ color: 'var(--yellow)', marginBottom: '15px', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Crash Recovered</h2>
           <p style={{ color: 'var(--white)', fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', marginBottom: '30px' }}>
@@ -208,7 +208,7 @@ function App() {
   const renderExitModal = () => {
     if (!showExitModal) return null;
     return createPortal(
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)', padding: 'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)' }}>
         <div className="animate-pop-in" style={{ position: 'absolute', top: '50%', left: '50%', backgroundColor: 'var(--dark-green)', margin: 0, padding: 'clamp(20px, 4vh, 40px)', borderRadius: '24px', border: '1px solid var(--teal)', textAlign: 'center', maxWidth: '90%', width: '400px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', boxSizing: 'border-box' }}>
           <h2 style={{ color: 'var(--orange)', marginBottom: '15px', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Exit Round?</h2>
           <p style={{ color: 'var(--white)', marginBottom: '30px', fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', opacity: 0.9 }}>Are you sure you want to leave? Your current round progress will be lost.</p>

@@ -23,7 +23,7 @@ export const AboutScreen: React.FC = () => {
     >
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', zIndex: 1, padding: '0 20px', boxSizing: 'border-box' }}>
-        <h1 className="title animate-slide-up" style={{ marginTop: '20px', marginBottom: '30px', fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>ABOUT</h1>
+        <h1 className="title animate-slide-up" style={{ marginTop: 0, marginBottom: 'clamp(15px, 3vh, 30px)', fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>ABOUT</h1>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px', justifyContent: 'center', width: '100%', maxWidth: '1200px' }}>
           

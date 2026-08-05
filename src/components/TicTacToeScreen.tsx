@@ -110,8 +110,8 @@ export const TicTacToeScreen: React.FC = () => {
         {/* TITLE DIRECTLY ABOVE GRID */}
         <h1 className="title" style={{ 
           marginTop: 0, 
-          fontSize: 'clamp(1.5rem, min(4vw, 3.5vh), 3rem)', 
-          marginBottom: '6px', 
+          fontSize: 'clamp(2rem, min(5vw, 4.5vh), 3.5rem)', 
+          marginBottom: '8px', 
           textAlign: 'center', 
           width: '100%',
           letterSpacing: '1px'

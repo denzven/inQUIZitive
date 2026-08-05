@@ -1,22 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
+import { useBuzzerStore } from '../store/useBuzzerStore';
 import { ScreenLayout } from './ScreenLayout';
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
-type BuzzerState = 'READY' | 'PLAYING';
-
 export const BuzzerScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed } = useQuizStore();
+  const {
+    buzzerQuestions, setBuzzerQuestions,
+    currentIdx, setCurrentIdx,
+    buzzerState, setBuzzerState,
+    userAnswers, setUserAnswer,
+    revealedQuestions, setQuestionRevealed,
+  } = useBuzzerStore();
 
   // 1. Data Setup (Buzzer round questions - max 20)
-  const [buzzerQuestions] = useState(() => {
-    const available = questions.filter(q => q.roundCode === 'B' && !q.used);
-    return available.slice(0, 20);
-  });
-
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const [buzzerState, setBuzzerState] = useState<BuzzerState>('READY');
+  useEffect(() => {
+    if (buzzerQuestions.length === 0) {
+      const available = questions.filter(q => q.roundCode === 'B' && !q.used);
+      setBuzzerQuestions(available.slice(0, 20));
+    }
+  }, [buzzerQuestions.length, questions, setBuzzerQuestions]);
 
   const currentQ = buzzerQuestions[currentIdx];
 
@@ -30,20 +34,45 @@ export const BuzzerScreen: React.FC = () => {
   const handleNext = () => {
     if (currentIdx < buzzerQuestions.length - 1) {
       setCurrentIdx(prev => prev + 1);
-      setIsAnswerRevealed(false);
     }
   };
 
   const handlePrev = () => {
     if (currentIdx > 0) {
       setCurrentIdx(prev => prev - 1);
-      setIsAnswerRevealed(false);
     }
   };
 
-  const handleReveal = () => {
-    setIsAnswerRevealed(true);
+  const handleOptionClick = (optIdx: number) => {
+    if (!currentQ) return;
+    setUserAnswer(currentIdx, optIdx);
+    setQuestionRevealed(currentIdx);
   };
+
+  const handleReveal = () => {
+    setQuestionRevealed(currentIdx);
+  };
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (buzzerState === 'PLAYING' && currentQ) {
+        if (e.key === '1') handleOptionClick(0);
+        if (e.key === '2') handleOptionClick(1);
+        if (e.key === '3') handleOptionClick(2);
+        if (e.key === '4') handleOptionClick(3);
+        if (e.key === ' ') handleReveal();
+        if (e.key === 'ArrowLeft') handlePrev();
+        if (e.key === 'ArrowRight') handleNext();
+      }
+      if (e.key === 'Escape') setGameState('MENU');
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [buzzerState, currentQ, currentIdx, buzzerQuestions.length]);
+
+  const isCurrentRevealed = !!revealedQuestions[currentIdx];
+  const selectedOptIdx = userAnswers[currentIdx] ?? -1;
 
   return (
     <ScreenLayout
@@ -53,8 +82,8 @@ export const BuzzerScreen: React.FC = () => {
       onSettingsClick={() => setGameState('SETTINGS')}
       hideTitle={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', flex: 1, paddingBottom: '90px', boxSizing: 'border-box' }}>
-        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', flex: 1, boxSizing: 'border-box' }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, min(5vw, 4.5vh), 3.5rem)', marginBottom: 'clamp(6px, 1.2vh, 16px)' }}>
           Buzzer Round
         </h1>
 
@@ -97,18 +126,24 @@ export const BuzzerScreen: React.FC = () => {
             {/* OPTIONS GRID */}
             <div className="options-grid" style={{ marginBottom: '40px' }}>
               {currentQ.options.map((opt, i) => {
-                const isCorrect = opt === currentQ.answer;
+                const isRightAnswer = opt === currentQ.answer;
+                const isSelected = i === selectedOptIdx;
                 let bgColor = 'var(--dark-teal)';
                 
-                if (isAnswerRevealed && isCorrect) {
-                  bgColor = 'var(--correct-green)';
+                if (isCurrentRevealed) {
+                  if (isSelected) {
+                    bgColor = isRightAnswer ? 'var(--correct-green)' : 'var(--wrong-red)';
+                  } else if (isRightAnswer) {
+                    bgColor = 'var(--correct-green)';
+                  }
                 }
 
                 return (
                   <div 
                     key={i} 
                     className="option-card"
-                    style={{ backgroundColor: bgColor }}
+                    onClick={() => handleOptionClick(i)}
+                    style={{ backgroundColor: bgColor, cursor: 'pointer' }}
                   >
                     <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
@@ -144,7 +179,7 @@ export const BuzzerScreen: React.FC = () => {
                 }}
               >
                 <Eye size={28} style={{ verticalAlign: 'middle', marginRight: '10px' }} />
-                {isAnswerRevealed ? 'Answer Revealed' : 'Reveal Answer'}
+                {isCurrentRevealed ? 'Answer Revealed' : 'Reveal Answer'}
               </button>
 
               <button 

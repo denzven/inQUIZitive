@@ -82,7 +82,7 @@ export const MenuScreen: React.FC = () => {
       footerText="Made with Love by Denzven and AI using React and Vite"
       hideTitle={true}
     >
-      <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '10px', zIndex: 10 }}>
+      <div style={{ position: 'absolute', top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', right: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-right, 0px))', display: 'flex', gap: '10px', zIndex: 20 }}>
         {deferredPrompt && (
           <button 
             onClick={handleInstallClick}

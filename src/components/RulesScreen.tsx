@@ -14,8 +14,8 @@ export const RulesScreen: React.FC = () => {
       onSettingsClick={() => setGameState('SETTINGS')}
       hideTitle={true}
     >
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '900px', margin: 'auto', paddingTop: '80px', paddingBottom: '40px' }}>
-        <h1 className="title animate-slide-down" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)', marginBottom: '30px', textAlign: 'center' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '900px', margin: 'auto', paddingBottom: '20px', boxSizing: 'border-box' }}>
+        <h1 className="title animate-slide-down" style={{ marginTop: 0, fontSize: 'clamp(2.2rem, min(6vw, 5vh), 4.2rem)', marginBottom: 'clamp(15px, 3vh, 30px)', textAlign: 'center' }}>
           Rules
         </h1>
         

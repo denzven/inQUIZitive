@@ -54,7 +54,7 @@ export const LeaderboardScreen: React.FC = () => {
           {displayedTeams.map((team) => (
             <div key={team.id} className="test-box">
               <button onClick={() => removeTeam(team.id)} className="btn-delete-corner" aria-label="Delete">
-                <X size={18} strokeWidth={3} />
+                <X style={{ width: 'clamp(14px, 3vw, 18px)', height: 'clamp(14px, 3vw, 18px)' }} strokeWidth={3} />
               </button>
               
               <input 
@@ -73,7 +73,7 @@ export const LeaderboardScreen: React.FC = () => {
           ))}
           
           <button onClick={handleAdd} className="test-add-box" aria-label="Add Team">
-            <Plus size={48} strokeWidth={3} />
+            <Plus style={{ width: 'clamp(28px, 6vw, 48px)', height: 'clamp(28px, 6vw, 48px)' }} strokeWidth={3} />
           </button>
         </div>
       </div>

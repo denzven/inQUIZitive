@@ -37,23 +37,34 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       
       {backgroundDecor}
 
+      {/* Top Left Action Buttons (Home / Settings) */}
       <div 
         className="animate-fade-in"
         style={{ 
-          position: 'absolute', top: 'clamp(10px, 3vw, 50px)', left: 'clamp(10px, 3vw, 50px)', 
-          display: 'flex', gap: '10px', zIndex: 10, animationDelay: '0.5s' 
+          position: 'absolute', 
+          top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', 
+          left: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-left, 0px))', 
+          display: 'flex', 
+          gap: '10px', 
+          zIndex: 20, 
+          animationDelay: '0.5s' 
         }}
       >
         {showHomeButton && onHomeClick && (
           <button 
             onClick={onHomeClick}
             style={{ 
-              width: 'clamp(50px, 6vw, 80px)', height: 'clamp(50px, 6vw, 80px)', borderRadius: '15px', 
-              padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'
+              width: 'clamp(44px, 5vw, 65px)', 
+              height: 'clamp(44px, 5vw, 65px)', 
+              borderRadius: '15px', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center'
             }}
             aria-label="Home"
           >
-            <Home style={{ width: 'clamp(24px, 3vw, 40px)', height: 'clamp(24px, 3vw, 40px)' }} color="var(--dark-green)" strokeWidth={1.5} />
+            <Home style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
         )}
 
@@ -61,22 +72,52 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           <button 
             onClick={onSettingsClick}
             style={{ 
-              width: 'clamp(50px, 6vw, 80px)', height: 'clamp(50px, 6vw, 80px)', borderRadius: '15px', 
-              padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'
+              width: 'clamp(44px, 5vw, 65px)', 
+              height: 'clamp(44px, 5vw, 65px)', 
+              borderRadius: '15px', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center'
             }}
             aria-label="Settings"
           >
-            <Settings style={{ width: 'clamp(24px, 3vw, 40px)', height: 'clamp(24px, 3vw, 40px)' }} color="var(--dark-green)" strokeWidth={1.5} />
+            <Settings style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
         )}
       </div>
 
-      {/* Spacing from Top to avoid absolute positioned buttons */}
-      <div style={{ height: 'clamp(20px, 5vh, 60px)', flexShrink: 0 }}></div>
-
-      {/* Main Content Area: Centered Title + Children */}
-      <div ref={scrollRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '100%', flex: 1, boxSizing: 'border-box' }}>
+      {/* Main Content Area: Centered Title + Children with safe top padding & zero scroll clipping */}
+      <div 
+        ref={scrollRef} 
+        style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          width: '100%', 
+          minHeight: 0, 
+          overflowY: 'auto', 
+          overflowX: 'hidden', 
+          boxSizing: 'border-box',
+          paddingTop: 'max(clamp(50px, 7vh, 80px), calc(env(safe-area-inset-top, 0px) + 45px))',
+          paddingBottom: 'max(clamp(15px, 2vh, 25px), env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'max(clamp(10px, 2.5vw, 25px), env(safe-area-inset-left, 0px))',
+          paddingRight: 'max(clamp(10px, 2.5vw, 25px), env(safe-area-inset-right, 0px))'
+        }}
+      >
+        <div 
+          style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'flex-start', 
+            width: '100%', 
+            height: '100%',
+            minHeight: '100%',
+            flex: 1,
+            boxSizing: 'border-box' 
+          }}
+        >
           {!hideTitle && (
             <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
               <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{subtitle}</h2>

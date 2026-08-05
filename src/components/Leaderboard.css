@@ -5,14 +5,14 @@
   align-items: center;
   width: 100%;
   max-width: 100%;
-  padding: 40px 20px;
+  padding: clamp(15px, 3vh, 40px) clamp(10px, 3vw, 20px);
   box-sizing: border-box;
 }
 
 .test-title {
   color: var(--yellow);
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  margin: 0 0 20px 0;
+  font-size: clamp(2.2rem, min(6vw, 5vh), 4.2rem);
+  margin: 0 0 clamp(10px, 2vh, 20px) 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   text-align: center;
   font-weight: 900;
@@ -21,15 +21,16 @@
 
 .leaderboard-global-actions {
   display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: clamp(8px, 2vw, 15px);
+  margin-bottom: clamp(15px, 3vh, 30px);
   justify-content: center;
+  flex-wrap: wrap;
   width: 100%;
 }
 
 .global-btn {
-  padding: 10px 20px;
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  padding: clamp(8px, 1.5vh, 10px) clamp(14px, 3vw, 20px);
+  font-size: clamp(0.85rem, 2.5vw, 1.2rem);
   border-radius: 10px;
   background-color: var(--teal);
   color: var(--white);
@@ -61,15 +62,18 @@
 
 .test-grid {
   display: grid;
-  /* Fixed 240px columns that wrap automatically based on screen width */
-  grid-template-columns: repeat(auto-fit, 240px);
-  /* Centers the entire grid inside the container */
-  justify-content: center;
-  /* Controls spacing between columns and rows */
-  gap: 30px; 
+  /* 2 columns per row on mobile screens */
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(10px, 2.5vw, 25px); 
   width: 100%;
   max-width: 1200px;
   box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .test-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
 }
 
 .test-box {
@@ -79,15 +83,16 @@
   justify-content: space-between;
   align-items: center;
   background-color: var(--dark-teal);
-  border: 4px solid var(--teal);
-  border-radius: 20px;
-  height: 280px;
+  border: clamp(2px, 0.5vw, 4px) solid var(--teal);
+  border-radius: clamp(12px, 2vw, 20px);
+  height: clamp(160px, 26vh, 260px);
   color: var(--yellow);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-  padding: 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  padding: clamp(8px, 2vw, 16px);
   margin: 0; 
   transition: transform 0.2s;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .test-box:hover {
@@ -98,7 +103,7 @@
   background: transparent;
   border: none;
   color: var(--yellow);
-  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-size: clamp(0.9rem, 2.8vw, 1.6rem);
   font-weight: bold;
   text-align: center;
   outline: none;
@@ -107,31 +112,41 @@
   min-width: 0;
   font-family: inherit;
   box-sizing: border-box;
-  padding-bottom: 5px;
+  padding-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .test-box-content {
-  font-size: 5rem;
+  font-size: clamp(2.2rem, 7vw, 4.5rem);
   font-weight: 900;
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: center;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+  width: 100%;
+  overflow: hidden;
 }
 
 .score-controls {
   display: flex;
-  gap: 10px;
+  gap: clamp(4px, 1vw, 10px);
   width: 100%;
 }
 
 .test-btn {
   flex: 1;
-  padding: 8px;
-  font-size: 1.2rem;
+  padding: clamp(4px, 1vh, 8px);
+  font-size: clamp(0.8rem, 2.4vw, 1.2rem);
   min-width: 0;
+  border-radius: clamp(8px, 1.5vw, 12px);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-minus {
@@ -144,20 +159,20 @@
 
 .btn-delete-corner {
   position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 40px;
-  height: 40px;
+  top: clamp(-8px, -1.5vw, -10px);
+  right: clamp(-8px, -1.5vw, -10px);
+  width: clamp(28px, 5vw, 38px);
+  height: clamp(28px, 5vw, 38px);
   border-radius: 50%;
   background-color: var(--wrong-red);
   color: var(--white);
-  border: 3px solid var(--dark-green);
+  border: 2px solid var(--dark-green);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   padding: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
   z-index: 10;
   transition: all 0.2s;
   box-sizing: border-box;
@@ -172,14 +187,15 @@
   justify-content: center;
   align-items: center;
   background-color: rgba(42, 157, 143, 0.1);
-  border: 4px dashed var(--teal);
-  border-radius: 20px;
-  height: 280px;
+  border: clamp(2px, 0.5vw, 4px) dashed var(--teal);
+  border-radius: clamp(12px, 2vw, 20px);
+  height: clamp(160px, 26vh, 260px);
   color: var(--teal);
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .test-add-box:hover {
@@ -211,23 +227,24 @@
   background-color: var(--dark-green);
   border: 4px solid var(--teal);
   border-radius: 20px;
-  padding: 30px;
+  padding: clamp(20px, 4vw, 30px);
   max-width: 90%;
   width: 400px;
   text-align: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
 
 .modal-content h3 {
   color: var(--yellow);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
   margin-top: 0;
   margin-bottom: 15px;
 }
 
 .modal-content p {
   color: var(--white);
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 2.5vw, 1.2rem);
   margin-bottom: 25px;
   line-height: 1.5;
 }
@@ -237,3 +254,4 @@
   gap: 15px;
   justify-content: center;
 }
+

@@ -216,20 +216,24 @@ export const SpinWheelScreen: React.FC = () => {
       hideTitle={true}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', flex: 1 }}>
-        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)', marginBottom: '20px' }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, min(5.5vw, 5vh), 3.8rem)', marginBottom: 'clamp(8px, 1.5vh, 18px)' }}>
           Spin & Jeopardy
         </h1>
 
         {/* PYTHON-MATCHED SLOT REEL SPIN VIEW */}
         {(swState === 'SPIN_READY' || swState === 'SPINNING' || swState === 'SPIN_DONE') && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, justifyContent: 'center', margin: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, justifyContent: 'center', margin: 'auto', width: '100%' }}>
             
             {/* 4 Slot Reel Columns Container */}
             <div style={{ 
               display: 'flex', 
-              gap: 'clamp(12px, 2.5vw, 25px)', 
-              padding: '10px', 
-              position: 'relative'
+              gap: 'clamp(6px, 1.5vw, 25px)', 
+              padding: '6px', 
+              position: 'relative',
+              width: '100%',
+              maxWidth: '1000px',
+              justifyContent: 'center',
+              boxSizing: 'border-box'
             }}>
               {[0, 1, 2, 3].map(colIdx => {
                 const offset = slotOffsets[colIdx] || 0;
@@ -237,10 +241,12 @@ export const SpinWheelScreen: React.FC = () => {
 
                 return (
                   <div key={colIdx} style={{ 
-                    width: 'clamp(140px, 19vw, 240px)', 
+                    flex: '1 1 0px',
+                    maxWidth: '240px',
+                    minWidth: 0,
                     height: `${slotH}px`, 
                     backgroundColor: 'rgba(42, 157, 143, 0.2)', 
-                    borderRadius: '16px',
+                    borderRadius: 'clamp(10px, 2vw, 16px)',
                     border: '1px solid rgba(42, 157, 143, 0.35)',
                     position: 'relative', 
                     overflow: 'hidden',
@@ -274,12 +280,13 @@ export const SpinWheelScreen: React.FC = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: isCenter ? 'clamp(1.2rem, 2.3vw, 1.8rem)' : 'clamp(0.95rem, 1.6vw, 1.3rem)',
+                                fontSize: isCenter ? 'clamp(0.75rem, 2.2vw, 1.8rem)' : 'clamp(0.6rem, 1.5vw, 1.3rem)',
                                 fontWeight: isCenter ? 900 : 700,
                                 color: isCenter ? 'var(--white)' : 'rgba(232, 237, 223, 0.65)',
                                 textAlign: 'center',
-                                padding: '0 10px',
-                                whiteSpace: 'nowrap',
+                                padding: '0 4px',
+                                lineHeight: 1.15,
+                                wordBreak: 'break-word',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 boxSizing: 'border-box',
@@ -296,14 +303,14 @@ export const SpinWheelScreen: React.FC = () => {
 
                     {/* Top Cylinder Gradient Fade (dark_green fade) */}
                     <div style={{
-                      position: 'absolute', top: 0, left: 0, right: 0, height: '60px',
+                      position: 'absolute', top: 0, left: 0, right: 0, height: 'clamp(35px, 6vh, 60px)',
                       background: 'linear-gradient(to bottom, rgba(38, 70, 83, 0.85), transparent)',
                       pointerEvents: 'none', zIndex: 6
                     }} />
 
                     {/* Bottom Cylinder Gradient Fade (dark_green fade) */}
                     <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '60px',
+                      position: 'absolute', bottom: 0, left: 0, right: 0, height: 'clamp(35px, 6vh, 60px)',
                       background: 'linear-gradient(to top, rgba(38, 70, 83, 0.85), transparent)',
                       pointerEvents: 'none', zIndex: 6
                     }} />
@@ -335,17 +342,28 @@ export const SpinWheelScreen: React.FC = () => {
             </div>
 
             {/* Action Control Buttons */}
-            <div style={{ marginTop: '35px', display: 'flex', gap: '20px' }}>
+            <div style={{ 
+              marginTop: 'clamp(15px, 3vh, 35px)', 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              justifyContent: 'center', 
+              alignItems: 'center',
+              gap: 'clamp(10px, 2.5vw, 20px)',
+              width: '100%',
+              padding: '0 10px',
+              boxSizing: 'border-box'
+            }}>
               {swState === 'SPIN_READY' && (
                 <button 
                   onClick={startSpin} 
                   style={{ 
-                    padding: '16px 50px', 
-                    fontSize: '2rem', 
+                    padding: 'clamp(10px, 2vh, 16px) clamp(24px, 5vw, 50px)', 
+                    fontSize: 'clamp(1.1rem, 4vw, 2rem)', 
                     backgroundColor: 'var(--orange)',
                     borderRadius: '16px',
                     fontWeight: 'bold',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.4)'
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                    maxWidth: '100%'
                   }}
                 >
                   Spin Categories
@@ -356,10 +374,12 @@ export const SpinWheelScreen: React.FC = () => {
                   <button 
                     onClick={startSpin} 
                     style={{ 
-                      padding: '12px 35px', 
-                      fontSize: '1.5rem', 
+                      padding: 'clamp(8px, 1.8vh, 12px) clamp(16px, 3.5vw, 35px)', 
+                      fontSize: 'clamp(1rem, 3.5vw, 1.5rem)', 
                       backgroundColor: 'var(--orange)',
-                      borderRadius: '14px'
+                      borderRadius: '14px',
+                      flex: '1 1 auto',
+                      maxWidth: '200px'
                     }}
                   >
                     Respin
@@ -367,11 +387,13 @@ export const SpinWheelScreen: React.FC = () => {
                   <button 
                     onClick={() => setSwState('BOARD')} 
                     style={{ 
-                      padding: '12px 40px', 
-                      fontSize: '1.5rem', 
+                      padding: 'clamp(8px, 1.8vh, 12px) clamp(16px, 3.5vw, 40px)', 
+                      fontSize: 'clamp(1rem, 3.5vw, 1.5rem)', 
                       backgroundColor: 'var(--yellow)', 
                       color: 'var(--dark-green)',
-                      borderRadius: '14px'
+                      borderRadius: '14px',
+                      flex: '1 1 auto',
+                      maxWidth: '280px'
                     }}
                   >
                     To Jeopardy Board &gt;
@@ -384,13 +406,37 @@ export const SpinWheelScreen: React.FC = () => {
 
         {/* BOARD VIEW */}
         {swState === 'BOARD' && (
-          <div style={{ display: 'flex', gap: 'clamp(10px, 2vw, 30px)', marginTop: '20px', width: '100%', maxWidth: '1400px', justifyContent: 'center' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: 'clamp(4px, 1.5vw, 30px)', 
+            marginTop: 'clamp(10px, 2vh, 20px)', 
+            width: '100%', 
+            maxWidth: '1400px', 
+            justifyContent: 'center',
+            padding: '0 clamp(4px, 1.5vw, 15px)',
+            boxSizing: 'border-box'
+          }}>
             {selectedTopics.map((topic, colIdx) => {
               const list = boardQuestions[topic] || (topicMap.get(topic) || []).filter(q => !q.used).slice(0, 4);
 
               return (
-                <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vw, 20px)', flex: 1, maxWidth: '280px' }}>
-                  <div style={{ backgroundColor: 'var(--yellow)', color: 'var(--dark-green)', padding: '15px 10px', borderRadius: '15px', textAlign: 'center', fontWeight: 'bold', fontSize: 'clamp(1.2rem, 2vw, 1.5rem)' }}>
+                <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vh, 20px)', flex: '1 1 0px', minWidth: 0, maxWidth: '280px' }}>
+                  <div style={{ 
+                    backgroundColor: 'var(--yellow)', 
+                    color: 'var(--dark-green)', 
+                    padding: 'clamp(8px, 1.5vh, 15px) clamp(4px, 1vw, 10px)', 
+                    borderRadius: 'clamp(8px, 1.5vw, 15px)', 
+                    textAlign: 'center', 
+                    fontWeight: 'bold', 
+                    fontSize: 'clamp(0.75rem, 2.2vw, 1.5rem)',
+                    lineHeight: 1.15,
+                    minHeight: 'clamp(44px, 7vh, 60px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    wordBreak: 'break-word',
+                    boxSizing: 'border-box'
+                  }}>
                     {topic}
                   </div>
                   
@@ -399,13 +445,17 @@ export const SpinWheelScreen: React.FC = () => {
                       key={rowIdx} 
                       onClick={() => handleTileClick(q)}
                       style={{ 
-                        padding: '20px 10px', 
-                        fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', 
+                        padding: 'clamp(10px, 2vh, 20px) clamp(4px, 1vw, 10px)', 
+                        fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', 
                         backgroundColor: q.used ? 'var(--dark-green)' : 'var(--teal)',
                         color: q.used ? 'var(--dark-teal)' : 'var(--white)',
                         border: q.used ? '1px solid var(--dark-teal)' : 'none',
                         boxShadow: q.used ? 'none' : undefined,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        borderRadius: 'clamp(8px, 1.5vw, 15px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
                       {q.scoreVal}
@@ -419,15 +469,25 @@ export const SpinWheelScreen: React.FC = () => {
 
         {/* QUESTION VIEW & FEEDBACK */}
         {(swState === 'QUESTION_VIEW' || swState === 'FEEDBACK') && currentQ && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1500px', height: '100%', boxSizing: 'border-box' }}>
             
-            <div style={{ margin: '0 clamp(10px, 3vw, 50px)' }}>
-              <p style={{ color: 'var(--light-orange)', fontSize: '1.2rem', fontWeight: 'bold', margin: '0 0 10px 0' }}>
+            <div style={{ margin: '0 clamp(10px, 3vw, 50px)', flexShrink: 0 }}>
+              <p style={{ color: 'var(--light-orange)', fontSize: 'clamp(1rem, 2.2vw, 1.4rem)', fontWeight: 'bold', margin: '0 0 8px 0' }}>
                 Topic: {currentQ.topic} | Points: {currentQ.scoreVal}
               </p>
-              <div className="card" style={{ minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', margin: 0 }}>
-                <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.2 }}>{currentQ.question}</h2>
-              </div>
+            </div>
+
+            <div className="card" style={{ 
+              flex: '1 1 0px', 
+              minHeight: 'clamp(100px, 18vh, 220px)', 
+              margin: '0 clamp(10px, 3vw, 50px) clamp(8px, 1.5vh, 18px)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              textAlign: 'center',
+              padding: 'clamp(16px, 3vh, 30px)' 
+            }}>
+              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 
             <div className="options-grid">
@@ -458,7 +518,23 @@ export const SpinWheelScreen: React.FC = () => {
               })}
             </div>
 
-            <button className="menu-btn" onClick={() => setSwState('BOARD')} style={{ position: 'fixed', bottom: '30px', right: '30px', flex: 1, backgroundColor: 'var(--orange)', zIndex: 20 }}>
+            <button 
+              onClick={() => setSwState('BOARD')} 
+              style={{ 
+                position: 'fixed', 
+                bottom: 'max(clamp(15px, 3vh, 30px), calc(env(safe-area-inset-bottom, 0px) + 12px))', 
+                right: 'max(clamp(15px, 3vw, 30px), env(safe-area-inset-right, 0px))', 
+                backgroundColor: 'var(--orange)',
+                color: 'var(--white)',
+                zIndex: 20,
+                width: 'auto',
+                fontSize: 'clamp(1rem, 3vw, 1.4rem)',
+                padding: 'clamp(10px, 2vh, 14px) clamp(16px, 3vw, 28px)',
+                borderRadius: '14px',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+                maxWidth: 'calc(100vw - 30px)'
+              }}
+            >
               Back to Board
             </button>
           </div>

@@ -14,6 +14,8 @@ export interface RapidFireState {
   correctCount: number;
   selectedOptIdx: number;
   isCorrect: boolean;
+  userAnswers: Record<number, number>;
+  revealedQuestions: Record<number, boolean>;
 
   setRfQuestions: (questions: Question[]) => void;
   setRfState: (state: RFState) => void;
@@ -24,6 +26,8 @@ export interface RapidFireState {
   setCorrectCount: (updater: number | ((prev: number) => number)) => void;
   setSelectedOptIdx: (idx: number) => void;
   setIsCorrect: (isCorrect: boolean) => void;
+  setUserAnswer: (qIdx: number, optIdx: number) => void;
+  setQuestionRevealed: (qIdx: number) => void;
   resetRf: () => void;
 }
 
@@ -37,6 +41,8 @@ const initialState = {
   correctCount: 0,
   selectedOptIdx: -1,
   isCorrect: false,
+  userAnswers: {},
+  revealedQuestions: {},
 };
 
 export const useRapidFireStore = create<RapidFireState>()(
@@ -60,6 +66,12 @@ export const useRapidFireStore = create<RapidFireState>()(
       })),
       setSelectedOptIdx: (idx) => set({ selectedOptIdx: idx }),
       setIsCorrect: (isCorrect) => set({ isCorrect }),
+      setUserAnswer: (qIdx, optIdx) => set((state) => ({
+        userAnswers: { ...state.userAnswers, [qIdx]: optIdx }
+      })),
+      setQuestionRevealed: (qIdx) => set((state) => ({
+        revealedQuestions: { ...state.revealedQuestions, [qIdx]: true }
+      })),
       resetRf: () => set(initialState),
     }),
     {

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 
 import { useRapidFireStore } from '../store/useRapidFireStore';
@@ -19,6 +19,8 @@ export const RapidFireScreen: React.FC = () => {
     correctCount, setCorrectCount,
     selectedOptIdx, setSelectedOptIdx,
     isCorrect, setIsCorrect,
+    userAnswers, setUserAnswer,
+    revealedQuestions, setQuestionRevealed,
     resetRf
   } = useRapidFireStore();
 
@@ -54,7 +56,6 @@ export const RapidFireScreen: React.FC = () => {
         if (currentIdx + 1 < rfQuestions.length && timer > 0) {
           setRfState('PLAYING');
           setCurrentIdx(prev => prev + 1);
-          setSelectedOptIdx(-1);
         } else {
           setRfState('END');
         }
@@ -75,25 +76,49 @@ export const RapidFireScreen: React.FC = () => {
 
   // 5. Answer Handler
   const handleAnswer = useCallback((optIndex: number) => {
-    if (rfState !== 'PLAYING' || isPaused) return;
+    if ((rfState !== 'PLAYING' && rfState !== 'FEEDBACK') || isPaused) return;
     
     const currentQ = rfQuestions[currentIdx];
+    if (!currentQ) return;
     const selectedText = currentQ.options[optIndex];
     const correct = selectedText === currentQ.answer;
 
+    if (userAnswers[currentIdx] === undefined) {
+      if (correct) {
+        setScore(prev => prev + currentQ.scoreVal);
+        setCorrectCount(prev => prev + 1);
+      }
+    }
+
+    setUserAnswer(currentIdx, optIndex);
+    setQuestionRevealed(currentIdx);
     setSelectedOptIdx(optIndex);
     setIsCorrect(correct);
 
-    if (correct) {
-      setScore(prev => prev + currentQ.scoreVal);
-      setCorrectCount(prev => prev + 1);
-    }
-
     setRfState('FEEDBACK');
-  }, [rfState, isPaused, rfQuestions, currentIdx]);
+  }, [rfState, isPaused, rfQuestions, currentIdx, userAnswers, setUserAnswer, setQuestionRevealed, setSelectedOptIdx, setIsCorrect, setScore, setCorrectCount, setRfState]);
+
+  const currentQ = rfQuestions[currentIdx];
+
+  const handlePrev = useCallback(() => {
+    if (currentIdx > 0) {
+      setCurrentIdx(prev => prev - 1);
+    }
+  }, [currentIdx, setCurrentIdx]);
+
+  const handleNext = useCallback(() => {
+    if (currentIdx < rfQuestions.length - 1) {
+      setCurrentIdx(prev => prev + 1);
+    }
+  }, [currentIdx, rfQuestions.length, setCurrentIdx]);
+
+  const handleReveal = useCallback(() => {
+    if (currentQ) {
+      setQuestionRevealed(currentIdx);
+    }
+  }, [currentQ, currentIdx, setQuestionRevealed]);
 
   // 6. Keyboard Controls
-  // 7. Cleanup & Return Handler
   const handleReturnToMenu = useCallback(() => {
     resetRf();
     setGameState('MENU');
@@ -101,25 +126,26 @@ export const RapidFireScreen: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (rfState === 'PLAYING' && !isPaused) {
+      if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && !isPaused) {
         if (e.key === '1') handleAnswer(0);
         if (e.key === '2') handleAnswer(1);
         if (e.key === '3') handleAnswer(2);
         if (e.key === '4') handleAnswer(3);
       }
+      if (e.key === ' ') handleReveal();
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'Escape') handleReturnToMenu();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [rfState, isPaused, handleAnswer, handleReturnToMenu]);
+  }, [rfState, isPaused, handleAnswer, handleReveal, handlePrev, handleNext, handleReturnToMenu]);
 
   const bonus = useMemo(() => {
     if (correctCount === rfQuestions.length && rfQuestions.length >= 5) return 20;
     if (correctCount > 5) return 10;
     return 0;
   }, [correctCount, rfQuestions.length]);
-
-  const currentQ = rfQuestions[currentIdx];
 
   return (
     <ScreenLayout
@@ -130,62 +156,64 @@ export const RapidFireScreen: React.FC = () => {
       hideTitle={true}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', flex: 1 }}>
-        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, 5vw, 4rem)', marginBottom: '20px' }}>
+        <h1 className="title" style={{ marginTop: 0, fontSize: 'clamp(2rem, min(5vw, 4.5vh), 3.5rem)', marginBottom: 'clamp(6px, 1.2vh, 16px)' }}>
           Rapid Fire Round
         </h1>
 
         {/* READY STATE */}
         {rfState === 'READY' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, margin: 'auto' }}>
-            <button onClick={() => setRfState('PLAYING')} style={{ padding: '20px 60px', fontSize: '3rem', backgroundColor: 'var(--teal)' }}>
+            <button onClick={() => setRfState('PLAYING')} style={{ padding: 'clamp(12px, 2vh, 20px) clamp(30px, 5vw, 60px)', fontSize: 'clamp(1.5rem, 4vw, 3rem)', backgroundColor: 'var(--teal)' }}>
               Start Timer
             </button>
-            <p style={{ color: 'var(--light-orange)', fontSize: '1.5rem', marginTop: '20px' }}>Press Start to begin 60s timer.</p>
-            <p style={{ color: 'var(--yellow)', fontSize: '1.5rem', marginTop: '20px' }}>Questions Loaded: {rfQuestions.length}</p>
+            <p style={{ color: 'var(--light-orange)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '15px' }}>Press Start to begin 60s timer.</p>
+            <p style={{ color: 'var(--yellow)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '10px' }}>Questions Loaded: {rfQuestions.length}</p>
           </div>
         )}
 
         {/* PLAYING / FEEDBACK STATE */}
         {(rfState === 'PLAYING' || rfState === 'FEEDBACK') && currentQ && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', paddingBottom: '90px', boxSizing: 'border-box' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(10px, 3vw, 50px)', alignItems: 'center' }}>
-              <div className="card" style={{ padding: '10px 30px', margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>
+              <div className="card" style={{ padding: '6px 20px', margin: 0, fontSize: 'clamp(1rem, 2vw, 1.5rem)', fontWeight: 'bold', borderRadius: '14px' }}>
                 Score: {score}
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 25px)' }}>
                 <div style={{ 
-                  fontSize: 'clamp(3rem, 6vw, 4rem)', 
+                  fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', 
                   fontWeight: 900, 
                   color: isPaused ? 'var(--wrong-red)' : timer <= 10 ? 'var(--orange)' : 'var(--white)',
                   textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
                 }}>
                   {timer}s
                 </div>
-                <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '15px', borderRadius: '20px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>
-                  {isPaused ? <Play size={32} color="var(--dark-green)" /> : <Pause size={32} color="var(--white)" />}
+                <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '8px 12px', borderRadius: '14px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>
+                  {isPaused ? <Play style={{ width: 'clamp(20px, 2.5vw, 28px)', height: 'clamp(20px, 2.5vw, 28px)' }} color="var(--dark-green)" /> : <Pause style={{ width: 'clamp(20px, 2.5vw, 28px)', height: 'clamp(20px, 2.5vw, 28px)' }} color="var(--white)" />}
                 </button>
               </div>
             </div>
 
-            <div className="card" style={{ margin: '20px clamp(10px, 3vw, 50px)', minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '15px', left: '25px', color: 'var(--light-orange)', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <div className="card" style={{ flex: '1 1 0px', margin: 'clamp(8px, 1.5vh, 18px) clamp(10px, 3vw, 50px)', minHeight: 'clamp(100px, 16vh, 220px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: 'clamp(16px, 2.5vh, 30px)' }}>
+              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold' }}>
                 {currentIdx + 1}/{rfQuestions.length}
               </div>
-              <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.2 }}>{currentQ.question}</h2>
+              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 
             <div className="options-grid">
               {currentQ.options.map((opt, i) => {
                 let bgColor = 'var(--dark-teal)';
-                const isSelected = i === selectedOptIdx;
+                const isCurrentRevealed = !!revealedQuestions[currentIdx];
+                const currentSelectedOptIdx = userAnswers[currentIdx] ?? -1;
+                const isSelected = i === currentSelectedOptIdx;
                 const isRightAnswer = opt === currentQ.answer;
 
-                if (rfState === 'FEEDBACK') {
+                if (isCurrentRevealed || rfState === 'FEEDBACK') {
                   if (isSelected) {
-                    bgColor = isCorrect ? 'var(--correct-green)' : 'var(--wrong-red)';
-                  } else if (!isCorrect && isRightAnswer) {
+                    bgColor = isRightAnswer ? 'var(--correct-green)' : 'var(--wrong-red)';
+                  } else if (isRightAnswer) {
                     bgColor = 'var(--correct-green)';
                   }
                 }
@@ -195,13 +223,62 @@ export const RapidFireScreen: React.FC = () => {
                     key={i} 
                     className="option-card"
                     onClick={() => handleAnswer(i)}
-                    style={{ backgroundColor: bgColor }}
+                    style={{ backgroundColor: bgColor, cursor: 'pointer' }}
                   >
                     <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
               })}
+            </div>
+
+            {/* CONTROLS */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'clamp(8px, 1.8vw, 20px)', marginTop: 'clamp(6px, 1.2vh, 14px)', flexShrink: 0 }}>
+              <button 
+                onClick={handlePrev} 
+                disabled={currentIdx === 0}
+                style={{ 
+                  padding: 'clamp(8px, 1.4vh, 12px) clamp(14px, 2.5vw, 28px)', 
+                  fontSize: 'clamp(0.95rem, 2vw, 1.4rem)', 
+                  backgroundColor: 'var(--dark-teal)',
+                  opacity: currentIdx === 0 ? 0.5 : 1,
+                  cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+                  borderRadius: '14px'
+                }}
+              >
+                <ChevronLeft style={{ width: 'clamp(18px, 2.2vw, 24px)', height: 'clamp(18px, 2.2vw, 24px)', verticalAlign: 'middle', marginRight: '4px' }} />
+                Prev
+              </button>
+
+              <button 
+                onClick={handleReveal} 
+                style={{ 
+                  padding: 'clamp(10px, 1.6vh, 14px) clamp(18px, 3vw, 36px)', 
+                  fontSize: 'clamp(1rem, 2.2vw, 1.5rem)', 
+                  backgroundColor: 'var(--yellow)',
+                  color: 'var(--dark-green)',
+                  borderRadius: '14px'
+                }}
+              >
+                <Eye style={{ width: 'clamp(20px, 2.4vw, 26px)', height: 'clamp(20px, 2.4vw, 26px)', verticalAlign: 'middle', marginRight: '8px' }} />
+                {revealedQuestions[currentIdx] || rfState === 'FEEDBACK' ? 'Answer Revealed' : 'Reveal Answer'}
+              </button>
+
+              <button 
+                onClick={handleNext} 
+                disabled={currentIdx === rfQuestions.length - 1}
+                style={{ 
+                  padding: 'clamp(8px, 1.4vh, 12px) clamp(14px, 2.5vw, 28px)', 
+                  fontSize: 'clamp(0.95rem, 2vw, 1.4rem)', 
+                  backgroundColor: 'var(--orange)',
+                  opacity: currentIdx === rfQuestions.length - 1 ? 0.5 : 1,
+                  cursor: currentIdx === rfQuestions.length - 1 ? 'not-allowed' : 'pointer',
+                  borderRadius: '14px'
+                }}
+              >
+                Next
+                <ChevronRight style={{ width: 'clamp(18px, 2.2vw, 24px)', height: 'clamp(18px, 2.2vw, 24px)', verticalAlign: 'middle', marginLeft: '4px' }} />
+              </button>
             </div>
           </div>
         )}
@@ -222,13 +299,22 @@ export const RapidFireScreen: React.FC = () => {
               <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--white)', margin: '10px 0' }}>Correct Answers: {correctCount}/{rfQuestions.length}</p>
               <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', color: 'var(--yellow)', margin: '10px 0 20px 0' }}>Bonus: +{bonus}</p>
               <p style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--white)', fontWeight: 'bold', margin: '10px 0' }}>Total: {score + bonus}</p>
-              <button 
-                className="menu-btn" 
-                onClick={handleReturnToMenu} 
-                style={{ marginTop: '30px', maxWidth: '300px', backgroundColor: 'var(--orange)' }}
-              >
-                Return to Menu
-              </button>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px' }}>
+                <button 
+                  className="menu-btn" 
+                  onClick={() => { setRfState('PLAYING'); setIsPaused(true); }} 
+                  style={{ maxWidth: '240px', backgroundColor: 'var(--teal)', border: '2px solid var(--yellow)' }}
+                >
+                  Review Questions
+                </button>
+                <button 
+                  className="menu-btn" 
+                  onClick={handleReturnToMenu} 
+                  style={{ maxWidth: '240px', backgroundColor: 'var(--orange)' }}
+                >
+                  Return to Menu
+                </button>
+              </div>
             </div>
           </div>
         )}
