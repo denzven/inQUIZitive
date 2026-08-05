@@ -17,8 +17,8 @@ export const RapidFireScreen: React.FC = () => {
     currentIdx, setCurrentIdx,
     score, setScore,
     correctCount, setCorrectCount,
-    selectedOptIdx, setSelectedOptIdx,
-    isCorrect, setIsCorrect,
+    setSelectedOptIdx,
+    setIsCorrect,
     userAnswers, setUserAnswer,
     revealedQuestions, setQuestionRevealed,
     resetRf
