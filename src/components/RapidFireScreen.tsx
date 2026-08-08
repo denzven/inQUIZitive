@@ -2,11 +2,16 @@ import React, { useEffect, useMemo, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { Play, Pause, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
-
 import { useRapidFireStore } from '../store/useRapidFireStore';
+import { seededShuffle } from '../utils/random';
 
+/**
+ * RapidFireScreen Component.
+ * Manages the high-intensity Rapid Fire round where a contestant must answer up to 10 questions in 60 seconds.
+ * Handles countdown timer tick, pause/resume, feedback state, bonus point calculation, and answer verification.
+ */
 export const RapidFireScreen: React.FC = () => {
-  const { questions, setGameState, markQuestionUsed } = useQuizStore();
+  const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
 
   // Use the persisted Rapid Fire store
   const {
@@ -24,15 +29,17 @@ export const RapidFireScreen: React.FC = () => {
     resetRf
   } = useRapidFireStore();
 
-  // Initialize questions ONLY if we haven't already (prevents overwriting on crash recovery)
+  /** Initializes Rapid Fire questions array from available unused RF round questions */
   useEffect(() => {
     if (rfQuestions.length === 0) {
       const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
-      setRfQuestions(available.slice(0, 10));
+      const shuffled = seededShuffle(available, `${seed}_rf`);
+      setRfQuestions(shuffled.slice(0, 10));
     }
-  }, [rfQuestions.length, questions, setRfQuestions]);
+  }, [rfQuestions.length, questions, setRfQuestions, seed]);
 
-  // 3. Timer Logic
+
+  /** 60-second countdown timer effect */
   useEffect(() => {
     let interval: number | undefined;
     if (rfState === 'PLAYING' && !isPaused && timer > 0) {
@@ -49,7 +56,7 @@ export const RapidFireScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [rfState, isPaused, timer]);
 
-  // 4. Feedback Auto-Advance Logic
+  /** Feedback delay effect before automatically advancing to next question */
   useEffect(() => {
     if (rfState === 'FEEDBACK' && !isPaused) {
       const timeout = setTimeout(() => {
@@ -64,7 +71,7 @@ export const RapidFireScreen: React.FC = () => {
     }
   }, [rfState, isPaused, currentIdx, rfQuestions.length, timer]);
 
-  // Mark question as used as soon as it is shown to the user
+  /** Marks current question as used in global store upon display */
   useEffect(() => {
     if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && rfQuestions[currentIdx]) {
       const q = rfQuestions[currentIdx];
@@ -74,7 +81,11 @@ export const RapidFireScreen: React.FC = () => {
     }
   }, [rfState, currentIdx, rfQuestions, markQuestionUsed]);
 
-  // 5. Answer Handler
+  /**
+   * Handles contestant answer selection for option index, updating score and triggering feedback phase.
+   * 
+   * @param optIndex - Selected option index (0 to 3)
+   */
   const handleAnswer = useCallback((optIndex: number) => {
     if ((rfState !== 'PLAYING' && rfState !== 'FEEDBACK') || isPaused) return;
     
@@ -100,30 +111,34 @@ export const RapidFireScreen: React.FC = () => {
 
   const currentQ = rfQuestions[currentIdx];
 
+  /** Navigates to previous question index */
   const handlePrev = useCallback(() => {
     if (currentIdx > 0) {
       setCurrentIdx(prev => prev - 1);
     }
   }, [currentIdx, setCurrentIdx]);
 
+  /** Navigates to next question index */
   const handleNext = useCallback(() => {
     if (currentIdx < rfQuestions.length - 1) {
       setCurrentIdx(prev => prev + 1);
     }
   }, [currentIdx, rfQuestions.length, setCurrentIdx]);
 
+  /** Reveals answer for current question */
   const handleReveal = useCallback(() => {
     if (currentQ) {
       setQuestionRevealed(currentIdx);
     }
   }, [currentQ, currentIdx, setQuestionRevealed]);
 
-  // 6. Keyboard Controls
+  /** Clears store state and returns to main menu screen */
   const handleReturnToMenu = useCallback(() => {
     resetRf();
     setGameState('MENU');
   }, [resetRf, setGameState]);
 
+  /** Binds keyboard shortcuts (1-4 for option pick, Space to reveal, Arrows to navigate, Esc to return) */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && !isPaused) {
@@ -141,6 +156,7 @@ export const RapidFireScreen: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [rfState, isPaused, handleAnswer, handleReveal, handlePrev, handleNext, handleReturnToMenu]);
 
+  /** Computes accuracy bonus score */
   const bonus = useMemo(() => {
     if (correctCount === rfQuestions.length && rfQuestions.length >= 5) return 20;
     if (correctCount > 5) return 10;
@@ -347,3 +363,4 @@ export const RapidFireScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

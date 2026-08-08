@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 
+/** Props for AddTeamForm component */
 interface AddTeamFormProps {
+  /** Callback fired when a new team is submitted */
   onAddTeam: (name: string) => void;
 }
 
+/**
+ * AddTeamForm Component.
+ * Form widget featuring a text input field and submit button for adding new team entries.
+ */
 export const AddTeamForm: React.FC<AddTeamFormProps> = ({ onAddTeam }) => {
   const [newTeamName, setNewTeamName] = useState('');
 
+  /** Handles team submission on Enter key or button click */
   const handleSubmit = () => {
     if (newTeamName.trim()) {
       onAddTeam(newTeamName.trim());
@@ -31,3 +38,4 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({ onAddTeam }) => {
     </div>
   );
 };
+

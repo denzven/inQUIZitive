@@ -2,17 +2,33 @@ import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { Home, Settings } from 'lucide-react';
 
+/**
+ * Props for the ScreenLayout wrapper component.
+ */
 interface ScreenLayoutProps {
+  /** Inner content nodes rendered inside the responsive projector viewport */
   children: React.ReactNode;
+  /** Optional background decorative SVG or elements */
   backgroundDecor?: React.ReactNode;
+  /** Whether to show top-left Home navigation button */
   showHomeButton?: boolean;
+  /** Click handler for top-left Home navigation button */
   onHomeClick?: () => void;
+  /** Whether to show top-left Settings navigation button */
   showSettingsButton?: boolean;
+  /** Click handler for top-left Settings navigation button */
   onSettingsClick?: () => void;
+  /** Optional footer text content */
   footerText?: React.ReactNode;
+  /** Whether to hide main header title banner */
   hideTitle?: boolean;
 }
 
+/**
+ * Responsive ScreenLayout wrapper component.
+ * Provides uniform letterboxing, header title, navigation action buttons,
+ * auto-scroll resetting, and responsive safe area padding across screens.
+ */
 export const ScreenLayout: React.FC<ScreenLayoutProps> = ({ 
   children, 
   backgroundDecor, 
@@ -26,6 +42,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   const { subtitle } = useQuizStore();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
+  /** Automatically scroll main content view back to top on children navigation updates */
   React.useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
@@ -52,16 +69,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       >
         {showHomeButton && onHomeClick && (
           <button 
+            className="btn-icon"
             onClick={onHomeClick}
-            style={{ 
-              width: 'clamp(44px, 5vw, 65px)', 
-              height: 'clamp(44px, 5vw, 65px)', 
-              borderRadius: '15px', 
-              padding: 0, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center'
-            }}
             aria-label="Home"
           >
             <Home style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
@@ -70,16 +79,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
 
         {showSettingsButton && onSettingsClick && (
           <button 
+            className="btn-icon"
             onClick={onSettingsClick}
-            style={{ 
-              width: 'clamp(44px, 5vw, 65px)', 
-              height: 'clamp(44px, 5vw, 65px)', 
-              borderRadius: '15px', 
-              padding: 0, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center'
-            }}
             aria-label="Settings"
           >
             <Settings style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
@@ -137,3 +138,4 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
     </div>
   );
 };
+

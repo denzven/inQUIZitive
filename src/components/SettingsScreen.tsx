@@ -1,10 +1,16 @@
 import React, { useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { parseExcelData, fetchExcelData, exportProgressToExcel } from '../utils/excelParser';
-import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette } from 'lucide-react';
+import { isNoShuffle } from '../utils/random';
+import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette, Shuffle } from 'lucide-react';
 import trialSheetUrl from '../assets/trial_iQz_sheet.xlsx?url';
 import { ScreenLayout } from './ScreenLayout';
 
+/**
+ * SettingsScreen Component.
+ * Provides controls for dataset management (custom Excel uploads, progress export/backup, sample template downloads),
+ * question status reset, event subtitle configuration, random seed adjustment, and real-time color theme palette picking.
+ */
 export const SettingsScreen: React.FC = () => {
   const { 
     setGameState, 
@@ -21,21 +27,34 @@ export const SettingsScreen: React.FC = () => {
   const [msg, setMsg] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
 
+  /** Generates a new random 8-digit seed number */
+  const handleRandomizeSeed = () => {
+    const newSeed = Math.floor(10000000 + Math.random() * 90000000).toString();
+    setSeed(newSeed);
+    setMsg(`Generated new seed: ${newSeed}`);
+  };
+
   const totalQuestions = questions.length;
   const usedQuestions = questions.filter(q => q.used).length;
   const unusedQuestions = totalQuestions - usedQuestions;
 
-  // Round counts
+
+  /** Summarizes questions count per round code */
   const roundCounts = questions.reduce((acc, q) => {
     const code = q.roundCode || 'Other';
     acc[code] = (acc[code] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
+  /**
+   * Parses uploaded Excel file, validates column schema, and loads questions into Zustand store.
+   * 
+   * @param file - The raw .xlsx / .xls File instance.
+   */
   const processFile = async (file: File) => {
     try {
       setMsg('Parsing file...');
-      const parsedQuestions = await parseExcelData(file);
+      const parsedQuestions = await parseExcelData(file, seed);
       
       if (!parsedQuestions || parsedQuestions.length === 0) {
         throw new Error("No questions found. Check Excel format.");
@@ -53,10 +72,11 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  /** Reloads the bundled default trial questions dataset into state */
   const handleReloadDefault = async () => {
     try {
       setMsg('Reloading default questions...');
-      const defaultQs = await fetchExcelData(trialSheetUrl);
+      const defaultQs = await fetchExcelData(trialSheetUrl, seed);
       loadQuestions(defaultQs);
       setMsg(`Reloaded default dataset (${defaultQs.length} questions)!`);
     } catch (err: any) {
@@ -65,6 +85,7 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  /** Downloads sample template .xlsx file for offline editing */
   const handleDownloadSample = () => {
     const link = document.createElement('a');
     link.href = trialSheetUrl;
@@ -75,32 +96,38 @@ export const SettingsScreen: React.FC = () => {
     setMsg('Sample Excel template downloaded!');
   };
 
+  /** Exports current question used state and team scores to Excel backup file */
   const handleExportProgress = () => {
     const state = useQuizStore.getState();
     exportProgressToExcel(state.questions, state.teams);
     setMsg('Progress exported to Excel!');
   };
 
+  /** Resets used status for all loaded questions */
   const handleResetUsedStatus = () => {
     resetAllQuestionsUsed();
     setMsg('Reset all question used statuses!');
   };
 
+  /** File input change event handler */
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) processFile(file);
   };
 
+  /** Drag over event handler for drop zone styling */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
+  /** Drag leave handler */
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
+  /** Drop event handler for uploading drag-and-dropped spreadsheet files */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -114,6 +141,7 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  /** Color picker circular button component */
   const ColorPickerDot = ({ label, colorKey }: { label: string, colorKey: keyof typeof theme }) => (
     <div title={label} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -207,15 +235,71 @@ export const SettingsScreen: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.95rem', fontWeight: 'bold' }}>Random Seed</label>
-                <input 
-                  type="number" 
-                  value={seed} 
-                  onChange={e => setSeed(Number(e.target.value))}
-                  style={inputStyle}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>Random Seed / Safeword</label>
+                  {isNoShuffle(seed) && (
+                    <span className="badge badge-yellow" style={{ fontSize: '0.75rem' }}>
+                      NOSHUFFLE Mode Active
+                    </span>
+                  )}
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'stretch', 
+                  width: '100%', 
+                  borderRadius: '10px', 
+                  overflow: 'hidden',
+                  border: '2px solid var(--teal)',
+                  backgroundColor: 'var(--white)',
+                  boxSizing: 'border-box'
+                }}>
+                  <input 
+                    type="text" 
+                    value={seed} 
+                    onChange={e => setSeed(e.target.value)}
+                    style={{ 
+                      flex: 1, 
+                      border: 'none', 
+                      outline: 'none', 
+                      padding: '10px 14px', 
+                      fontSize: '1rem', 
+                      backgroundColor: 'transparent',
+                      color: 'var(--dark-green)',
+                      fontFamily: 'inherit',
+                      fontWeight: 'bold',
+                      minWidth: 0
+                    }}
+                    placeholder="e.g., 12342026 or NOSHUFFLE"
+                  />
+                  <button 
+                    type="button"
+                    onClick={handleRandomizeSeed}
+                    title="Generate New Random Seed"
+                    style={{ 
+                      padding: '0 16px',
+                      backgroundColor: 'var(--yellow)', 
+                      color: 'var(--dark-green)',
+                      border: 'none',
+                      borderLeft: '2px solid var(--teal)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--light-orange)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--yellow)'}
+                  >
+                    <Shuffle size={20} strokeWidth={2.5} />
+                  </button>
+                </div>
               </div>
             </div>
+
+
+
+
 
             {/* Theme Palette Card */}
             <div className="card" style={cardStyle}>
@@ -393,4 +477,5 @@ export const SettingsScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+
 

@@ -1,12 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { reshuffleAllQuestions } from '../utils/excelParser';
 
+/**
+ * Represents a competing team in the quiz competition.
+ */
 export interface Team {
   id: number;
   name: string;
   score: number;
 }
 
+/**
+ * Represents a single quiz question item imported from spreadsheet data.
+ */
 export interface Question {
   index: number;
   roundCode: string;
@@ -18,18 +25,25 @@ export interface Question {
   used: boolean;
 }
 
+/**
+ * Main Zustand store state interface for the Quiz application.
+ */
 export interface QuizState {
-  // Navigation States
+  /** Current active application screen or mode */
   gameState: 'SETUP' | 'MENU' | 'START' | 'SETTINGS' | 'ABOUT' | 'LEADERBOARD' | 'PLAYING' | 'END' | 'RULES';
   
-  // Game Data
+  /** List of participating teams */
   teams: Team[];
+  /** Array of all imported questions */
   questions: Question[];
+  /** Index of currently displayed question in active round */
   currentQuestionIndex: number;
+  /** Whether correct answer is currently revealed on screen */
   isAnswerRevealed: boolean;
+  /** Current active round code (e.g. 'RF', 'SWJ', 'TTT', 'B') */
   activeRound: string | null;
 
-  // Settings
+  /** Color theme configuration tokens */
   theme: {
     darkGreen: string;
     teal: string;
@@ -41,32 +55,50 @@ export interface QuizState {
     correctGreen: string;
     wrongRed: string;
   };
-  seed: number;
+  /** Randomization seed for wheel/grids or 'NOSHUFFLE' safeword */
+  seed: string | number;
+  /** Subtitle banner text displayed on screens */
   subtitle: string;
+  /** Flag indicating whether question dataset has loaded into persistent storage */
   hasLoaded: boolean;
 
-  // Actions - Core
+  /** Sets the active application screen state */
   setGameState: (state: QuizState['gameState']) => void;
+  /** Loads parsed question items into global store */
   loadQuestions: (questions: Question[]) => void;
+  /** Initializes and starts a named quiz round */
   startRound: (roundCode: string) => void;
+  /** Marks a question as used by index */
   markQuestionUsed: (index: number) => void;
+  /** Resets used status for all questions */
   resetAllQuestionsUsed: () => void;
   
-  // Actions - Gameplay
+  /** Advances to next question or completes round if last question */
   nextQuestion: () => void;
+  /** Navigates back to previous question index */
   prevQuestion: () => void;
+  /** Reveals answer for current active question */
   revealAnswer: () => void;
+  /** Awards question score or custom points to target team */
   awardPoints: (teamId: number, customVal?: number) => void;
   
-  // Actions - Settings & Teams
+  /** Replaces entire team roster array */
   setTeams: (teams: Team[]) => void;
+  /** Appends new team with auto-incremented ID */
   addTeam: (name: string) => void;
+  /** Removes team from roster by ID */
   removeTeam: (id: number) => void;
+  /** Adjusts team score by delta amount */
   updateTeamScore: (id: number, delta: number) => void;
+  /** Updates team display name */
   updateTeamName: (id: number, name: string) => void;
+  /** Updates single color token in theme state */
   setThemeColor: (key: keyof QuizState['theme'], color: string) => void;
-  setSeed: (seed: number) => void;
+  /** Updates seed number or string */
+  setSeed: (seed: string | number) => void;
+  /** Updates event subtitle string */
   setSubtitle: (subtitle: string) => void;
+  /** Sets question dataset load status to true */
   setHasLoaded: () => void;
 }
 
@@ -82,6 +114,9 @@ const defaultTheme = {
   wrongRed: '#e74c3c',
 };
 
+/**
+ * Global Zustand store hook with local storage persistence for main quiz state.
+ */
 export const useQuizStore = create<QuizState>()(
   persist(
     (set) => ({
@@ -98,7 +133,7 @@ export const useQuizStore = create<QuizState>()(
   activeRound: null,
 
   theme: defaultTheme,
-  seed: 12342026,
+  seed: '12342026',
   subtitle: 'ARISE 2k26',
   hasLoaded: false,
 
@@ -188,18 +223,22 @@ export const useQuizStore = create<QuizState>()(
 
   setThemeColor: (key, color) => set((state) => {
     const newTheme = { ...state.theme, [key]: color };
-    // We could apply CSS variables here, or let App.tsx observe changes.
     return { theme: newTheme };
   }),
 
-  setSeed: (seed) => set({ seed }),
+  setSeed: (seed) => set((state) => {
+    const reshuffled = reshuffleAllQuestions(state.questions, seed);
+    return { seed, questions: reshuffled };
+  }),
   
   setSubtitle: (subtitle) => set({ subtitle }),
 
   setHasLoaded: () => set({ hasLoaded: true }),
+
     }),
     {
       name: 'inquizitive-storage', // name of item in localStorage
     }
   )
 );
+

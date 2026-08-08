@@ -2,14 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import QLogo from '../assets/Q.png';
 import { Maximize, Minimize, Download } from 'lucide-react';
-
 import { ScreenLayout } from './ScreenLayout';
 
+/**
+ * MenuScreen Component.
+ * The primary navigation dashboard for InQUIZitive. Provides access to Start, Leaderboard,
+ * Rules, Settings, and About views, as well as PWA installation and fullscreen toggle controls.
+ */
 export const MenuScreen: React.FC = () => {
   const { setGameState, hasLoaded, setHasLoaded } = useQuizStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
+  /** Handles initial load timer fallback if questions take time */
   useEffect(() => {
     if (!hasLoaded) {
       const timer = setTimeout(() => {
@@ -19,6 +24,7 @@ export const MenuScreen: React.FC = () => {
     }
   }, [hasLoaded, setHasLoaded]);
 
+  /** Listens to browser document fullscreen change events */
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -27,6 +33,7 @@ export const MenuScreen: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  /** Listens to beforeinstallprompt event to offer PWA installation button */
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -36,6 +43,9 @@ export const MenuScreen: React.FC = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
+  /**
+   * Prompts the browser's native PWA installation dialog.
+   */
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -46,6 +56,9 @@ export const MenuScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Toggles browser document full screen view on/off.
+   */
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(console.error);
@@ -67,6 +80,7 @@ export const MenuScreen: React.FC = () => {
     );
   }
 
+  /** Decorative background circles */
   const decorCircles = (
     <>
       <div className="animate-pop-in" style={{ position: 'absolute', top: '21%', left: '8%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }} />
@@ -85,10 +99,9 @@ export const MenuScreen: React.FC = () => {
       <div style={{ position: 'absolute', top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', right: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-right, 0px))', display: 'flex', gap: '10px', zIndex: 20 }}>
         {deferredPrompt && (
           <button 
+            className="btn-icon"
             onClick={handleInstallClick}
             style={{ 
-              width: '50px', height: '50px', borderRadius: '15px', 
-              padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
               backgroundColor: 'var(--yellow)',
               border: '2px solid var(--orange)'
             }}
@@ -99,10 +112,9 @@ export const MenuScreen: React.FC = () => {
           </button>
         )}
         <button 
+          className="btn-icon"
           onClick={toggleFullScreen}
           style={{ 
-            width: '50px', height: '50px', borderRadius: '15px', 
-            padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
             backgroundColor: 'var(--dark-teal)',
             border: '2px solid var(--teal)'
           }}
@@ -140,3 +152,4 @@ export const MenuScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

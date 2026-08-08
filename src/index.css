@@ -12,7 +12,11 @@
   font-style: normal;
 }
 
+/* ==========================================================================
+   Design System Tokens & Theme Variables
+   ========================================================================== */
 :root {
+  /* Brand Color Palette */
   --dark-green: #264653;
   --teal: #2a9d8f;
   --dark-teal: #1c695f;
@@ -23,7 +27,26 @@
   --correct-green: #2ecc71;
   --wrong-red: #e74c3c;
   
+  /* Glassmorphism & UI Accents */
+  --dark-overlay: rgba(0, 0, 0, 0.85);
+  --glass-bg: rgba(38, 70, 83, 0.75);
+  --glass-border: rgba(42, 157, 143, 0.4);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  
+  /* Typography Tokens */
   --font-main: 'League Spartan', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 15px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
+  --radius-pill: 9999px;
+  
+  /* Motion & Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 /* Custom Simple & Minimal Theme Scrollbars */
@@ -86,7 +109,7 @@ body {
 }
 
 /* 
-  Projector Container now adapts. 
+  Projector Container adapts to screen size.
   On large screens, it behaves like a letterboxed projector.
   On mobile, it fills the viewport and scrolls if necessary.
 */
@@ -112,8 +135,11 @@ body {
   }
 }
 
-button {
-  border-radius: 15px;
+/* ==========================================================================
+   Reusable Component System - Buttons
+   ========================================================================== */
+button, .btn {
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   padding: 0.8em 1.6em;
   font-size: clamp(1rem, 4vw, 1.5rem);
@@ -122,25 +148,105 @@ button {
   background-color: var(--teal);
   color: var(--white);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all var(--transition-normal);
   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
 
-button:hover {
+button:hover, .btn:hover {
   border-color: var(--yellow);
   background-color: var(--dark-teal);
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
-button:active {
+button:active, .btn:active {
   transform: translateY(1px) scale(0.98);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 button:focus,
-button:focus-visible {
+button:focus-visible,
+.btn:focus,
+.btn:focus-visible {
   outline: 4px auto var(--yellow);
+}
+
+/* Button Variants */
+.btn-primary {
+  background-color: var(--teal);
+  color: var(--white);
+}
+
+.btn-secondary {
+  background-color: var(--dark-teal);
+  color: var(--white);
+  border-color: var(--teal);
+}
+
+.btn-accent {
+  background-color: var(--yellow);
+  color: var(--dark-green);
+}
+
+.btn-accent:hover {
+  background-color: var(--light-orange);
+  border-color: var(--orange);
+}
+
+.btn-danger {
+  background-color: var(--wrong-red);
+  color: var(--white);
+  border-color: var(--wrong-red);
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+  border-color: var(--yellow);
+}
+
+.btn-success {
+  background-color: var(--correct-green);
+  color: var(--dark-green);
+  border-color: var(--correct-green);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--white);
+  border-color: rgba(232, 237, 223, 0.3);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--yellow);
+}
+
+.btn-icon {
+  width: clamp(44px, 5vw, 65px);
+  height: clamp(44px, 5vw, 65px);
+  border-radius: var(--radius-md);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 0.4em 0.8em;
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 1em 2em;
+  font-size: clamp(1.3rem, 4.5vw, 2.2rem);
+  border-radius: var(--radius-lg);
 }
 
 /* Specific class for giant menu buttons */
@@ -158,6 +264,215 @@ button:focus-visible {
 .menu-btn:nth-child(5) { animation-delay: 0.25s; }
 .menu-btn:nth-child(6) { animation-delay: 0.3s; }
 
+/* ==========================================================================
+   Reusable Component System - Cards & Panels
+   ========================================================================== */
+.card {
+  background-color: var(--dark-teal);
+  border-radius: var(--radius-xl);
+  padding: clamp(1rem, 4vw, 2rem);
+  margin: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--teal);
+  animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+}
+
+.card-flat {
+  background-color: var(--dark-green);
+  border: 2px solid var(--teal);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.card-interactive {
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: var(--yellow);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.card-header {
+  border-bottom: 1px solid var(--teal);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body {
+  flex: 1;
+}
+
+.card-footer {
+  border-top: 1px solid rgba(42, 157, 143, 0.3);
+  padding-top: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ==========================================================================
+   Reusable Component System - Badges & Status Indicators
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3em 0.8em;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background-color: var(--teal);
+  color: var(--white);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.badge-teal {
+  background-color: var(--teal);
+  color: var(--white);
+}
+
+.badge-yellow {
+  background-color: var(--yellow);
+  color: var(--dark-green);
+}
+
+.badge-orange {
+  background-color: var(--orange);
+  color: var(--white);
+}
+
+.badge-green {
+  background-color: var(--correct-green);
+  color: var(--dark-green);
+}
+
+.badge-red {
+  background-color: var(--wrong-red);
+  color: var(--white);
+}
+
+/* ==========================================================================
+   Reusable Component System - Modal Overlays & Boxes
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--dark-overlay);
+  z-index: 99999;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+.modal-box {
+  background-color: var(--dark-green);
+  padding: clamp(20px, 4vh, 40px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--teal);
+  text-align: center;
+  max-width: 90%;
+  width: 450px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+}
+
+.modal-title {
+  color: var(--yellow);
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+}
+
+.modal-body {
+  color: var(--white);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  margin-bottom: 25px;
+  line-height: 1.4;
+  opacity: 0.95;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Reusable Component System - Form Inputs & Controls
+   ========================================================================== */
+input[type="file"] {
+  display: none;
+}
+
+.file-upload-label {
+  display: inline-block;
+  background-color: var(--orange);
+  color: var(--white);
+  padding: 1rem 2rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  font-weight: bold;
+}
+
+.file-upload-label:hover {
+  background-color: var(--yellow);
+  color: var(--dark-green);
+  transform: translateY(-2px);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  font-family: inherit;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--white);
+  border: 2px solid var(--teal);
+  border-radius: var(--radius-md);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast);
+}
+
+.input-field:focus {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(233, 196, 106, 0.3);
+}
+
+/* Ensure inputs can be typed in normally */
+input[type="text"], input[type="number"], input[type="password"], textarea {
+  caret-color: auto;
+  cursor: text;
+}
+
+/* ==========================================================================
+   Typography Utilities
+   ========================================================================== */
 @keyframes titlePop {
   0% { transform: scale(0.9) translateY(-20px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
@@ -177,17 +492,26 @@ button:focus-visible {
 .title span:nth-child(2) { color: var(--yellow); }
 .title span:nth-child(3) { color: var(--white); }
 
-.card {
-  background-color: var(--dark-teal);
-  border-radius: 30px;
-  padding: clamp(1rem, 4vw, 2rem);
-  margin: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  border: 2px solid var(--teal);
-  animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+.subtitle {
+  font-size: clamp(1.2rem, min(5vw, 4vh), 2.5rem);
+  color: var(--white);
+  margin: 0;
+  text-align: center;
 }
 
-/* Specific layout adjustments for responsive views */
+.text-gradient {
+  background: linear-gradient(135deg, var(--white) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-shadow {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   Layout Grids & Helpers
+   ========================================================================== */
 .menu-grid {
   display: flex;
   flex-direction: column;
@@ -242,7 +566,7 @@ button:focus-visible {
   align-items: center;
   font-size: clamp(1.2rem, 2.6vw, 2.2rem);
   font-weight: bold;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all var(--transition-normal);
   cursor: pointer;
   border: 2px solid transparent;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -272,38 +596,31 @@ button:focus-visible {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-input[type="file"] {
-  display: none;
-}
-.file-upload-label {
-  display: inline-block;
-  background-color: var(--orange);
-  color: var(--white);
-  padding: 1rem 2rem;
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  border-radius: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-}
-.file-upload-label:hover {
-  background-color: var(--yellow);
-  color: var(--dark-green);
-  transform: translateY(-2px);
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Ensure inputs (like Team Names) can still be typed in normally */
-input[type="text"], input[type="number"], input[type="password"], textarea {
-  caret-color: auto;
-  cursor: text;
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Custom interactive cursor */
-button, .menu-btn, a, [role="button"], .file-upload-label, input[type="checkbox"], input[type="radio"], .option-card {
+button, .btn, .menu-btn, a, [role="button"], .file-upload-label, input[type="checkbox"], input[type="radio"], .option-card {
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="%23e76f51" opacity="0.4" /><circle cx="24" cy="24" r="14" fill="%23e9c46a" stroke="%23264653" stroke-width="4"/><circle cx="24" cy="24" r="5" fill="%23264653"/></svg>') 24 24, pointer !important;
 }
 
-/* Animations */
+/* ==========================================================================
+   Animations & Micro-interactions
+   ========================================================================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -338,3 +655,12 @@ button, .menu-btn, a, [role="button"], .file-upload-label, input[type="checkbox"
 .animate-spin {
   animation: spin 2s linear infinite;
 }
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+.animate-pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+

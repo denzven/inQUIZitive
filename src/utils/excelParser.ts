@@ -1,7 +1,19 @@
 import * as XLSX from 'xlsx';
 import type { Question } from '../store/useQuizStore';
+import { shuffleOptionsWithSeed } from './random';
 
-export const parseExcelData = async (file: File | ArrayBuffer): Promise<Question[]> => {
+/**
+ * Asynchronously parses an uploaded Excel file or ArrayBuffer containing quiz questions.
+ * 
+ * @param file - The raw File object uploaded by the user or an ArrayBuffer containing workbook binary data.
+ * @param seed - Optional randomization seed string or number (default '12342026'). Pass 'NOSHUFFLE' to disable randomization.
+ * @returns A Promise resolving to an array of parsed `Question` objects.
+ * @throws Will reject if file reading or workbook parsing fails.
+ */
+export const parseExcelData = async (
+  file: File | ArrayBuffer,
+  seed: string | number = '12342026'
+): Promise<Question[]> => {
   return new Promise((resolve, reject) => {
     try {
       let data: any;
@@ -9,13 +21,13 @@ export const parseExcelData = async (file: File | ArrayBuffer): Promise<Question
         const reader = new FileReader();
         reader.onload = (e) => {
           data = e.target?.result;
-          resolve(processWorkbook(data, 'binary'));
+          resolve(processWorkbook(data, 'binary', seed));
         };
         reader.onerror = (err) => reject(err);
         reader.readAsBinaryString(file);
       } else {
         // It's an ArrayBuffer
-        resolve(processWorkbook(file, 'array'));
+        resolve(processWorkbook(file, 'array', seed));
       }
     } catch (err) {
       reject(err);
@@ -23,7 +35,20 @@ export const parseExcelData = async (file: File | ArrayBuffer): Promise<Question
   });
 };
 
-const processWorkbook = (data: any, type: 'binary' | 'array'): Question[] => {
+/**
+ * Internal helper to read an Excel workbook sheet and map raw row objects into normalized Question instances.
+ * Skips the first 2 header rows to align with spreadsheet specifications.
+ * 
+ * @param data - The raw binary string or ArrayBuffer data of the spreadsheet.
+ * @param type - The XLSX parser reading format ('binary' | 'array').
+ * @param seed - Randomization seed string or number.
+ * @returns An array of normalized `Question` objects with deterministically shuffled answer options.
+ */
+const processWorkbook = (
+  data: any,
+  type: 'binary' | 'array',
+  seed: string | number = '12342026'
+): Question[] => {
   const workbook = XLSX.read(data, { type });
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
@@ -39,15 +64,16 @@ const processWorkbook = (data: any, type: 'binary' | 'array'): Question[] => {
     const questionText = row['Questions'];
     if (!questionText) return;
 
-    const options: string[] = [
+    // Excel column 1 ("Answer") is the correct answer. Columns "2", "3", "4" are distractors.
+    const rawOptions: string[] = [
       String(row['Answer']).trim(),
       String(row['2']).trim(),
       String(row['3']).trim(),
       String(row['4']).trim()
     ].filter(Boolean); // Remove empty options
 
-    // Shuffle options (basic Fisher-Yates or sort by random)
-    const shuffledOptions = options.sort(() => Math.random() - 0.5);
+    // Shuffle options deterministically using global seed and question index
+    const shuffledOptions = shuffleOptionsWithSeed(rawOptions, seed, index);
 
     const q: Question = {
       index: index,
@@ -66,12 +92,52 @@ const processWorkbook = (data: any, type: 'binary' | 'array'): Question[] => {
   return questions;
 };
 
-export const fetchExcelData = async (url: string): Promise<Question[]> => {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  return parseExcelData(arrayBuffer);
+/**
+ * Re-shuffles the options of an array of Question objects based on a new seed.
+ * 
+ * @param questions - Current array of Question objects.
+ * @param newSeed - The new seed string or number to apply.
+ * @returns A new array of Question objects with re-shuffled options.
+ */
+export const reshuffleAllQuestions = (
+  questions: Question[],
+  newSeed: string | number
+): Question[] => {
+  return questions.map((q, idx) => {
+    // Reconstruct raw options with q.answer at index 0
+    const distractors = q.options.filter(o => o !== q.answer);
+    const rawOptions = [q.answer, ...distractors];
+    const shuffledOptions = shuffleOptionsWithSeed(rawOptions, newSeed, q.index >= 0 ? q.index : idx);
+    return {
+      ...q,
+      options: shuffledOptions
+    };
+  });
 };
 
+/**
+ * Fetches an Excel spreadsheet file from a network URL and parses its question contents.
+ * 
+ * @param url - The remote or bundled URL endpoint targeting the `.xlsx` file.
+ * @param seed - Optional randomization seed string or number.
+ * @returns A Promise resolving to an array of parsed `Question` objects.
+ */
+export const fetchExcelData = async (
+  url: string,
+  seed: string | number = '12342026'
+): Promise<Question[]> => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  return parseExcelData(arrayBuffer, seed);
+};
+
+/**
+ * Exports current quiz progress (questions state and team leaderboards) into a downloadable `.xlsx` workbook.
+ * Creates two sheets: "Questions_Progress" and "Teams_Progress".
+ * 
+ * @param questions - Current array of `Question` items including their `used` status.
+ * @param teams - Current array of `Team` objects with updated scores.
+ */
 export const exportProgressToExcel = (questions: Question[], teams: any[]) => {
   const wsQuestions = XLSX.utils.json_to_sheet(questions.map(q => {
     const incorrectOptions = q.options.filter(o => o !== q.answer);
@@ -100,3 +166,5 @@ export const exportProgressToExcel = (questions: Question[], teams: any[]) => {
 
   XLSX.writeFile(wb, "InQUIZitive_Progress.xlsx");
 };
+
+

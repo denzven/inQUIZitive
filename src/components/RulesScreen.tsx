@@ -3,6 +3,10 @@ import { ScreenLayout } from './ScreenLayout';
 import { useQuizStore } from '../store/useQuizStore';
 import { Trophy, Clock, AlertTriangle, ListChecks } from 'lucide-react';
 
+/**
+ * RulesScreen Component.
+ * Displays tournament rules and round mechanics overview (General rules, Rapid Fire, Buzzer round, Leaderboard victory).
+ */
 export const RulesScreen: React.FC = () => {
   const { setGameState } = useQuizStore();
 
@@ -66,3 +70,4 @@ export const RulesScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

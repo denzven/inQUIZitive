@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
-
 import { useSpinWheelStore } from '../store/useSpinWheelStore';
-export const SpinWheelScreen: React.FC = () => {
-  const { questions, setGameState, markQuestionUsed } = useQuizStore();
+import { seededShuffle } from '../utils/random';
 
-  // 1. Data Grouping
+/**
+ * SpinWheelScreen Component (Spin Wheel & Jeopardy Round).
+ * Features a 4-column Slot Machine Category Wheel engine ported from Python Pygame,
+ * dynamic Jeopardy board grid selection, and option answer verification feedback.
+ */
+export const SpinWheelScreen: React.FC = () => {
+  const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
+  const spinCountRef = useRef<number>(0);
+
+  /** Data grouping: filters SWJ round questions into topic mappings and ensures >= 4 fallback topics */
   const { allTopics, topicMap } = useMemo(() => {
     const swj = questions.filter(q => q.roundCode === 'SWJ');
     const map = new Map<string, Question[]>();
@@ -59,7 +66,10 @@ export const SpinWheelScreen: React.FC = () => {
   const spinStartTimeRef = useRef<number>(0);
   const animFrameRef = useRef<number | null>(null);
 
-
+  /**
+   * Triggers the 4-column Slot Machine Reel Spin animation loop.
+   * Selects 4 unique category topics and decelerates each reel with staggered easing.
+   */
   const startSpin = () => {
     setSwState('SPINNING');
     spinStartTimeRef.current = Date.now();
@@ -68,8 +78,9 @@ export const SpinWheelScreen: React.FC = () => {
     const topicsWithUnused = allTopics.filter(t => (topicMap.get(t) || []).some(q => !q.used));
     const pool = topicsWithUnused.length >= 4 ? topicsWithUnused : allTopics;
     
-    // Random sample without replacement
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    // Seeded random sample without replacement (bypassed if NOSHUFFLE seed)
+    spinCountRef.current += 1;
+    const shuffled = seededShuffle(pool, `${seed}_spin_${spinCountRef.current}`);
     const chosenTopics = shuffled.slice(0, 4);
     const chosenIndices = chosenTopics.map(t => Math.max(0, allTopics.indexOf(t)));
     
@@ -147,13 +158,18 @@ export const SpinWheelScreen: React.FC = () => {
     animFrameRef.current = requestAnimationFrame(animate);
   };
 
+  /** Cleanup slot machine animation frame on unmount */
   useEffect(() => {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
   }, []);
 
-  // 4. Answer Handler
+  /**
+   * Handles option answer selection during question view.
+   * 
+   * @param optIndex - Selected option index
+   */
   const handleAnswer = useCallback((optIndex: number) => {
     if (swState !== 'QUESTION_VIEW' || !currentQ) return;
     
@@ -170,7 +186,7 @@ export const SpinWheelScreen: React.FC = () => {
     setSwState('FEEDBACK');
   }, [swState, currentQ, setSelectedOptIdx, setIsCorrect, setIsReviewing, setUserAnswer, setSwState]);
 
-  // 5. Feedback Auto-Advance
+  /** Auto-advances from feedback phase back to Jeopardy board after delay */
   useEffect(() => {
     if (swState === 'FEEDBACK' && !isReviewing) {
       const timeout = setTimeout(() => {
@@ -181,6 +197,11 @@ export const SpinWheelScreen: React.FC = () => {
     }
   }, [swState, isReviewing, setSwState, setCurrentQ]);
 
+  /**
+   * Handles user click on a Jeopardy board tile button.
+   * 
+   * @param q - The selected Question item.
+   */
   const handleTileClick = (q: Question) => {
     setCurrentQ(q);
     
@@ -560,3 +581,4 @@ export const SpinWheelScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

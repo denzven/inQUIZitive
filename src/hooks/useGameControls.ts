@@ -1,6 +1,16 @@
 import { useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 
+/**
+ * Custom React hook that binds global keyboard controls for live presenter gameplay.
+ * Active only when `gameState === 'PLAYING'` and the focused element is not an input/textarea.
+ * 
+ * Key bindings:
+ * - `Space`: Reveals current question answer.
+ * - `ArrowRight`: Advances to the next question in the round.
+ * - `ArrowLeft`: Navigates to the previous question.
+ * - `1-9`: Directly awards points to the corresponding team ID (1 through 9).
+ */
 export const useGameControls = () => {
   const {
     gameState,
@@ -12,6 +22,12 @@ export const useGameControls = () => {
   } = useQuizStore();
 
   useEffect(() => {
+    /**
+     * Window keydown event handler for presenter shortcuts.
+     * Checks focused input elements to prevent accidental triggers while typing.
+     * 
+     * @param e - The KeyboardEvent object dispatched by the browser.
+     */
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input
       if (
@@ -71,3 +87,4 @@ export const useGameControls = () => {
     };
   }, [gameState, nextQuestion, prevQuestion, revealAnswer, awardPoints, setGameState]);
 };
+

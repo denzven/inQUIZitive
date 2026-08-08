@@ -3,9 +3,15 @@ import { useQuizStore } from '../store/useQuizStore';
 import { useBuzzerStore } from '../store/useBuzzerStore';
 import { ScreenLayout } from './ScreenLayout';
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { seededShuffle } from '../utils/random';
 
+/**
+ * BuzzerScreen Component.
+ * Controls the Buzzer Round presentation view where questions are answered by the fastest team.
+ * Manages question navigation, option verification, answer reveal, and keyboard shortcuts.
+ */
 export const BuzzerScreen: React.FC = () => {
-  const { questions, setGameState, markQuestionUsed } = useQuizStore();
+  const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
   const {
     buzzerQuestions, setBuzzerQuestions,
     currentIdx, setCurrentIdx,
@@ -14,46 +20,56 @@ export const BuzzerScreen: React.FC = () => {
     revealedQuestions, setQuestionRevealed,
   } = useBuzzerStore();
 
-  // 1. Data Setup (Buzzer round questions - max 20)
+  /** Data Setup: allocates up to 20 unused Buzzer round questions */
   useEffect(() => {
     if (buzzerQuestions.length === 0) {
       const available = questions.filter(q => q.roundCode === 'B' && !q.used);
-      setBuzzerQuestions(available.slice(0, 20));
+      const shuffled = seededShuffle(available, `${seed}_buzzer`);
+      setBuzzerQuestions(shuffled.slice(0, 20));
     }
-  }, [buzzerQuestions.length, questions, setBuzzerQuestions]);
+  }, [buzzerQuestions.length, questions, setBuzzerQuestions, seed]);
+
 
   const currentQ = buzzerQuestions[currentIdx];
 
-  // Mark question as used immediately when displayed/shown
+  /** Marks current question as used in global store immediately upon display */
   useEffect(() => {
     if (buzzerState === 'PLAYING' && currentQ && currentQ.index >= 0 && !currentQ.used) {
       markQuestionUsed(currentQ.index);
     }
   }, [buzzerState, currentIdx, currentQ, markQuestionUsed]);
 
+  /** Navigates to next question index */
   const handleNext = () => {
     if (currentIdx < buzzerQuestions.length - 1) {
       setCurrentIdx(prev => prev + 1);
     }
   };
 
+  /** Navigates to previous question index */
   const handlePrev = () => {
     if (currentIdx > 0) {
       setCurrentIdx(prev => prev - 1);
     }
   };
 
+  /**
+   * Records user option selection for current question.
+   * 
+   * @param optIdx - Selected option index
+   */
   const handleOptionClick = (optIdx: number) => {
     if (!currentQ) return;
     setUserAnswer(currentIdx, optIdx);
     setQuestionRevealed(currentIdx);
   };
 
+  /** Reveals answer for current question */
   const handleReveal = () => {
     setQuestionRevealed(currentIdx);
   };
 
-  // Keyboard controls
+  /** Keyboard shortcuts listener (1-4 for options, Space for reveal, Arrows for navigation, Esc to exit) */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (buzzerState === 'PLAYING' && currentQ) {
@@ -222,3 +238,4 @@ export const BuzzerScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

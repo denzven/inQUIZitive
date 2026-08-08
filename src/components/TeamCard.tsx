@@ -1,13 +1,23 @@
 import React from 'react';
 import type { Team } from '../store/useQuizStore';
 
+/** Props for the TeamCard component */
 interface TeamCardProps {
+  /** Target Team object */
   team: Team;
+  /** Callback to update team title */
   onUpdateName: (id: number, name: string) => void;
+  /** Callback to increment/decrement team score */
   onUpdateScore: (id: number, delta: number) => void;
+  /** Callback to remove team */
   onRemove: (id: number) => void;
 }
 
+/**
+ * TeamCard Component.
+ * Renders an editable card widget for an individual team displaying name input, current score,
+ * +/-10 score adjusters, and a delete button.
+ */
 export const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdateName, onUpdateScore, onRemove }) => {
   return (
     <div className="team-card animate-pop-in">
@@ -45,3 +55,4 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdateName, onUpdate
     </div>
   );
 };
+

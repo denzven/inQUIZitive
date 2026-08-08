@@ -2,21 +2,27 @@ import React, { useMemo } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { Trophy, X, Circle, RotateCcw, Home } from 'lucide-react';
-
 import { useTicTacToeStore } from '../store/useTicTacToeStore';
+import { seededShuffle } from '../utils/random';
 
+/**
+ * TicTacToeScreen Component (Tiebreaker Round).
+ * Features a 3x3 interactive grid for head-to-head tiebreaker competition between Team X and Team O.
+ * Clicking a cell launches its assigned question and awards the cell mark upon answer verification.
+ */
 export const TicTacToeScreen: React.FC = () => {
-  const { questions, setGameState, markQuestionUsed, teams } = useQuizStore();
+  const { questions, setGameState, markQuestionUsed, teams, seed } = useQuizStore();
 
   // Pick first 2 teams as Tiebreaker participants
   const teamX = teams[0] ? teams[0].name : 'Team X';
   const teamO = teams[1] ? teams[1].name : 'Team O';
 
-  // Fetch TTT questions (up to 9)
+  /** Prepares 9 questions allocated for the 3x3 Tic-Tac-Toe grid */
   const tttQuestions = useMemo(() => {
     const available = questions.filter(q => q.roundCode === 'TTT');
+    const shuffled = seededShuffle(available, `${seed}_ttt`);
     // Fill up to 9 with dummy if needed
-    const list = [...available];
+    const list = [...shuffled];
     let i = 1;
     while (list.length < 9) {
       list.push({
@@ -32,7 +38,8 @@ export const TicTacToeScreen: React.FC = () => {
       i++;
     }
     return list.slice(0, 9);
-  }, [questions]);
+  }, [questions, seed]);
+
 
   // Persisted Store State
   const {
@@ -42,6 +49,12 @@ export const TicTacToeScreen: React.FC = () => {
     resetTtt
   } = useTicTacToeStore();
 
+  /**
+   * Evaluates 3x3 board array for winning 3-in-a-row lines (rows, columns, diagonals).
+   * 
+   * @param b - The current 9-element board state array.
+   * @returns 'X', 'O', or null if no 3-in-a-row winner exists.
+   */
   const checkWinner = (b: Array<string | null>) => {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -59,6 +72,11 @@ export const TicTacToeScreen: React.FC = () => {
 
   const winner = checkWinner(board);
 
+  /**
+   * Handles user click on a 3x3 grid tile button to view its assigned question.
+   * 
+   * @param index - The cell index (0 to 8).
+   */
   const handleTileClick = (index: number) => {
     if (winner) return;
     setSelectedIdx(index);
@@ -74,6 +92,11 @@ export const TicTacToeScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Assigns 'X', 'O', or null to the currently active tile upon answer resolution.
+   * 
+   * @param claim - Symbol to claim cell ('X' | 'O' | null).
+   */
   const handleAssignTile = (claim: 'X' | 'O' | null) => {
     if (selectedIdx === null || selectedIdx === -1) return;
 
@@ -341,3 +364,4 @@ export const TicTacToeScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

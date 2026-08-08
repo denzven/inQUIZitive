@@ -3,9 +3,15 @@ import { useQuizStore } from '../store/useQuizStore';
 import { Keyboard, Info, Rocket } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 
+/**
+ * AboutScreen Component.
+ * Displays application background information, PWA feature highlights,
+ * and keyboard shortcut documentation for live quiz presentation.
+ */
 export const AboutScreen: React.FC = () => {
   const { setGameState } = useQuizStore();
 
+  /** Background decorative circle nodes */
   const decorCircles = (
     <>
       <div className="animate-pop-in" style={{ position: 'absolute', top: '15%', left: '15%', width: 'clamp(200px, 40vw, 400px)', height: 'clamp(200px, 40vw, 400px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6 }} />
@@ -90,3 +96,4 @@ export const AboutScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

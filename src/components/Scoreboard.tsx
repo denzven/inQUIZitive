@@ -1,6 +1,10 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 
+/**
+ * Scoreboard Component.
+ * Displays a live horizontal score strip of all participating teams and their accumulated points.
+ */
 export const Scoreboard: React.FC = () => {
   const { teams } = useQuizStore();
 
@@ -39,3 +43,4 @@ export const Scoreboard: React.FC = () => {
     </div>
   );
 };
+

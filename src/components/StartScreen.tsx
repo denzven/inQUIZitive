@@ -1,12 +1,16 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-
-
 import { ScreenLayout } from './ScreenLayout';
 
+/**
+ * StartScreen Component.
+ * Displays the list of selectable quiz rounds (Aptitude, Rapid Fire, Jeopardy, Tic-Tac-Toe, Buzzer)
+ * allowing the presenter to trigger specific game round sessions.
+ */
 export const StartScreen: React.FC = () => {
   const { setGameState, startRound } = useQuizStore();
 
+  /** Data array defining available round titles and round codes */
   const roundsData = [
     { name: "Round 1: Aptitude (Offline)", code: null },
     { name: "Round 2: Rapid Fire", code: "RF" },
@@ -15,6 +19,7 @@ export const StartScreen: React.FC = () => {
     { name: "Round 5: Buzzer", code: "B" }
   ];
 
+  /** Decorative floating question marks for screen background */
   const questionMarksDecor = (
     <>
       <div className="animate-pop-in" style={{ position: 'absolute', top: '21%', left: '8%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }}>
@@ -80,3 +85,4 @@ export const StartScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
+

@@ -20,11 +20,16 @@ import { useRapidFireStore } from './store/useRapidFireStore';
 import { useTicTacToeStore } from './store/useTicTacToeStore';
 import { useSpinWheelStore } from './store/useSpinWheelStore';
 
+/**
+ * Main Root Application Component for InQUIZitive.
+ * Manages global screen navigation, CSS custom property theme injections,
+ * browser back-button trapping, refresh interception, and crash recovery modals.
+ */
 function App() {
-  const { gameState, setGameState, loadQuestions, activeRound, theme, hasLoaded, setHasLoaded } = useQuizStore();
+  const { gameState, setGameState, loadQuestions, activeRound, theme, hasLoaded, setHasLoaded, seed } = useQuizStore();
   const [init, setInit] = useState(false);
 
-  // Apply theme to document root
+  /** Syncs Zustand theme colors to document root CSS variables */
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--dark-green', theme.darkGreen);
@@ -38,7 +43,7 @@ function App() {
     root.style.setProperty('--wrong-red', theme.wrongRed);
   }, [theme]);
 
-  // Reset scroll position on screen transitions
+  /** Resets scroll position when navigating between screens */
   useEffect(() => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
@@ -56,7 +61,7 @@ function App() {
   const [showCrashModal, setShowCrashModal] = useState(false);
   const previousState = useRef(gameState);
 
-  // 1. Prevent Refresh / Tab Close (ONLY during PLAYING)
+  /** 1. Prevents accidental browser refresh / tab close during active gameplay */
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (gameState === 'PLAYING') {
@@ -68,15 +73,15 @@ function App() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState]);
 
-  // 2. Handle Back Button elegantly
+  /** 2. Pushes dummy state into browser history when transitioning away from MENU */
   useEffect(() => {
-    // If we transition FROM MENU to something else, push a dummy state to trap the back button.
     if (previousState.current === 'MENU' && gameState !== 'MENU') {
       window.history.pushState('trap', '', window.location.href);
     }
     previousState.current = gameState;
   }, [gameState]);
 
+  /** Traps popstate event to confirm exit modal during active play */
   useEffect(() => {
     const handlePopState = () => {
       if (gameState === 'PLAYING') {
@@ -92,7 +97,7 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [gameState, setGameState]);
 
-  // 3. Intercept F5 / Ctrl+R / Escape to show custom modal
+  /** 3. Intercepts F5 / Ctrl+R / Escape keys during active play */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState !== 'PLAYING') return;
@@ -113,14 +118,14 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState]);
 
-  // Auto-load bundled Excel file and wait for fonts
+  /** Auto-loads default trial question spreadsheet and waits for custom fonts */
   useEffect(() => {
     if (init) return;
     const loadDefaultData = async () => {
       try {
         if (!hasLoaded) {
           const [parsed] = await Promise.all([
-            fetchExcelData(trialSheetUrl),
+            fetchExcelData(trialSheetUrl, seed),
             document.fonts ? document.fonts.ready : Promise.resolve()
           ]);
           loadQuestions(parsed);
@@ -166,17 +171,19 @@ function App() {
     return null; // The true preloader in index.html is visible
   }
 
-  // Crash Modal
+  /**
+   * Renders modal dialog alerting presenter of a recovered game crash after page reload.
+   */
   const renderCrashModal = () => {
     if (!showCrashModal) return null;
     return createPortal(
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)', padding: 'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)' }}>
-        <div className="animate-pop-in" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'var(--dark-green)', margin: 0, padding: 'clamp(20px, 4vh, 40px)', borderRadius: '24px', border: '1px solid var(--orange)', textAlign: 'center', maxWidth: '90%', width: '500px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', boxSizing: 'border-box' }}>
-          <h2 style={{ color: 'var(--yellow)', marginBottom: '15px', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Crash Recovered</h2>
-          <p style={{ color: 'var(--white)', fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', marginBottom: '30px' }}>
+      <div className="modal-overlay">
+        <div className="modal-box animate-pop-in" style={{ border: '1px solid var(--orange)' }}>
+          <h2 className="modal-title">Crash Recovered</h2>
+          <p className="modal-body">
             It looks like the app was closed unexpectedly during an active round. Do you want to resume?
           </p>
-          <div style={{ display: 'flex', gap: '15px' }}>
+          <div className="modal-actions">
             <button 
               className="menu-btn" 
               onClick={() => {
@@ -204,15 +211,17 @@ function App() {
     );
   };
 
-  // Modal rendering logic
+  /**
+   * Renders modal dialog confirming exit from an active round to prevent loss of score progress.
+   */
   const renderExitModal = () => {
     if (!showExitModal) return null;
     return createPortal(
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 99999, backdropFilter: 'blur(5px)', padding: 'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)' }}>
-        <div className="animate-pop-in" style={{ position: 'absolute', top: '50%', left: '50%', backgroundColor: 'var(--dark-green)', margin: 0, padding: 'clamp(20px, 4vh, 40px)', borderRadius: '24px', border: '1px solid var(--teal)', textAlign: 'center', maxWidth: '90%', width: '400px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', boxSizing: 'border-box' }}>
-          <h2 style={{ color: 'var(--orange)', marginBottom: '15px', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Exit Round?</h2>
-          <p style={{ color: 'var(--white)', marginBottom: '30px', fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', opacity: 0.9 }}>Are you sure you want to leave? Your current round progress will be lost.</p>
-          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexDirection: 'column' }}>
+      <div className="modal-overlay">
+        <div className="modal-box animate-pop-in">
+          <h2 className="modal-title" style={{ color: 'var(--orange)' }}>Exit Round?</h2>
+          <p className="modal-body">Are you sure you want to leave? Your current round progress will be lost.</p>
+          <div className="modal-actions" style={{ flexDirection: 'column' }}>
             <button className="menu-btn" style={{ padding: '15px', fontSize: '1.5rem', backgroundColor: 'var(--wrong-red)', borderColor: 'var(--wrong-red)' }} onClick={() => {
               setShowExitModal(false);
               setGameState('MENU');
@@ -225,7 +234,9 @@ function App() {
     );
   };
 
-  // Routing
+  /**
+   * Evaluates `gameState` to return the appropriate React view component.
+   */
   const renderScreen = () => {
     switch (gameState) {
       case 'MENU':
@@ -284,3 +295,4 @@ function App() {
 }
 
 export default App;
+
