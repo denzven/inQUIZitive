@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
+import { playButtonClick } from '../utils/soundEffects';
 
 /**
  * StartScreen Component.
@@ -22,16 +23,16 @@ export const StartScreen: React.FC = () => {
   /** Decorative floating question marks for screen background */
   const questionMarksDecor = (
     <>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '21%', left: '8%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }}>
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '21%', left: '8%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }}>
         <div style={{ fontSize: 'clamp(20rem, 50vw, 25rem)', color: 'var(--light-orange)', transform: 'rotate(20deg)', opacity: 0.8, fontWeight: 900 }}>?</div>
       </div>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '42%', left: '97%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }}>
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '42%', left: '97%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }}>
         <div style={{ fontSize: 'clamp(20rem, 50vw, 25rem)', color: 'var(--yellow)', transform: 'rotate(-20deg)', opacity: 0.8, fontWeight: 900 }}>?</div>
       </div>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '92%', left: '7%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }}>
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '92%', left: '7%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }}>
         <div style={{ fontSize: 'clamp(20rem, 50vw, 25rem)', color: 'var(--yellow)', transform: 'rotate(45deg)', opacity: 0.8, fontWeight: 900 }}>?</div>
       </div>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '115%', left: '87%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }}>
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '115%', left: '87%', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }}>
         <div style={{ fontSize: 'clamp(20rem, 50vw, 25rem)', color: 'var(--orange)', transform: 'rotate(-15deg)', opacity: 0.8, fontWeight: 900 }}>?</div>
       </div>
     </>
@@ -41,9 +42,9 @@ export const StartScreen: React.FC = () => {
     <ScreenLayout 
       backgroundDecor={questionMarksDecor}
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { playButtonClick(); setGameState('MENU'); }}
       showSettingsButton={true}
-      onSettingsClick={() => setGameState('SETTINGS')}
+      onSettingsClick={() => { playButtonClick(); setGameState('SETTINGS'); }}
       hideTitle={true}
     >
       <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -61,6 +62,7 @@ export const StartScreen: React.FC = () => {
                 className="menu-btn"
                 onClick={() => {
                   if (!isDisabled && round.code) {
+                    playButtonClick();
                     startRound(round.code);
                   }
                 }}

@@ -3,6 +3,7 @@ import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { X, Plus } from 'lucide-react';
 import './Leaderboard.css';
+import { playButtonClick } from '../utils/soundEffects';
 
 /**
  * LeaderboardScreen Component.
@@ -17,16 +18,19 @@ export const LeaderboardScreen: React.FC = () => {
 
   /** Appends a new default team entry to the roster */
   const handleAdd = () => {
+    playButtonClick();
     addTeam(`Team ${teams.length + 1}`);
   };
 
   /** Displays confirmation modal before resetting team scores */
   const handleReset = () => {
+    playButtonClick();
     setShowResetModal(true);
   };
 
   /** Confirms and resets all team scores back to zero */
   const confirmReset = () => {
+    playButtonClick();
     setTeams(teams.map(t => ({ ...t, score: 0 })));
     setShowResetModal(false);
   };
@@ -39,7 +43,7 @@ export const LeaderboardScreen: React.FC = () => {
   return (
     <ScreenLayout
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { playButtonClick(); setGameState('MENU'); }}
       hideTitle={true}
     >
       <div className="test-grid-container">
@@ -48,7 +52,7 @@ export const LeaderboardScreen: React.FC = () => {
         <div className="leaderboard-global-actions">
           <button 
             className={`global-btn ${isSorted ? 'active' : ''}`}
-            onClick={() => setIsSorted(!isSorted)}
+            onClick={() => { playButtonClick(); setIsSorted(!isSorted); }}
           >
             {isSorted ? 'Unsort' : 'Sort by Score'}
           </button>
@@ -63,7 +67,7 @@ export const LeaderboardScreen: React.FC = () => {
         <div className="test-grid">
           {displayedTeams.map((team) => (
             <div key={team.id} className="test-box">
-              <button onClick={() => removeTeam(team.id)} className="btn-delete-corner" aria-label="Delete">
+              <button onClick={() => { playButtonClick(); removeTeam(team.id); }} className="btn-delete-corner" aria-label="Delete">
                 <X style={{ width: 'clamp(14px, 3vw, 18px)', height: 'clamp(14px, 3vw, 18px)' }} strokeWidth={3} />
               </button>
               
@@ -76,8 +80,8 @@ export const LeaderboardScreen: React.FC = () => {
               <div className="test-box-content">{team.score}</div>
 
               <div className="score-controls">
-                <button onClick={() => updateTeamScore(team.id, -10)} className="test-btn btn-minus">-10</button>
-                <button onClick={() => updateTeamScore(team.id, 10)} className="test-btn btn-plus">+10</button>
+                <button onClick={() => { playButtonClick(); updateTeamScore(team.id, -10); }} className="test-btn btn-minus">-10</button>
+                <button onClick={() => { playButtonClick(); updateTeamScore(team.id, 10); }} className="test-btn btn-plus">+10</button>
               </div>
             </div>
           ))}
@@ -94,7 +98,7 @@ export const LeaderboardScreen: React.FC = () => {
             <h3>Reset Scores</h3>
             <p>Are you sure you want to reset all team scores to 0? This cannot be undone.</p>
             <div className="modal-actions">
-              <button className="global-btn" onClick={() => setShowResetModal(false)}>Cancel</button>
+              <button className="global-btn" onClick={() => { playButtonClick(); setShowResetModal(false); }}>Cancel</button>
               <button className="global-btn btn-reset" onClick={confirmReset}>Confirm</button>
             </div>
           </div>

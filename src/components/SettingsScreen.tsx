@@ -1,15 +1,21 @@
 import React, { useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { parseExcelData, fetchExcelData, exportProgressToExcel } from '../utils/excelParser';
+import { fetchExcelData, exportProgressToExcel, auditExcelData, type AuditResult } from '../utils/excelParser';
 import { isNoShuffle } from '../utils/random';
-import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette, Shuffle } from 'lucide-react';
+import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette, Shuffle, Edit3, Volume2, VolumeX, Bell, AlertOctagon, CheckCircle2, XCircle, Clock, Play, Square, Sparkles, MousePointerClick, Music, RotateCw } from 'lucide-react';
 import trialSheetUrl from '../assets/trial_iQz_sheet.xlsx?url';
 import { ScreenLayout } from './ScreenLayout';
+import { SpreadsheetAuditModal } from './SpreadsheetAuditModal';
+import { QuestionBankEditor } from './QuestionBankEditor';
+import { useAudioStore, type SfxKey } from '../store/useAudioStore';
+import { playTickTock, playTileChime, playBuzzerLockout, playCorrectFanfare, playWrongBuzz, playButtonClick, playBubblePopSequence, playWheelTick, stopWheelTick } from '../utils/soundEffects';
+import { startBgm, stopBgm, isBgmPlaying } from '../utils/bgmSynthesizer';
 
 /**
  * SettingsScreen Component.
  * Provides controls for dataset management (custom Excel uploads, progress export/backup, sample template downloads),
- * question status reset, event subtitle configuration, random seed adjustment, and real-time color theme palette picking.
+ * question status reset, event subtitle configuration, random seed adjustment, real-time color theme palette picking,
+ * spreadsheet pre-flight audits, and password-protected in-app question editing.
  */
 export const SettingsScreen: React.FC = () => {
   const { 
@@ -23,9 +29,146 @@ export const SettingsScreen: React.FC = () => {
     resetAllQuestionsUsed 
   } = useQuizStore();
   
+  const { volume, isMuted, setVolume, toggleMute, disabledSfx, toggleSfxDisabled, customSoundbites, setCustomSoundbite } = useAudioStore();
+  const [playingPreviewKey, setPlayingPreviewKey] = useState<SfxKey | null>(null);
+  const previewTimerRef = useRef<number | null>(null);
+
+  const sfxList: Array<{
+    key: SfxKey;
+    label: string;
+    desc: string;
+    icon: React.ReactNode;
+    durationMs: number;
+    play: (ignoreDisabled: boolean) => void;
+    stop: () => void;
+  }> = [
+    {
+      key: 'tickTock',
+      label: 'Countdown Tick-Tock',
+      desc: 'Rapid Fire 60s timer woodblock tick-tock audio',
+      icon: <Clock size={20} color="var(--yellow)" />,
+      durationMs: 200,
+      play: (ignore) => playTickTock(false, false, ignore),
+      stop: () => {},
+    },
+    {
+      key: 'tileChime',
+      label: 'Jeopardy Tile Chime',
+      desc: 'Sparkling glass chime played on tile click',
+      icon: <Bell size={20} color="var(--teal)" />,
+      durationMs: 500,
+      play: (ignore) => playTileChime(2, ignore),
+      stop: () => {},
+    },
+    {
+      key: 'buzzerLockout',
+      label: 'Buzzer Lockout Buzz',
+      desc: 'Game show lockout buzzer tone on buzz-in',
+      icon: <AlertOctagon size={20} color="var(--wrong-red)" />,
+      durationMs: 500,
+      play: (ignore) => playBuzzerLockout(ignore),
+      stop: () => {},
+    },
+    {
+      key: 'correctFanfare',
+      label: 'Correct Fanfare',
+      desc: 'Ascending C-major chord on correct answer',
+      icon: <CheckCircle2 size={20} color="var(--correct-green)" />,
+      durationMs: 1200,
+      play: (ignore) => playCorrectFanfare(ignore),
+      stop: () => {},
+    },
+    {
+      key: 'wrongBuzz',
+      label: 'Wrong Answer Buzz',
+      desc: 'Dissonant double-burst tone on wrong answer',
+      icon: <XCircle size={20} color="var(--orange)" />,
+      durationMs: 400,
+      play: (ignore) => playWrongBuzz(ignore),
+      stop: () => {},
+    },
+    {
+      key: 'bubblePop',
+      label: 'Menu Circle Bubble Pops',
+      desc: 'Water bubble pops when background circles appear',
+      icon: <Sparkles size={20} color="var(--yellow)" />,
+      durationMs: 600,
+      play: (ignore) => playBubblePopSequence(ignore),
+      stop: () => {},
+    },
+    {
+      key: 'buttonClick',
+      label: 'UI Button Click',
+      desc: 'Click tone when clicking buttons or controls',
+      icon: <MousePointerClick size={20} color="var(--white)" />,
+      durationMs: 250,
+      play: (ignore) => playButtonClick(ignore),
+      stop: () => {},
+    },
+    {
+      key: 'wheelTick',
+      label: 'Spin Wheel Mechanical Ticks',
+      desc: 'Continuous 5.5s mechanical reel notch ticks synced with category wheel spin',
+      icon: <RotateCw size={20} color="var(--teal)" />,
+      durationMs: 5500,
+      play: (ignore) => playWheelTick(ignore),
+      stop: () => stopWheelTick(),
+    },
+    {
+      key: 'bgm',
+      label: 'Lobby Background Music (BGM)',
+      desc: 'Looping 8-bar music with variations for Menu & Start screens',
+      icon: <Music size={20} color="var(--yellow)" />,
+      durationMs: Infinity,
+      play: (ignore) => startBgm(ignore),
+      stop: () => stopBgm(),
+    },
+  ];
+
+  /** Toggles preview playback dynamically based on exact audio duration */
+  const handlePreviewToggle = (item: (typeof sfxList)[0]) => {
+    // If currently playing THIS item, stop it immediately!
+    if (playingPreviewKey === item.key || (item.key === 'bgm' && isBgmPlaying())) {
+      if (previewTimerRef.current) {
+        clearTimeout(previewTimerRef.current);
+        previewTimerRef.current = null;
+      }
+      item.stop();
+      setPlayingPreviewKey(null);
+      return;
+    }
+
+    // Stop any other currently running audio previews
+    if (previewTimerRef.current) {
+      clearTimeout(previewTimerRef.current);
+      previewTimerRef.current = null;
+    }
+    stopBgm();
+    stopWheelTick();
+
+    // Start playing new preview
+    item.play(true);
+    setPlayingPreviewKey(item.key);
+
+    // If duration is finite, reset button state after exact audio duration
+    if (Number.isFinite(item.durationMs)) {
+      previewTimerRef.current = window.setTimeout(() => {
+        setPlayingPreviewKey(prev => (prev === item.key ? null : prev));
+        previewTimerRef.current = null;
+      }, item.durationMs);
+    }
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // Pre-flight audit state
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [showAuditModal, setShowAuditModal] = useState<boolean>(false);
+
+  // Question Editor state
+  const [showQuestionEditor, setShowQuestionEditor] = useState<boolean>(false);
 
   /** Generates a new random 8-digit seed number */
   const handleRandomizeSeed = () => {
@@ -38,7 +181,6 @@ export const SettingsScreen: React.FC = () => {
   const usedQuestions = questions.filter(q => q.used).length;
   const unusedQuestions = totalQuestions - usedQuestions;
 
-
   /** Summarizes questions count per round code */
   const roundCounts = questions.reduce((acc, q) => {
     const code = q.roundCode || 'Other';
@@ -47,25 +189,22 @@ export const SettingsScreen: React.FC = () => {
   }, {} as Record<string, number>);
 
   /**
-   * Parses uploaded Excel file, validates column schema, and loads questions into Zustand store.
+   * Runs pre-flight audit scan on uploaded Excel file and triggers Audit Modal.
    * 
    * @param file - The raw .xlsx / .xls File instance.
    */
   const processFile = async (file: File) => {
     try {
-      setMsg('Parsing file...');
-      const parsedQuestions = await parseExcelData(file, seed);
+      setMsg('Auditing spreadsheet...');
+      const result = await auditExcelData(file, seed);
       
-      if (!parsedQuestions || parsedQuestions.length === 0) {
-        throw new Error("No questions found. Check Excel format.");
-      }
-      const q1 = parsedQuestions[0];
-      if (!q1.question || !q1.answer) {
-        throw new Error("Invalid format: Missing 'Questions' or 'Answer' columns.");
+      if (result.cleanQuestions.length === 0) {
+        throw new Error("No valid questions found in workbook. Check Excel format.");
       }
 
-      loadQuestions(parsedQuestions);
-      setMsg(`Success: Loaded ${parsedQuestions.length} questions!`);
+      setAuditResult(result);
+      setShowAuditModal(true);
+      setMsg('');
     } catch (err: any) {
       setMsg(err.message || 'Failed to parse Excel file.');
       console.error(err);
@@ -301,6 +440,231 @@ export const SettingsScreen: React.FC = () => {
 
 
 
+            {/* Presenter Audio & Synthesized SFX Test Bench Card */}
+            <div className="card" style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--yellow)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Volume2 size={24} />
+                  <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Presenter Master Audio & SFX</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  style={{
+                    backgroundColor: isMuted ? 'var(--wrong-red)' : 'var(--teal)',
+                    color: 'var(--white)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                  {isMuted ? 'UNMUTE' : 'MUTE'}
+                </button>
+              </div>
+
+              {/* Master Volume Slider */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                  <span>Master SFX Volume</span>
+                  <span style={{ color: isMuted ? 'var(--orange)' : 'var(--yellow)', fontFamily: 'monospace' }}>
+                    {isMuted ? 'MUTED' : `${Math.round(volume * 100)}%`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  style={{ accentColor: 'var(--yellow)', cursor: 'pointer', width: '100%' }}
+                />
+              </div>
+
+              {/* Per-SFX Preview & Individual Enable/Disable Toggles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                <label style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--yellow)' }}>
+                  Individual Sound Effect Controls ({sfxList.filter(item => !disabledSfx[item.key]).length}/{sfxList.length} Enabled):
+                </label>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {sfxList.map((item) => {
+                    const isDisabled = !!disabledSfx[item.key];
+                    const isCurrentlyPlaying = item.key === 'bgm' ? isBgmPlaying() : playingPreviewKey === item.key;
+                    const customMp3Url = customSoundbites[item.key];
+
+                    return (
+                      <div
+                        key={item.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: 'rgba(0,0,0,0.25)',
+                          border: `1.5px solid ${isDisabled ? 'rgba(255,255,255,0.1)' : customMp3Url ? 'var(--yellow)' : 'var(--teal)'}`,
+                          borderRadius: '12px',
+                          padding: '10px 14px',
+                          gap: '12px',
+                          opacity: isDisabled ? 0.75 : 1,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {item.icon}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: isDisabled ? 'rgba(255,255,255,0.6)' : 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.label}
+                              </span>
+                              {customMp3Url && (
+                                <span style={{ backgroundColor: 'var(--yellow)', color: 'var(--dark-green)', fontSize: '0.68rem', fontWeight: '900', padding: '2px 6px', borderRadius: '4px' }}>
+                                  CUSTOM MP3
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--yellow)', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {item.desc}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                          {/* Hidden File Input for Custom MP3 Soundbite */}
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            id={`mp3-upload-${item.key}`}
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (evt) => {
+                                  if (evt.target?.result) {
+                                    setCustomSoundbite(item.key, evt.target.result as string);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+
+                          {/* Upload MP3 Custom Soundbite Button */}
+                          <label
+                            htmlFor={`mp3-upload-${item.key}`}
+                            title={`Upload Custom MP3 for ${item.label}`}
+                            style={{
+                              backgroundColor: 'rgba(255,255,255,0.1)',
+                              color: 'var(--white)',
+                              border: '1px solid rgba(255,255,255,0.25)',
+                              borderRadius: '8px',
+                              padding: '6px 10px',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            <UploadCloud size={14} color="var(--yellow)" />
+                            MP3
+                          </label>
+
+                          {/* Reset Custom MP3 to Synthesizer Default */}
+                          {customMp3Url && (
+                            <button
+                              type="button"
+                              onClick={() => setCustomSoundbite(item.key, null)}
+                              title="Reset back to built-in synthesized Web Audio default"
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: 'var(--orange)',
+                                border: '1px solid var(--orange)',
+                                borderRadius: '8px',
+                                padding: '6px 8px',
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          )}
+
+                          {/* Preview Play / Stop Button */}
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewToggle(item)}
+                            title={isCurrentlyPlaying ? `Stop ${item.label}` : `Preview ${item.label}`}
+                            style={{
+                              backgroundColor: isCurrentlyPlaying ? 'var(--wrong-red)' : 'var(--dark-green)',
+                              color: 'var(--white)',
+                              border: `1px solid ${isCurrentlyPlaying ? 'var(--orange)' : 'var(--teal)'}`,
+                              borderRadius: '8px',
+                              padding: '6px 10px',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontWeight: 'bold',
+                              minWidth: '78px',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            {isCurrentlyPlaying ? (
+                              <>
+                                <Square size={14} fill="var(--white)" />
+                                Stop
+                              </>
+                            ) : (
+                              <>
+                                <Play size={14} fill="var(--white)" />
+                                Preview
+                              </>
+                            )}
+                          </button>
+
+                          {/* Enable / Disable Toggle Switch Button */}
+                          <button
+                            type="button"
+                            onClick={() => toggleSfxDisabled(item.key)}
+                            title={isDisabled ? `Enable ${item.label}` : `Disable ${item.label}`}
+                            style={{
+                              backgroundColor: isDisabled ? 'rgba(229, 56, 59, 0.25)' : 'var(--correct-green)',
+                              color: isDisabled ? 'var(--wrong-red)' : 'var(--dark-green)',
+                              border: `1.5px solid ${isDisabled ? 'var(--wrong-red)' : 'var(--correct-green)'}`,
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              fontWeight: '900',
+                              letterSpacing: '0.5px',
+                              minWidth: '85px',
+                              textAlign: 'center'
+                            }}
+                          >
+                            {isDisabled ? 'OFF' : 'ON'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {/* Theme Palette Card */}
             <div className="card" style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
@@ -360,6 +724,30 @@ export const SettingsScreen: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Question Bank Editor Toggle Button */}
+              <button 
+                onClick={() => setShowQuestionEditor(!showQuestionEditor)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--yellow)',
+                  color: 'var(--dark-green)',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+                }}
+              >
+                <Edit3 size={20} />
+                {showQuestionEditor ? 'Close Question Bank Editor' : 'Open Question Bank Editor (Password Protected)'}
+              </button>
 
               {/* Action Buttons */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -442,10 +830,10 @@ export const SettingsScreen: React.FC = () => {
               >
                 <UploadCloud size={28} color={isDragging ? 'var(--yellow)' : 'var(--white)'} style={{ marginBottom: '4px' }} />
                 <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--white)' }}>
-                  Upload Custom Excel File
+                  Upload Custom Excel File (Pre-Flight Audit)
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--white)', opacity: 0.8 }}>
-                  Drag & Drop or click to browse (.xlsx)
+                  Drag & Drop or click to audit & browse (.xlsx)
                 </div>
                 <input 
                   type="file" 
@@ -473,6 +861,39 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
         </div>
+
+        {/* In-App Question Bank Editor Section */}
+        {showQuestionEditor && (
+          <div style={{ width: '100%', marginTop: '30px' }}>
+            <QuestionBankEditor onClose={() => setShowQuestionEditor(false)} />
+          </div>
+        )}
+
+        {/* Pre-Flight Audit Modal */}
+        <SpreadsheetAuditModal 
+          isOpen={showAuditModal}
+          auditResult={auditResult}
+          onImportAutoFix={() => {
+            if (auditResult) {
+              loadQuestions(auditResult.cleanQuestions);
+              setMsg(`Successfully imported & auto-fixed ${auditResult.cleanQuestions.length} questions!`);
+            }
+            setShowAuditModal(false);
+          }}
+          onImportAndEdit={() => {
+            if (auditResult) {
+              loadQuestions(auditResult.cleanQuestions);
+              setMsg(`Loaded ${auditResult.cleanQuestions.length} questions. Opening Editor...`);
+            }
+            setShowAuditModal(false);
+            setShowQuestionEditor(true);
+          }}
+          onCancel={() => {
+            setShowAuditModal(false);
+            setMsg('Excel import cancelled.');
+          }}
+        />
+
       </div>
     </ScreenLayout>
   );

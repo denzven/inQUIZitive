@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { Keyboard, Info, Rocket } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
+import { playButtonClick } from '../utils/soundEffects';
 
 /**
  * AboutScreen Component.
@@ -14,8 +15,8 @@ export const AboutScreen: React.FC = () => {
   /** Background decorative circle nodes */
   const decorCircles = (
     <>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '15%', left: '15%', width: 'clamp(200px, 40vw, 400px)', height: 'clamp(200px, 40vw, 400px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6 }} />
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '85%', left: '85%', width: 'clamp(200px, 50vw, 500px)', height: 'clamp(200px, 50vw, 500px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6, animationDelay: '0.2s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '15%', left: '15%', width: 'clamp(200px, 40vw, 400px)', height: 'clamp(200px, 40vw, 400px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6 }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '85%', left: '85%', width: 'clamp(200px, 50vw, 500px)', height: 'clamp(200px, 50vw, 500px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6, animationDelay: '0.2s' }} />
     </>
   );
 
@@ -25,7 +26,7 @@ export const AboutScreen: React.FC = () => {
       hideTitle={true} 
       footerText="Made with Love by Denzven and AI using React and Vite"
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { playButtonClick(); setGameState('MENU'); }}
     >
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', zIndex: 1, padding: '0 20px', boxSizing: 'border-box' }}>

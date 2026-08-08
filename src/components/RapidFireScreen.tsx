@@ -4,6 +4,7 @@ import { Play, Pause, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 import { useRapidFireStore } from '../store/useRapidFireStore';
 import { seededShuffle } from '../utils/random';
+import { playTickTock, playCorrectFanfare, playWrongBuzz, playBuzzerLockout } from '../utils/soundEffects';
 
 /**
  * RapidFireScreen Component.
@@ -39,22 +40,25 @@ export const RapidFireScreen: React.FC = () => {
   }, [rfQuestions.length, questions, setRfQuestions, seed]);
 
 
-  /** 60-second countdown timer effect */
+  /** 60-second countdown timer effect with synthesized tick-tock audio */
   useEffect(() => {
     let interval: number | undefined;
     if (rfState === 'PLAYING' && !isPaused && timer > 0) {
       interval = window.setInterval(() => {
         setTimer(prev => {
           if (prev <= 1) {
+            playBuzzerLockout();
             setRfState('END');
             return 0;
           }
-          return prev - 1;
+          const nextTimer = prev - 1;
+          playTickTock(nextTimer % 2 === 1, nextTimer <= 10);
+          return nextTimer;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [rfState, isPaused, timer]);
+  }, [rfState, isPaused, timer, setTimer, setRfState]);
 
   /** Feedback delay effect before automatically advancing to next question */
   useEffect(() => {
@@ -93,6 +97,12 @@ export const RapidFireScreen: React.FC = () => {
     if (!currentQ) return;
     const selectedText = currentQ.options[optIndex];
     const correct = selectedText === currentQ.answer;
+
+    if (correct) {
+      playCorrectFanfare();
+    } else {
+      playWrongBuzz();
+    }
 
     if (userAnswers[currentIdx] === undefined) {
       if (correct) {

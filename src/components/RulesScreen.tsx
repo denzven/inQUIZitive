@@ -2,6 +2,7 @@ import React from 'react';
 import { ScreenLayout } from './ScreenLayout';
 import { useQuizStore } from '../store/useQuizStore';
 import { Trophy, Clock, AlertTriangle, ListChecks } from 'lucide-react';
+import { playButtonClick } from '../utils/soundEffects';
 
 /**
  * RulesScreen Component.
@@ -13,9 +14,9 @@ export const RulesScreen: React.FC = () => {
   return (
     <ScreenLayout
       showHomeButton={true}
-      onHomeClick={() => setGameState('MENU')}
+      onHomeClick={() => { playButtonClick(); setGameState('MENU'); }}
       showSettingsButton={true}
-      onSettingsClick={() => setGameState('SETTINGS')}
+      onSettingsClick={() => { playButtonClick(); setGameState('SETTINGS'); }}
       hideTitle={true}
     >
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '900px', margin: 'auto', paddingBottom: '20px', boxSizing: 'border-box' }}>

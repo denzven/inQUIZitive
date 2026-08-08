@@ -4,6 +4,7 @@ import { ScreenLayout } from './ScreenLayout';
 import { Trophy, X, Circle, RotateCcw, Home } from 'lucide-react';
 import { useTicTacToeStore } from '../store/useTicTacToeStore';
 import { seededShuffle } from '../utils/random';
+import { playTileChime, playCorrectFanfare, playWrongBuzz } from '../utils/soundEffects';
 
 /**
  * TicTacToeScreen Component (Tiebreaker Round).
@@ -79,6 +80,7 @@ export const TicTacToeScreen: React.FC = () => {
    */
   const handleTileClick = (index: number) => {
     if (winner) return;
+    playTileChime(index);
     setSelectedIdx(index);
     setIsAnswerRevealed(false);
 
@@ -99,6 +101,12 @@ export const TicTacToeScreen: React.FC = () => {
    */
   const handleAssignTile = (claim: 'X' | 'O' | null) => {
     if (selectedIdx === null || selectedIdx === -1) return;
+
+    if (claim === 'X' || claim === 'O') {
+      playCorrectFanfare();
+    } else {
+      playWrongBuzz();
+    }
 
     const newBoard = [...board];
     newBoard[selectedIdx] = claim;
@@ -170,7 +178,7 @@ export const TicTacToeScreen: React.FC = () => {
             zIndex: 200,
             backdropFilter: 'blur(8px)'
           }}>
-            <div className="animate-pop-in" style={{ 
+            <div className="animate-pop-in-absolute" style={{ 
               position: 'fixed',
               top: '50%',
               left: '50%',
@@ -279,7 +287,7 @@ export const TicTacToeScreen: React.FC = () => {
             zIndex: 100,
             backdropFilter: 'blur(5px)'
           }}>
-            <div className="animate-pop-in" style={{ 
+            <div className="animate-pop-in-absolute" style={{ 
               position: 'fixed',
               top: '50%',
               left: '50%',

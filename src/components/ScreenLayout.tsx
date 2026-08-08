@@ -1,6 +1,8 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Home, Settings } from 'lucide-react';
+import { Home, Settings, Volume2, VolumeX } from 'lucide-react';
+import { useAudioStore } from '../store/useAudioStore';
+import { playButtonClick, stopWheelTick } from '../utils/soundEffects';
 
 /**
  * Props for the ScreenLayout wrapper component.
@@ -18,6 +20,8 @@ interface ScreenLayoutProps {
   showSettingsButton?: boolean;
   /** Click handler for top-left Settings navigation button */
   onSettingsClick?: () => void;
+  /** Optional additional elements rendered in top-right navigation bar */
+  topRightActions?: React.ReactNode;
   /** Optional footer text content */
   footerText?: React.ReactNode;
   /** Whether to hide main header title banner */
@@ -36,18 +40,21 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   onHomeClick,
   showSettingsButton,
   onSettingsClick,
+  topRightActions,
   footerText,
   hideTitle
 }) => {
-  const { subtitle } = useQuizStore();
+  const { subtitle, gameState } = useQuizStore();
+  const { isMuted, toggleMute } = useAudioStore();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  /** Automatically scroll main content view back to top on children navigation updates */
+  /** Automatically scroll main content view back to top on gameState screen transitions */
   React.useEffect(() => {
+    stopWheelTick();
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
-  }, [children]);
+  }, [gameState]);
 
   return (
     <div className="projector-container animate-fade-in" style={{ justifyContent: 'flex-start', alignItems: 'center', overflow: 'hidden' }}>
@@ -70,7 +77,10 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
         {showHomeButton && onHomeClick && (
           <button 
             className="btn-icon"
-            onClick={onHomeClick}
+            onClick={() => {
+              stopWheelTick();
+              onHomeClick();
+            }}
             aria-label="Home"
           >
             <Home style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
@@ -80,12 +90,47 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
         {showSettingsButton && onSettingsClick && (
           <button 
             className="btn-icon"
-            onClick={onSettingsClick}
+            onClick={() => {
+              stopWheelTick();
+              onSettingsClick();
+            }}
             aria-label="Settings"
           >
             <Settings style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
         )}
+      </div>
+
+      {/* Top Right Action Buttons (Mute Icon Button + Custom Actions) */}
+      <div 
+        className="animate-fade-in"
+        style={{ 
+          position: 'absolute', 
+          top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', 
+          right: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-right, 0px))', 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '10px', 
+          zIndex: 20, 
+          animationDelay: '0.5s' 
+        }}
+      >
+        <button 
+          className="btn-icon"
+          onClick={() => {
+            toggleMute();
+            playButtonClick();
+          }}
+          style={{ 
+            backgroundColor: isMuted ? 'var(--orange)' : 'var(--dark-teal)',
+            border: `2px solid ${isMuted ? 'var(--wrong-red)' : 'var(--teal)'}`
+          }}
+          aria-label={isMuted ? "Unmute Audio" : "Mute Audio"}
+          title={isMuted ? "Unmute Audio" : "Mute Audio"}
+        >
+          {isMuted ? <VolumeX size={24} color="var(--white)" /> : <Volume2 size={24} color="var(--white)" />}
+        </button>
+        {topRightActions}
       </div>
 
       {/* Main Content Area: Centered Title + Children with safe top padding & zero scroll clipping */}

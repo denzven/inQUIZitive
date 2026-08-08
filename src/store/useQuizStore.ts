@@ -61,11 +61,23 @@ export interface QuizState {
   subtitle: string;
   /** Flag indicating whether question dataset has loaded into persistent storage */
   hasLoaded: boolean;
+  /** Admin quizmaster passcode for question bank access */
+  adminPasscode: string;
 
   /** Sets the active application screen state */
   setGameState: (state: QuizState['gameState']) => void;
   /** Loads parsed question items into global store */
   loadQuestions: (questions: Question[]) => void;
+  /** Replaces entire questions array directly */
+  setQuestions: (questions: Question[]) => void;
+  /** Adds a new question item to question bank */
+  addQuestion: (question: Omit<Question, 'index'>) => void;
+  /** Updates existing question by index */
+  updateQuestion: (index: number, updated: Partial<Question>) => void;
+  /** Deletes question by index and re-indexes remaining questions */
+  deleteQuestion: (index: number) => void;
+  /** Sets admin quizmaster password */
+  setAdminPasscode: (passcode: string) => void;
   /** Initializes and starts a named quiz round */
   startRound: (roundCode: string) => void;
   /** Marks a question as used by index */
@@ -136,10 +148,39 @@ export const useQuizStore = create<QuizState>()(
   seed: '12342026',
   subtitle: 'ARISE 2k26',
   hasLoaded: false,
+  adminPasscode: 'ARISE2026',
 
   setGameState: (state) => set({ gameState: state }),
   
   loadQuestions: (questions) => set({ questions }),
+  
+  setQuestions: (questions) => set({ questions }),
+
+  addQuestion: (newQ) => set((state) => {
+    const nextIndex = state.questions.length > 0 
+      ? Math.max(...state.questions.map(q => q.index)) + 1 
+      : 0;
+    const questionToAdd: Question = {
+      ...newQ,
+      index: nextIndex,
+    };
+    return { questions: [...state.questions, questionToAdd] };
+  }),
+
+  updateQuestion: (index, updated) => set((state) => ({
+    questions: state.questions.map(q => 
+      q.index === index ? { ...q, ...updated } : q
+    )
+  })),
+
+  deleteQuestion: (index) => set((state) => {
+    const filtered = state.questions.filter(q => q.index !== index);
+    // Re-index remaining questions cleanly
+    const reindexed = filtered.map((q, idx) => ({ ...q, index: idx }));
+    return { questions: reindexed };
+  }),
+
+  setAdminPasscode: (adminPasscode) => set({ adminPasscode }),
   
   startRound: (roundCode) => set(() => {
     return {

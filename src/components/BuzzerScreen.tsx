@@ -2,8 +2,9 @@ import React, { useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { useBuzzerStore } from '../store/useBuzzerStore';
 import { ScreenLayout } from './ScreenLayout';
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Volume2 } from 'lucide-react';
 import { seededShuffle } from '../utils/random';
+import { playBuzzerLockout, playCorrectFanfare, playWrongBuzz } from '../utils/soundEffects';
 
 /**
  * BuzzerScreen Component.
@@ -60,6 +61,12 @@ export const BuzzerScreen: React.FC = () => {
    */
   const handleOptionClick = (optIdx: number) => {
     if (!currentQ) return;
+    const selectedOpt = currentQ.options[optIdx];
+    if (selectedOpt === currentQ.answer) {
+      playCorrectFanfare();
+    } else {
+      playWrongBuzz();
+    }
     setUserAnswer(currentIdx, optIdx);
     setQuestionRevealed(currentIdx);
   };
@@ -69,7 +76,12 @@ export const BuzzerScreen: React.FC = () => {
     setQuestionRevealed(currentIdx);
   };
 
-  /** Keyboard shortcuts listener (1-4 for options, Space for reveal, Arrows for navigation, Esc to exit) */
+  /** Triggers the game show lockout buzzer sound */
+  const handleTriggerBuzzer = () => {
+    playBuzzerLockout();
+  };
+
+  /** Keyboard shortcuts listener (1-4 for options, Space for reveal, B for buzzer lockout, Arrows for navigation, Esc to exit) */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (buzzerState === 'PLAYING' && currentQ) {
@@ -77,6 +89,7 @@ export const BuzzerScreen: React.FC = () => {
         if (e.key === '2') handleOptionClick(1);
         if (e.key === '3') handleOptionClick(2);
         if (e.key === '4') handleOptionClick(3);
+        if (e.key.toLowerCase() === 'b') handleTriggerBuzzer();
         if (e.key === ' ') handleReveal();
         if (e.key === 'ArrowLeft') handlePrev();
         if (e.key === 'ArrowRight') handleNext();
@@ -183,6 +196,21 @@ export const BuzzerScreen: React.FC = () => {
               >
                 <ChevronLeft size={24} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
                 Prev
+              </button>
+
+              <button 
+                onClick={handleTriggerBuzzer}
+                style={{ 
+                  padding: '15px 25px', 
+                  fontSize: '1.5rem', 
+                  backgroundColor: 'var(--wrong-red)',
+                  color: 'var(--white)',
+                  boxShadow: '0 0 15px rgba(229, 56, 59, 0.4)'
+                }}
+                title="Trigger Buzzer Lockout Sound (Shortcut: B)"
+              >
+                <Volume2 size={24} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                BUZZ!
               </button>
 
               <button 

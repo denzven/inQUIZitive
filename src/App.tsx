@@ -15,6 +15,8 @@ import { SpinWheelScreen } from './components/SpinWheelScreen';
 import { TicTacToeScreen } from './components/TicTacToeScreen';
 import { BuzzerScreen } from './components/BuzzerScreen';
 import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
+import { playBubblePopSequence } from './utils/soundEffects';
+import { startBgm, stopBgm } from './utils/bgmSynthesizer';
 
 import { useRapidFireStore } from './store/useRapidFireStore';
 import { useTicTacToeStore } from './store/useTicTacToeStore';
@@ -28,6 +30,16 @@ import { useSpinWheelStore } from './store/useSpinWheelStore';
 function App() {
   const { gameState, setGameState, loadQuestions, activeRound, theme, hasLoaded, setHasLoaded, seed } = useQuizStore();
   const [init, setInit] = useState(false);
+
+  /** Manages Background Music (BGM) lifecycle: active only on MENU and START screens after preloader finishes */
+  useEffect(() => {
+    if (!init) return; // Suppress BGM while preloader is active
+    if (gameState === 'MENU' || gameState === 'START') {
+      startBgm();
+    } else {
+      stopBgm();
+    }
+  }, [gameState, init]);
 
   /** Syncs Zustand theme colors to document root CSS variables */
   useEffect(() => {
@@ -139,13 +151,18 @@ function App() {
       } finally {
         setInit(true);
         
-        // Remove preloader with fade out
+        // Remove preloader with fade out, then trigger bubble pop SFX and start lobby BGM
         const preloader = document.getElementById('preloader');
         if (preloader) {
           preloader.style.opacity = '0';
           setTimeout(() => {
             preloader.remove();
+            playBubblePopSequence();
+            startBgm();
           }, 500); // matches the transition duration in index.html
+        } else {
+          playBubblePopSequence();
+          startBgm();
         }
 
         // Ensure we bypass SETUP since we auto-load, or if it fails they can go to Settings.

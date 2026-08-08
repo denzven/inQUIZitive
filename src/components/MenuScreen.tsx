@@ -3,11 +3,12 @@ import { useQuizStore } from '../store/useQuizStore';
 import QLogo from '../assets/Q.png';
 import { Maximize, Minimize, Download } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
+import { playButtonClick, playBubblePopSequence } from '../utils/soundEffects';
 
 /**
  * MenuScreen Component.
  * The primary navigation dashboard for InQUIZitive. Provides access to Start, Leaderboard,
- * Rules, Settings, and About views, as well as PWA installation and fullscreen toggle controls.
+ * Rules, Settings, and About views, as well as PWA installation and fullscreen controls.
  */
 export const MenuScreen: React.FC = () => {
   const { setGameState, hasLoaded, setHasLoaded } = useQuizStore();
@@ -23,6 +24,13 @@ export const MenuScreen: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [hasLoaded, setHasLoaded]);
+
+  /** Triggers bubbly popping sound effect sequence when menu screen background circles pop up */
+  useEffect(() => {
+    if (hasLoaded) {
+      playBubblePopSequence();
+    }
+  }, [hasLoaded]);
 
   /** Listens to browser document fullscreen change events */
   useEffect(() => {
@@ -47,6 +55,7 @@ export const MenuScreen: React.FC = () => {
    * Prompts the browser's native PWA installation dialog.
    */
   const handleInstallClick = async () => {
+    playButtonClick();
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -60,11 +69,18 @@ export const MenuScreen: React.FC = () => {
    * Toggles browser document full screen view on/off.
    */
   const toggleFullScreen = () => {
+    playButtonClick();
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(console.error);
     } else {
       document.exitFullscreen().catch(console.error);
     }
+  };
+
+  /** Helper for menu button clicks with SFX */
+  const handleNavClick = (nextState: any) => {
+    playButtonClick();
+    setGameState(nextState);
   };
 
   if (!hasLoaded) {
@@ -83,47 +99,52 @@ export const MenuScreen: React.FC = () => {
   /** Decorative background circles */
   const decorCircles = (
     <>
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '21%', left: '8%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }} />
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '42%', left: '97%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }} />
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '92%', left: '7%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }} />
-      <div className="animate-pop-in" style={{ position: 'absolute', top: '115%', left: '87%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '21%', left: '8%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '42%', left: '97%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '92%', left: '7%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '115%', left: '87%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }} />
+    </>
+  );
+
+  const renderTopRightActions = (
+    <>
+      {deferredPrompt && (
+        <button 
+          className="btn-icon"
+          onClick={handleInstallClick}
+          style={{ 
+            backgroundColor: 'var(--yellow)',
+            border: '2px solid var(--orange)'
+          }}
+          aria-label="Install App"
+          title="Install App"
+        >
+          <Download size={24} color="var(--dark-green)" />
+        </button>
+      )}
+
+      <button 
+        className="btn-icon"
+        onClick={toggleFullScreen}
+        style={{ 
+          backgroundColor: 'var(--dark-teal)',
+          border: '2px solid var(--teal)'
+        }}
+        aria-label="Toggle Fullscreen"
+        title="Toggle Fullscreen"
+      >
+        {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
+      </button>
     </>
   );
 
   return (
     <ScreenLayout 
       backgroundDecor={decorCircles}
+      topRightActions={renderTopRightActions}
       footerText="Made with Love by Denzven and AI using React and Vite"
       hideTitle={true}
     >
-      <div style={{ position: 'absolute', top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', right: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-right, 0px))', display: 'flex', gap: '10px', zIndex: 20 }}>
-        {deferredPrompt && (
-          <button 
-            className="btn-icon"
-            onClick={handleInstallClick}
-            style={{ 
-              backgroundColor: 'var(--yellow)',
-              border: '2px solid var(--orange)'
-            }}
-            aria-label="Install App"
-            title="Install App"
-          >
-            <Download size={24} color="var(--dark-green)" />
-          </button>
-        )}
-        <button 
-          className="btn-icon"
-          onClick={toggleFullScreen}
-          style={{ 
-            backgroundColor: 'var(--dark-teal)',
-            border: '2px solid var(--teal)'
-          }}
-          aria-label="Toggle Fullscreen"
-          title="Toggle Fullscreen"
-        >
-          {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
-        </button>
-      </div>
 
       <div style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
@@ -132,19 +153,19 @@ export const MenuScreen: React.FC = () => {
         </div>
         
         <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box', margin: 0 }}>
-          <button className="menu-btn" onClick={() => setGameState('START')}>
+          <button className="menu-btn" onClick={() => handleNavClick('START')}>
             Start
           </button>
-          <button className="menu-btn" onClick={() => setGameState('LEADERBOARD')}>
+          <button className="menu-btn" onClick={() => handleNavClick('LEADERBOARD')}>
             Leaderboard
           </button>
-          <button className="menu-btn" onClick={() => setGameState('RULES')}>
+          <button className="menu-btn" onClick={() => handleNavClick('RULES')}>
             Rules
           </button>
-          <button className="menu-btn" onClick={() => setGameState('SETTINGS')}>
+          <button className="menu-btn" onClick={() => handleNavClick('SETTINGS')}>
             Settings
           </button>
-          <button className="menu-btn" onClick={() => setGameState('ABOUT')}>
+          <button className="menu-btn" onClick={() => handleNavClick('ABOUT')}>
             About
           </button>
         </div>

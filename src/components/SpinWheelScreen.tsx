@@ -3,6 +3,7 @@ import { useQuizStore, type Question } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { useSpinWheelStore } from '../store/useSpinWheelStore';
 import { seededShuffle } from '../utils/random';
+import { playTileChime, playCorrectFanfare, playWrongBuzz, playWheelTick, stopWheelTick } from '../utils/soundEffects';
 
 /**
  * SpinWheelScreen Component (Spin Wheel & Jeopardy Round).
@@ -12,6 +13,13 @@ import { seededShuffle } from '../utils/random';
 export const SpinWheelScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
   const spinCountRef = useRef<number>(0);
+
+  /** Ensures spinner audio is immediately stopped when leaving or unmounting the screen */
+  useEffect(() => {
+    return () => {
+      stopWheelTick();
+    };
+  }, []);
 
   /** Data grouping: filters SWJ round questions into topic mappings and ensures >= 4 fallback topics */
   const { allTopics, topicMap } = useMemo(() => {
@@ -99,6 +107,9 @@ export const SpinWheelScreen: React.FC = () => {
     speedsRef.current = [35, 35, 35, 35]; // Continuous 60fps scroll speed
     setSlotStates([1, 1, 1, 1]);
 
+    // Play single continuous 5.5s mechanical reel spin audio track (0 CPU spikes)
+    playWheelTick();
+
     const animate = () => {
       const elapsed = Date.now() - spinStartTimeRef.current;
       let completed = 0;
@@ -133,6 +144,7 @@ export const SpinWheelScreen: React.FC = () => {
         }
 
         newOffsets[i] += newSpeeds[i];
+
         if (newStates[i] === 0) {
           completed++;
         }
@@ -148,6 +160,7 @@ export const SpinWheelScreen: React.FC = () => {
 
       if (completed === 4) {
         setSwState('SPIN_DONE');
+        playTileChime(3);
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       } else {
         animFrameRef.current = requestAnimationFrame(animate);
@@ -176,6 +189,12 @@ export const SpinWheelScreen: React.FC = () => {
     const selectedText = currentQ.options[optIndex];
     const correct = selectedText === currentQ.answer;
 
+    if (correct) {
+      playCorrectFanfare();
+    } else {
+      playWrongBuzz();
+    }
+
     setSelectedOptIdx(optIndex);
     setIsCorrect(correct);
     setIsReviewing(false);
@@ -203,6 +222,7 @@ export const SpinWheelScreen: React.FC = () => {
    * @param q - The selected Question item.
    */
   const handleTileClick = (q: Question) => {
+    playTileChime(q.index);
     setCurrentQ(q);
     
     if (q.used) {
