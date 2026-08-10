@@ -78,6 +78,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           <button 
             className="btn-icon"
             onClick={() => {
+              playButtonClick();
               stopWheelTick();
               onHomeClick();
             }}
@@ -91,6 +92,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           <button 
             className="btn-icon"
             onClick={() => {
+              playButtonClick();
               stopWheelTick();
               onSettingsClick();
             }}

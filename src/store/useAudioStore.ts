@@ -11,6 +11,14 @@ export type SfxKey =
   | 'bubblePop'
   | 'buttonClick'
   | 'bgm'
+  | 'bgm_menu'
+  | 'bgm_rounds'
+  | 'bgm_rapid_fire'
+  | 'bgm_spin_wheel'
+  | 'bgm_tictactoe'
+  | 'bgm_buzzer'
+  | 'bgm_leaderboard'
+  | 'bgm_rules'
   | 'wheelTick';
 
 export interface AudioState {
@@ -48,6 +56,14 @@ const initialDisabledState: Record<SfxKey, boolean> = {
   bubblePop: false,
   buttonClick: false,
   bgm: false,
+  bgm_menu: false,
+  bgm_rounds: false,
+  bgm_rapid_fire: false,
+  bgm_spin_wheel: false,
+  bgm_tictactoe: false,
+  bgm_buzzer: false,
+  bgm_leaderboard: false,
+  bgm_rules: false,
   wheelTick: false,
 };
 
@@ -60,6 +76,14 @@ const initialCustomSoundbites: Record<SfxKey, string | null> = {
   bubblePop: null,
   buttonClick: null,
   bgm: null,
+  bgm_menu: null,
+  bgm_rounds: null,
+  bgm_rapid_fire: null,
+  bgm_spin_wheel: null,
+  bgm_tictactoe: null,
+  bgm_buzzer: null,
+  bgm_leaderboard: null,
+  bgm_rules: null,
   wheelTick: null,
 };
 

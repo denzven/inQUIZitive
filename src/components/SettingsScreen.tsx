@@ -9,7 +9,8 @@ import { SpreadsheetAuditModal } from './SpreadsheetAuditModal';
 import { QuestionBankEditor } from './QuestionBankEditor';
 import { useAudioStore, type SfxKey } from '../store/useAudioStore';
 import { playTickTock, playTileChime, playBuzzerLockout, playCorrectFanfare, playWrongBuzz, playButtonClick, playBubblePopSequence, playWheelTick, stopWheelTick } from '../utils/soundEffects';
-import { startBgm, stopBgm, isBgmPlaying } from '../utils/bgmSynthesizer';
+import { startBgmForKey, stopBgm, isBgmPlaying } from '../utils/bgmSynthesizer';
+import { playCustomSoundbite, stopCustomSoundbite } from '../utils/customAudioPlayer';
 
 /**
  * SettingsScreen Component.
@@ -43,6 +44,87 @@ export const SettingsScreen: React.FC = () => {
     stop: () => void;
   }> = [
     {
+      key: 'bgm_menu',
+      label: 'Main Menu Screen BGM',
+      desc: 'Upbeat game show lobby theme (C-Major, 115 BPM)',
+      icon: <Music size={20} color="var(--yellow)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_menu', ignore, true) || startBgmForKey('bgm_menu', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_menu', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_rounds',
+      label: 'Rounds Selection Screen BGM',
+      desc: 'Exciting round selector theme (E-Major, 110 BPM)',
+      icon: <Sparkles size={20} color="var(--light-orange)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_rounds', ignore, true) || startBgmForKey('bgm_rounds', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_rounds', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_rapid_fire',
+      label: 'Rapid Fire Round BGM',
+      desc: 'High-energy tension speed theme (D-Minor, 130 BPM)',
+      icon: <Clock size={20} color="var(--teal)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_rapid_fire', ignore, true) || startBgmForKey('bgm_rapid_fire', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_rapid_fire', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_spin_wheel',
+      label: 'Spin Wheel Round BGM',
+      desc: 'Suspenseful slot machine wheel theme (G-Major, 105 BPM)',
+      icon: <RotateCw size={20} color="var(--light-orange)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_spin_wheel', ignore, true) || startBgmForKey('bgm_spin_wheel', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_spin_wheel', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_tictactoe',
+      label: 'Tic Tac Toe Round BGM',
+      desc: 'Strategic synth-pop grid theme (F-Major, 100 BPM)',
+      icon: <Sliders size={20} color="var(--yellow)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_tictactoe', ignore, true) || startBgmForKey('bgm_tictactoe', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_tictactoe', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_buzzer',
+      label: 'Buzzer Round BGM',
+      desc: 'High-tension lock-in pulse theme (E-Minor, 125 BPM)',
+      icon: <AlertOctagon size={20} color="var(--wrong-red)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_buzzer', ignore, true) || startBgmForKey('bgm_buzzer', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_buzzer', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_leaderboard',
+      label: 'Leaderboard & Winner Podium BGM',
+      desc: 'Triumphant fanfare winner theme (A-Major, 120 BPM)',
+      icon: <Sparkles size={20} color="var(--yellow)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_leaderboard', ignore, true) || startBgmForKey('bgm_leaderboard', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_leaderboard', true); stopBgm(true); },
+    },
+    {
+      key: 'bgm_rules',
+      label: 'Rules Screen BGM',
+      desc: 'Relaxed informative lounge theme (Bb-Major, 95 BPM)',
+      icon: <FileSpreadsheet size={20} color="var(--teal)" />,
+      durationMs: Infinity,
+      play: (ignore) => playCustomSoundbite('bgm_rules', ignore, true) || startBgmForKey('bgm_rules', ignore, true),
+      stop: () => { stopCustomSoundbite('bgm_rules', true); stopBgm(true); },
+    },
+    {
+      key: 'buttonClick',
+      label: 'UI Button Click',
+      desc: 'Click tone when clicking buttons or controls',
+      icon: <MousePointerClick size={20} color="var(--white)" />,
+      durationMs: 250,
+      play: (ignore) => playButtonClick(ignore),
+      stop: () => {},
+    },
+    {
       key: 'tickTock',
       label: 'Countdown Tick-Tock',
       desc: 'Rapid Fire 60s timer woodblock tick-tock audio',
@@ -61,12 +143,12 @@ export const SettingsScreen: React.FC = () => {
       stop: () => {},
     },
     {
-      key: 'buzzerLockout',
-      label: 'Buzzer Lockout Buzz',
-      desc: 'Game show lockout buzzer tone on buzz-in',
-      icon: <AlertOctagon size={20} color="var(--wrong-red)" />,
-      durationMs: 500,
-      play: (ignore) => playBuzzerLockout(ignore),
+      key: 'wrongBuzz',
+      label: 'Wrong Answer Buzz',
+      desc: 'Dissonant double-burst tone on wrong answer',
+      icon: <XCircle size={20} color="var(--orange)" />,
+      durationMs: 400,
+      play: (ignore) => playWrongBuzz(ignore),
       stop: () => {},
     },
     {
@@ -79,12 +161,12 @@ export const SettingsScreen: React.FC = () => {
       stop: () => {},
     },
     {
-      key: 'wrongBuzz',
-      label: 'Wrong Answer Buzz',
-      desc: 'Dissonant double-burst tone on wrong answer',
-      icon: <XCircle size={20} color="var(--orange)" />,
-      durationMs: 400,
-      play: (ignore) => playWrongBuzz(ignore),
+      key: 'buzzerLockout',
+      label: 'Buzzer Lockout Buzz',
+      desc: 'Game show lockout buzzer tone on buzz-in',
+      icon: <AlertOctagon size={20} color="var(--wrong-red)" />,
+      durationMs: 500,
+      play: (ignore) => playBuzzerLockout(ignore),
       stop: () => {},
     },
     {
@@ -97,15 +179,6 @@ export const SettingsScreen: React.FC = () => {
       stop: () => {},
     },
     {
-      key: 'buttonClick',
-      label: 'UI Button Click',
-      desc: 'Click tone when clicking buttons or controls',
-      icon: <MousePointerClick size={20} color="var(--white)" />,
-      durationMs: 250,
-      play: (ignore) => playButtonClick(ignore),
-      stop: () => {},
-    },
-    {
       key: 'wheelTick',
       label: 'Spin Wheel Mechanical Ticks',
       desc: 'Continuous 5.5s mechanical reel notch ticks synced with category wheel spin',
@@ -114,21 +187,16 @@ export const SettingsScreen: React.FC = () => {
       play: (ignore) => playWheelTick(ignore),
       stop: () => stopWheelTick(),
     },
-    {
-      key: 'bgm',
-      label: 'Lobby Background Music (BGM)',
-      desc: 'Looping 8-bar music with variations for Menu & Start screens',
-      icon: <Music size={20} color="var(--yellow)" />,
-      durationMs: Infinity,
-      play: (ignore) => startBgm(ignore),
-      stop: () => stopBgm(),
-    },
   ];
 
   /** Toggles preview playback dynamically based on exact audio duration */
   const handlePreviewToggle = (item: (typeof sfxList)[0]) => {
+    const isCurrentlyPlaying = item.key.startsWith('bgm')
+      ? playingPreviewKey === item.key || (item.key === 'bgm_menu' && isBgmPlaying())
+      : playingPreviewKey === item.key;
+
     // If currently playing THIS item, stop it immediately!
-    if (playingPreviewKey === item.key || (item.key === 'bgm' && isBgmPlaying())) {
+    if (isCurrentlyPlaying) {
       if (previewTimerRef.current) {
         clearTimeout(previewTimerRef.current);
         previewTimerRef.current = null;
@@ -143,7 +211,7 @@ export const SettingsScreen: React.FC = () => {
       clearTimeout(previewTimerRef.current);
       previewTimerRef.current = null;
     }
-    stopBgm();
+    stopBgm(true);
     stopWheelTick();
 
     // Start playing new preview

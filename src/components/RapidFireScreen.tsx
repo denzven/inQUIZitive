@@ -40,10 +40,10 @@ export const RapidFireScreen: React.FC = () => {
   }, [rfQuestions.length, questions, setRfQuestions, seed]);
 
 
-  /** 60-second countdown timer effect with synthesized tick-tock audio */
+  /** 60-second countdown timer effect with synthesized tick-tock audio running continuously in background */
   useEffect(() => {
     let interval: number | undefined;
-    if (rfState === 'PLAYING' && !isPaused && timer > 0) {
+    if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && !isPaused && timer > 0) {
       interval = window.setInterval(() => {
         setTimer(prev => {
           if (prev <= 1) {

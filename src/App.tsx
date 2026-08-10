@@ -16,7 +16,7 @@ import { TicTacToeScreen } from './components/TicTacToeScreen';
 import { BuzzerScreen } from './components/BuzzerScreen';
 import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
 import { playBubblePopSequence } from './utils/soundEffects';
-import { startBgm, stopBgm } from './utils/bgmSynthesizer';
+import { playScreenBgm, startBgm } from './utils/bgmSynthesizer';
 
 import { useRapidFireStore } from './store/useRapidFireStore';
 import { useTicTacToeStore } from './store/useTicTacToeStore';
@@ -31,14 +31,10 @@ function App() {
   const { gameState, setGameState, loadQuestions, activeRound, theme, hasLoaded, setHasLoaded, seed } = useQuizStore();
   const [init, setInit] = useState(false);
 
-  /** Manages Background Music (BGM) lifecycle: active only on MENU and START screens after preloader finishes */
+  /** Manages Background Music (BGM) lifecycle across all screens and rounds after preloader finishes */
   useEffect(() => {
     if (!init) return; // Suppress BGM while preloader is active
-    if (gameState === 'MENU' || gameState === 'START') {
-      startBgm();
-    } else {
-      stopBgm();
-    }
+    playScreenBgm(gameState);
   }, [gameState, init]);
 
   /** Syncs Zustand theme colors to document root CSS variables */

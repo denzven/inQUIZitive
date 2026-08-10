@@ -33,8 +33,31 @@ export function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+let masterCompressor: DynamicsCompressorNode | null = null;
+let masterBassFilter: BiquadFilterNode | null = null;
+let masterReverbConvolver: ConvolverNode | null = null;
+let masterReverbGain: GainNode | null = null;
+
+/** Creates a synthetic stereo impulse response buffer for studio hall spatial reverberation */
+function createLiveStudioReverbBuffer(ctx: BaseAudioContext, duration = 1.0, decay = 2.8): AudioBuffer {
+  const sampleRate = ctx.sampleRate;
+  const length = Math.ceil(sampleRate * duration);
+  const buffer = ctx.createBuffer(2, length, sampleRate);
+  const left = buffer.getChannelData(0);
+  const right = buffer.getChannelData(1);
+
+  for (let i = 0; i < length; i++) {
+    const t = i / length;
+    const env = Math.pow(1 - t, decay);
+    left[i] = (Math.random() * 2 - 1) * env;
+    right[i] = (Math.random() * 2 - 1) * env;
+  }
+  return buffer;
+}
+
 /**
- * Returns the Master GainNode connected directly to audio destination.
+ * Returns the Master GainNode connected through a studio bass boost (+4.5dB Low-Shelf EQ),
+ * spatial Convolver Reverb bus, and broadcast limiter to audio destination.
  */
 export function getMasterGain(): GainNode | null {
   const ctx = getAudioContext();
@@ -42,7 +65,37 @@ export function getMasterGain(): GainNode | null {
   if (!masterGain) {
     masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(currentIsMuted ? 0 : currentVolume, ctx.currentTime);
-    masterGain.connect(ctx.destination);
+
+    // 1. Master Low-Shelf Bass Boost Filter (+4.5dB at 140Hz for rich, warm low-end punch)
+    masterBassFilter = ctx.createBiquadFilter();
+    masterBassFilter.type = 'lowshelf';
+    masterBassFilter.frequency.setValueAtTime(140, ctx.currentTime);
+    masterBassFilter.gain.setValueAtTime(4.5, ctx.currentTime);
+
+    // 2. Spatial Convolver Studio Reverb Bus
+    masterReverbConvolver = ctx.createConvolver();
+    masterReverbConvolver.buffer = createLiveStudioReverbBuffer(ctx, 1.0, 2.8);
+
+    masterReverbGain = ctx.createGain();
+    masterReverbGain.gain.setValueAtTime(0.22, ctx.currentTime); // 22% wet spatial reverb
+
+    // 3. Transparent Master Limiter optimized for zero ducking and distortion-free output
+    masterCompressor = ctx.createDynamicsCompressor();
+    masterCompressor.threshold.setValueAtTime(-1.5, ctx.currentTime); // High threshold prevents volume ducking
+    masterCompressor.knee.setValueAtTime(6, ctx.currentTime);         // Transparent soft-knee
+    masterCompressor.ratio.setValueAtTime(3.5, ctx.currentTime);       // Gentle peak safety ratio
+    masterCompressor.attack.setValueAtTime(0.002, ctx.currentTime);   // Ultra-fast 2ms peak catch
+    masterCompressor.release.setValueAtTime(0.08, ctx.currentTime);   // Quick 80ms recovery
+
+    // Routing:
+    masterGain.connect(masterBassFilter);
+    masterBassFilter.connect(masterCompressor);
+
+    masterBassFilter.connect(masterReverbConvolver);
+    masterReverbConvolver.connect(masterReverbGain);
+    masterReverbGain.connect(masterCompressor);
+
+    masterCompressor.connect(ctx.destination);
   }
   return masterGain;
 }
@@ -197,7 +250,16 @@ export function playTickTock(isTock = false, urgency = false, ignoreDisabled = f
   oscBody.connect(filter);
   oscHarmonic.connect(filter);
   filter.connect(gain);
-  gain.connect(master);
+
+  if (typeof ctx.createStereoPanner === 'function') {
+    const panner = ctx.createStereoPanner();
+    const panVal = isTock ? 0.32 : -0.32;
+    panner.pan.setValueAtTime(panVal, now);
+    gain.connect(panner);
+    panner.connect(master);
+  } else {
+    gain.connect(master);
+  }
 
   oscBody.start(now);
   oscHarmonic.start(now);
@@ -537,7 +599,7 @@ export function playWrongBuzz(ignoreDisabled = false): void {
 }
 
 /**
- * Synthesizes watery bubble pop sequence when background circles animate in.
+ * Synthesizes a subtle, delicate watery bubble pop sequence when background circles animate in.
  *
  * @param ignoreDisabled - If true, plays sound even if disabled.
  */
@@ -548,9 +610,11 @@ export function playBubblePopSequence(ignoreDisabled = false): void {
   const master = getMasterGain();
   if (!ctx || !master || (!ignoreDisabled && (currentIsMuted || currentVolume === 0))) return;
 
+  if (playPreloadedBuffer('bubblePop')) return;
+
   const now = ctx.currentTime;
-  const basePitches = [340, 460, 580, 700];
-  const delays = [0.1, 0.2, 0.3, 0.4];
+  const basePitches = [240, 320, 400, 480];
+  const delays = [0.04, 0.12, 0.20, 0.28];
 
   basePitches.forEach((startFreq, idx) => {
     const noteTime = now + delays[idx];
@@ -560,22 +624,22 @@ export function playBubblePopSequence(ignoreDisabled = false): void {
 
     osc.type = 'sine';
     osc.frequency.setValueAtTime(startFreq, noteTime);
-    osc.frequency.exponentialRampToValueAtTime(startFreq * 2.3, noteTime + 0.07);
+    osc.frequency.exponentialRampToValueAtTime(startFreq * 1.9, noteTime + 0.045);
 
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(startFreq * 1.5, noteTime);
-    filter.Q.setValueAtTime(1.8, noteTime);
+    filter.frequency.setValueAtTime(startFreq * 1.4, noteTime);
+    filter.Q.setValueAtTime(2.2, noteTime);
 
     gain.gain.setValueAtTime(0.0001, noteTime);
-    gain.gain.linearRampToValueAtTime(0.22, noteTime + 0.003);
-    gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.075);
+    gain.gain.linearRampToValueAtTime(0.10, noteTime + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.045);
 
     osc.connect(filter);
     filter.connect(gain);
     gain.connect(master);
 
     osc.start(noteTime);
-    osc.stop(noteTime + 0.08);
+    osc.stop(noteTime + 0.05);
   });
 }
 
