@@ -44,7 +44,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   footerText,
   hideTitle
 }) => {
-  const { subtitle, gameState } = useQuizStore();
+  const { subtitle, gameState, isStealthMode } = useQuizStore();
   const { isMuted, toggleMute } = useAudioStore();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -56,14 +56,21 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
     }
   }, [gameState]);
 
+  const actionContainerClass = `animate-fade-in ${isStealthMode ? 'ghost-zone' : ''}`;
+
   return (
     <div className="projector-container animate-fade-in" style={{ justifyContent: 'flex-start', alignItems: 'center', overflow: 'hidden' }}>
       
+      {/* ARIA Live Status Region for host earpiece announcements */}
+      <div role="status" aria-live="assertive" aria-atomic="true" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
+        {`Current Screen: ${gameState}`}
+      </div>
+
       {backgroundDecor}
 
       {/* Top Left Action Buttons (Home / Settings) */}
       <div 
-        className="animate-fade-in"
+        className={actionContainerClass}
         style={{ 
           position: 'absolute', 
           top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', 
@@ -105,7 +112,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
 
       {/* Top Right Action Buttons (Mute Icon Button + Custom Actions) */}
       <div 
-        className="animate-fade-in"
+        className={actionContainerClass}
         style={{ 
           position: 'absolute', 
           top: 'max(clamp(12px, 2.5vw, 25px), env(safe-area-inset-top, 0px))', 
@@ -138,6 +145,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       {/* Main Content Area: Centered Title + Children with safe top padding & zero scroll clipping */}
       <div 
         ref={scrollRef} 
+        className="screen-layout-content"
         style={{ 
           flex: 1, 
           display: 'flex', 

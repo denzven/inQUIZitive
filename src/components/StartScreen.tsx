@@ -16,8 +16,8 @@ export const StartScreen: React.FC = () => {
     { name: "Round 1: Aptitude (Offline)", code: null },
     { name: "Round 2: Rapid Fire", code: "RF" },
     { name: "Round 3: Jeopardy", code: "SWJ" },
-    { name: "Round 4: Tic-Tac-Toe", code: "TTT" },
-    { name: "Round 5: Buzzer", code: "B" }
+    { name: "Round 4: Buzzer", code: "B" },
+    { name: "Tie-Breaker: Tic-Tac-Toe", code: "TTT" }
   ];
 
   /** Decorative floating question marks for screen background */

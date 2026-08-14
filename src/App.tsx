@@ -34,8 +34,8 @@ function App() {
   /** Manages Background Music (BGM) lifecycle across all screens and rounds after preloader finishes */
   useEffect(() => {
     if (!init) return; // Suppress BGM while preloader is active
-    playScreenBgm(gameState);
-  }, [gameState, init]);
+    playScreenBgm(gameState, activeRound);
+  }, [gameState, activeRound, init]);
 
   /** Syncs Zustand theme colors to document root CSS variables */
   useEffect(() => {

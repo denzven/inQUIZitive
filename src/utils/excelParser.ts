@@ -36,6 +36,37 @@ export const parseExcelData = async (
 };
 
 /**
+ * Helper to safely convert cell values to trimmed strings.
+ * Handles numeric values like 0 or false without coercing them to empty strings (via `val || ''`).
+ */
+const getCellValue = (val: any): string => {
+  if (val === undefined || val === null) return '';
+  return String(val).trim();
+};
+
+/**
+ * Helper to detect unedited default template placeholders (e.g. "Question 255", "Answer 255", "Option 2 255", "Question 000").
+ */
+const isPlaceholderText = (text: string): boolean => {
+  if (!text) return false;
+  const trimmed = text.trim();
+  const lower = trimmed.toLowerCase();
+  
+  // Matches "Question 255", "Question 1", "Question 000", "Question 01"
+  if (/^question\s*\d+$/i.test(trimmed)) return true;
+  // Matches "Answer 255", "Answer 1", "Answer 000", "Answer 01"
+  if (/^answer\s*\d+$/i.test(trimmed)) return true;
+  // Matches "Option 2 255", "Option 3 255", "Option 4 255", "Option 255"
+  if (/^option\s*(\d+\s+)?\d+$/i.test(trimmed)) return true;
+  
+  // Legacy or generic placeholder matches
+  if (/^0{3,}$/.test(trimmed)) return true; // "000", "0000"
+  if (lower.includes('sample question') || lower.includes('insert question') || lower.includes('default question') || lower.includes('[insert')) return true;
+  
+  return false;
+};
+
+/**
  * Internal helper to read an Excel workbook sheet and map raw row objects into normalized Question instances.
  * Skips the first 2 header rows to align with spreadsheet specifications.
  * 
@@ -61,27 +92,27 @@ const processWorkbook = (
 
   rawData.forEach((row, index) => {
     // Check if it has a Question column
-    const questionText = row['Questions'];
-    if (!questionText) return;
+    const questionText = getCellValue(row['Questions']);
+    if (questionText === '') return;
+
+    const rawAns = getCellValue(row['Answer']);
+    const raw2 = getCellValue(row['2']);
+    const raw3 = getCellValue(row['3']);
+    const raw4 = getCellValue(row['4']);
 
     // Excel column 1 ("Answer") is the correct answer. Columns "2", "3", "4" are distractors.
-    const rawOptions: string[] = [
-      String(row['Answer']).trim(),
-      String(row['2']).trim(),
-      String(row['3']).trim(),
-      String(row['4']).trim()
-    ].filter(Boolean); // Remove empty options
+    const rawOptions: string[] = [rawAns, raw2, raw3, raw4].filter(opt => opt !== '');
 
     // Shuffle options deterministically using global seed and question index
     const shuffledOptions = shuffleOptionsWithSeed(rawOptions, seed, index);
 
     const q: Question = {
       index: index,
-      roundCode: String(row['Round Code'] || '').trim(),
-      topic: String(row['Topic'] || '').trim(),
-      used: String(row['Used']).trim().toLowerCase() === 'yes',
-      question: String(questionText).trim(),
-      answer: String(row['Answer']).trim(),
+      roundCode: getCellValue(row['Round Code']),
+      topic: getCellValue(row['Topic']),
+      used: getCellValue(row['Used']).toLowerCase() === 'yes',
+      question: questionText,
+      answer: rawAns,
       options: shuffledOptions,
       scoreVal: Number(row['Cost (Score)']) || 10,
     };
@@ -131,7 +162,7 @@ export const fetchExcelData = async (
   return parseExcelData(arrayBuffer, seed);
 };
 
-export type AuditIssueType = 'error' | 'warning';
+export type AuditIssueType = 'error' | 'placeholder' | 'warning';
 
 export type AuditCategory = 
   | 'MISSING_QUESTION' 
@@ -140,7 +171,8 @@ export type AuditCategory =
   | 'DUPLICATE_OPTIONS' 
   | 'DUPLICATE_QUESTION' 
   | 'INVALID_SCORE' 
-  | 'MISSING_ROUND_CODE';
+  | 'MISSING_ROUND_CODE'
+  | 'UNEDITED_TEMPLATE_PLACEHOLDER';
 
 export interface AuditIssue {
   rowIndex: number;
@@ -154,6 +186,7 @@ export interface AuditResult {
   totalRows: number;
   validCount: number;
   errorCount: number;
+  placeholderCount: number;
   warningCount: number;
   issues: AuditIssue[];
   cleanQuestions: Question[];
@@ -213,19 +246,21 @@ const processAuditWorkbook = (
   rawData.forEach((row, idx) => {
     const excelRowIndex = idx + 4; // Header is row 3, 0-index row is row 4
     totalRows++;
+    let rowHasFatalError = false;
 
-    const rawQuestionText = String(row['Questions'] || '').trim();
-    const rawAnswerText = String(row['Answer'] || '').trim();
-    const rawOpt2 = String(row['2'] || '').trim();
-    const rawOpt3 = String(row['3'] || '').trim();
-    const rawOpt4 = String(row['4'] || '').trim();
-    const rawRoundCode = String(row['Round Code'] || '').trim();
-    const rawTopic = String(row['Topic'] || '').trim();
+    const rawQuestionText = getCellValue(row['Questions']);
+    const rawAnswerText = getCellValue(row['Answer']);
+    const rawOpt2 = getCellValue(row['2']);
+    const rawOpt3 = getCellValue(row['3']);
+    const rawOpt4 = getCellValue(row['4']);
+    const rawRoundCode = getCellValue(row['Round Code']);
+    const rawTopic = getCellValue(row['Topic']);
     const rawCost = row['Cost (Score)'];
     const snippet = rawQuestionText ? (rawQuestionText.length > 45 ? rawQuestionText.substring(0, 45) + '...' : rawQuestionText) : `Row ${excelRowIndex}`;
 
     // Check 1: Missing Question Text
-    if (!rawQuestionText) {
+    if (rawQuestionText === '') {
+      rowHasFatalError = true;
       issues.push({
         rowIndex: excelRowIndex,
         questionSnippet: snippet,
@@ -236,7 +271,8 @@ const processAuditWorkbook = (
     }
 
     // Check 2: Missing Correct Answer
-    if (!rawAnswerText) {
+    if (rawAnswerText === '') {
+      rowHasFatalError = true;
       issues.push({
         rowIndex: excelRowIndex,
         questionSnippet: snippet,
@@ -247,11 +283,12 @@ const processAuditWorkbook = (
     }
 
     // Options analysis
-    const rawOptions = [rawAnswerText, rawOpt2, rawOpt3, rawOpt4].filter(Boolean);
+    const rawOptions = [rawAnswerText, rawOpt2, rawOpt3, rawOpt4].filter(opt => opt !== '');
     const uniqueOptions = Array.from(new Set(rawOptions.map(o => o.toLowerCase())));
 
     // Check 3: Insufficient Options
     if (rawOptions.length < 2) {
+      rowHasFatalError = true;
       issues.push({
         rowIndex: excelRowIndex,
         questionSnippet: snippet,
@@ -263,6 +300,7 @@ const processAuditWorkbook = (
 
     // Check 4: Duplicate Options within same question
     if (uniqueOptions.length < rawOptions.length) {
+      rowHasFatalError = true;
       const duplicates = rawOptions.filter((opt, i, arr) => 
         arr.findIndex(o => o.toLowerCase() === opt.toLowerCase()) !== i
       );
@@ -276,7 +314,7 @@ const processAuditWorkbook = (
     }
 
     // Check 5: Duplicate Question Text across workbook
-    if (rawQuestionText) {
+    if (rawQuestionText !== '') {
       const lowerQ = rawQuestionText.toLowerCase();
       if (questionTextsSeen.has(lowerQ)) {
         const prevRow = questionTextsSeen.get(lowerQ);
@@ -296,7 +334,7 @@ const processAuditWorkbook = (
     let numericScore = Number(rawCost);
     if (rawCost === '' || rawCost === null || rawCost === undefined || isNaN(numericScore) || numericScore <= 0) {
       numericScore = 10; // default fallback
-      if (rawCost !== '' && rawCost !== undefined) {
+      if (rawCost !== '' && rawCost !== undefined && rawCost !== null) {
         issues.push({
           rowIndex: excelRowIndex,
           questionSnippet: snippet,
@@ -308,7 +346,7 @@ const processAuditWorkbook = (
     }
 
     // Check 7: Round Code or Topic missing
-    if (!rawRoundCode) {
+    if (rawRoundCode === '') {
       issues.push({
         rowIndex: excelRowIndex,
         questionSnippet: snippet,
@@ -318,12 +356,24 @@ const processAuditWorkbook = (
       });
     }
 
-    // Create remediated / clean question object if minimal viable fields exist
-    if (rawQuestionText && rawAnswerText) {
+    // Check 8: Potential Unedited Template Placeholder
+    const hasPlaceholderField = [rawQuestionText, rawAnswerText, rawOpt2, rawOpt3, rawOpt4].some(isPlaceholderText);
+    if (hasPlaceholderField) {
+      issues.push({
+        rowIndex: excelRowIndex,
+        questionSnippet: snippet,
+        type: 'placeholder',
+        category: 'UNEDITED_TEMPLATE_PLACEHOLDER',
+        message: 'Contains unedited default template placeholder text (e.g. "Question 255" or "Answer 255"). Please verify before presentation.'
+      });
+    }
+
+    // Create remediated / clean question object ONLY if row has NO fatal errors!
+    if (!rowHasFatalError) {
       // Deduplicate options while preserving order
       const cleanOptionsList: string[] = [];
       [rawAnswerText, rawOpt2, rawOpt3, rawOpt4].forEach(opt => {
-        if (opt && !cleanOptionsList.some(o => o.toLowerCase() === opt.toLowerCase())) {
+        if (opt !== '' && !cleanOptionsList.some(o => o.toLowerCase() === opt.toLowerCase())) {
           cleanOptionsList.push(opt);
         }
       });
@@ -334,7 +384,7 @@ const processAuditWorkbook = (
         index: cleanQuestions.length,
         roundCode: rawRoundCode || 'General',
         topic: rawTopic || 'General',
-        used: String(row['Used'] || '').trim().toLowerCase() === 'yes',
+        used: getCellValue(row['Used']).toLowerCase() === 'yes',
         question: rawQuestionText,
         answer: rawAnswerText,
         options: shuffledOptions,
@@ -344,6 +394,7 @@ const processAuditWorkbook = (
   });
 
   const errorCount = issues.filter(i => i.type === 'error').length;
+  const placeholderCount = issues.filter(i => i.type === 'placeholder').length;
   const warningCount = issues.filter(i => i.type === 'warning').length;
   const validCount = cleanQuestions.length;
 
@@ -351,6 +402,7 @@ const processAuditWorkbook = (
     totalRows,
     validCount,
     errorCount,
+    placeholderCount,
     warningCount,
     issues,
     cleanQuestions,

@@ -199,7 +199,7 @@ export const RapidFireScreen: React.FC = () => {
 
         {/* PLAYING / FEEDBACK STATE */}
         {(rfState === 'PLAYING' || rfState === 'FEEDBACK') && currentQ && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(10px, 3vw, 50px)', alignItems: 'center' }}>
               <div className="card" style={{ padding: '6px 20px', margin: 0, fontSize: 'clamp(1rem, 2vw, 1.5rem)', fontWeight: 'bold', borderRadius: '14px' }}>
@@ -207,12 +207,19 @@ export const RapidFireScreen: React.FC = () => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 25px)' }}>
-                <div style={{ 
-                  fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', 
-                  fontWeight: 900, 
-                  color: isPaused ? 'var(--wrong-red)' : timer <= 10 ? 'var(--orange)' : 'var(--white)',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                }}>
+                <div 
+                  role="timer"
+                  aria-live={timer <= 10 ? "assertive" : "off"}
+                  aria-valuenow={timer}
+                  aria-valuemin={0}
+                  aria-valuemax={60}
+                  style={{ 
+                    fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', 
+                    fontWeight: 900, 
+                    color: isPaused ? 'var(--wrong-red)' : timer <= 10 ? 'var(--orange)' : 'var(--white)',
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                  }}
+                >
                   {timer}s
                 </div>
                 <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '8px 12px', borderRadius: '14px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>

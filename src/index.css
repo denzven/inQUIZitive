@@ -674,3 +674,69 @@ button, .btn, .menu-btn, a, [role="button"], .file-upload-label, input[type="che
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
+/* ==========================================================================
+   Stealth Mode & Broadcast Game Show Enhancements
+   ========================================================================== */
+.ghost-zone {
+  opacity: 0.08 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.ghost-zone:hover,
+.ghost-zone:focus-within {
+  opacity: 1 !important;
+}
+
+/* Floating Score Delta Badge Animation */
+@keyframes floatUpFade {
+  0% { opacity: 0; transform: translateY(10px) scale(0.7); }
+  25% { opacity: 1; transform: translateY(-5px) scale(1.15); }
+  75% { opacity: 1; transform: translateY(-15px) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+}
+
+.floating-score-badge {
+  position: absolute;
+  top: -15px;
+  right: -10px;
+  background-color: var(--yellow);
+  color: var(--dark-green);
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  animation: floatUpFade 2s forwards ease-out;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Mobile Responsive Admin Data Table to Card Stack Transformation (< 768px) */
+@media (max-width: 768px) {
+  .responsive-table-stack,
+  .responsive-table-stack tbody,
+  .responsive-table-stack tr,
+  .responsive-table-stack td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  
+  .responsive-table-stack thead {
+    display: none !important;
+  }
+  
+  .responsive-table-stack tr {
+    margin-bottom: 14px;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--teal) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 14px !important;
+  }
+  
+  .responsive-table-stack td {
+    border: none !important;
+    padding: 6px 0 !important;
+    text-align: left !important;
+  }
+}
+

@@ -15,6 +15,18 @@ export const LeaderboardScreen: React.FC = () => {
   const { teams, updateTeamScore, updateTeamName, addTeam, removeTeam, setGameState, setTeams } = useQuizStore();
   const [isSorted, setIsSorted] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [activeDeltas, setActiveDeltas] = useState<Record<number, { text: string; key: number }>>({});
+
+  /** Triggers score change with animated floating badge popup */
+  const handleScoreAdjust = (teamId: number, delta: number) => {
+    playButtonClick();
+    updateTeamScore(teamId, delta);
+    const badgeText = delta > 0 ? `+${delta}` : `${delta}`;
+    setActiveDeltas(prev => ({
+      ...prev,
+      [teamId]: { text: badgeText, key: Date.now() }
+    }));
+  };
 
   /** Appends a new default team entry to the roster */
   const handleAdd = () => {
@@ -66,7 +78,13 @@ export const LeaderboardScreen: React.FC = () => {
 
         <div className="test-grid">
           {displayedTeams.map((team) => (
-            <div key={team.id} className="test-box">
+            <div key={team.id} className="test-box" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+              {activeDeltas[team.id] && (
+                <div key={activeDeltas[team.id].key} className="floating-score-badge">
+                  {activeDeltas[team.id].text}
+                </div>
+              )}
+
               <button onClick={() => { playButtonClick(); removeTeam(team.id); }} className="btn-delete-corner" aria-label="Delete">
                 <X style={{ width: 'clamp(14px, 3vw, 18px)', height: 'clamp(14px, 3vw, 18px)' }} strokeWidth={3} />
               </button>
@@ -80,8 +98,8 @@ export const LeaderboardScreen: React.FC = () => {
               <div className="test-box-content">{team.score}</div>
 
               <div className="score-controls">
-                <button onClick={() => { playButtonClick(); updateTeamScore(team.id, -10); }} className="test-btn btn-minus">-10</button>
-                <button onClick={() => { playButtonClick(); updateTeamScore(team.id, 10); }} className="test-btn btn-plus">+10</button>
+                <button onClick={() => handleScoreAdjust(team.id, -10)} className="test-btn btn-minus">-10</button>
+                <button onClick={() => handleScoreAdjust(team.id, 10)} className="test-btn btn-plus">+10</button>
               </div>
             </div>
           ))}

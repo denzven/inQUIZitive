@@ -64,6 +64,18 @@ export interface QuizState {
   /** Admin quizmaster passcode for question bank access */
   adminPasscode: string;
 
+  /** Undo history stack for Ctrl+Z emergency recovery */
+  undoStack: Array<{ teams: Team[]; questions: Question[] }>;
+  /** Stealth mode flag for single-screen presentation (hides administrative UI overlays) */
+  isStealthMode: boolean;
+
+  /** Toggles stealth presentation mode on/off */
+  toggleStealthMode: () => void;
+  /** Pushes a snapshot of current teams and questions to undo stack */
+  pushUndoSnapshot: () => void;
+  /** Reverts to previous state snapshot if available. Returns true if reverted. */
+  undoLastAction: () => boolean;
+
   /** Sets the active application screen state */
   setGameState: (state: QuizState['gameState']) => void;
   /** Loads parsed question items into global store */
@@ -131,7 +143,7 @@ const defaultTheme = {
  */
 export const useQuizStore = create<QuizState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
   gameState: 'SETUP',
   teams: [
     { id: 1, name: 'Team 1', score: 0 },
@@ -143,6 +155,8 @@ export const useQuizStore = create<QuizState>()(
   currentQuestionIndex: 0,
   isAnswerRevealed: false,
   activeRound: null,
+  undoStack: [],
+  isStealthMode: false,
 
   theme: defaultTheme,
   seed: '12342026',
@@ -150,13 +164,43 @@ export const useQuizStore = create<QuizState>()(
   hasLoaded: false,
   adminPasscode: 'ARISE2026',
 
+  toggleStealthMode: () => set((state) => ({ isStealthMode: !state.isStealthMode })),
+
+  pushUndoSnapshot: () => {
+    const { teams, questions, undoStack } = get();
+    const snapshot = {
+      teams: JSON.parse(JSON.stringify(teams)),
+      questions: JSON.parse(JSON.stringify(questions))
+    };
+    // Limit stack size to 25 items
+    const updatedStack = [...undoStack, snapshot].slice(-25);
+    set({ undoStack: updatedStack });
+  },
+
+  undoLastAction: () => {
+    const { undoStack } = get();
+    if (undoStack.length === 0) return false;
+    const lastSnapshot = undoStack[undoStack.length - 1];
+    const newStack = undoStack.slice(0, -1);
+    set({
+      teams: lastSnapshot.teams,
+      questions: lastSnapshot.questions,
+      undoStack: newStack
+    });
+    return true;
+  },
+
   setGameState: (state) => set({ gameState: state }),
   
   loadQuestions: (questions) => set({ questions }),
   
-  setQuestions: (questions) => set({ questions }),
+  setQuestions: (questions) => {
+    get().pushUndoSnapshot();
+    set({ questions });
+  },
 
   addQuestion: (newQ) => set((state) => {
+    get().pushUndoSnapshot();
     const nextIndex = state.questions.length > 0 
       ? Math.max(...state.questions.map(q => q.index)) + 1 
       : 0;
@@ -167,18 +211,23 @@ export const useQuizStore = create<QuizState>()(
     return { questions: [...state.questions, questionToAdd] };
   }),
 
-  updateQuestion: (index, updated) => set((state) => ({
-    questions: state.questions.map(q => 
-      q.index === index ? { ...q, ...updated } : q
-    )
-  })),
+  updateQuestion: (index, updated) => {
+    get().pushUndoSnapshot();
+    set((state) => ({
+      questions: state.questions.map(q => 
+        q.index === index ? { ...q, ...updated } : q
+      )
+    }));
+  },
 
-  deleteQuestion: (index) => set((state) => {
-    const filtered = state.questions.filter(q => q.index !== index);
-    // Re-index remaining questions cleanly
-    const reindexed = filtered.map((q, idx) => ({ ...q, index: idx }));
-    return { questions: reindexed };
-  }),
+  deleteQuestion: (index) => {
+    get().pushUndoSnapshot();
+    set((state) => {
+      const filtered = state.questions.filter(q => q.index !== index);
+      const reindexed = filtered.map((q, idx) => ({ ...q, index: idx }));
+      return { questions: reindexed };
+    });
+  },
 
   setAdminPasscode: (adminPasscode) => set({ adminPasscode }),
   
@@ -191,15 +240,20 @@ export const useQuizStore = create<QuizState>()(
     };
   }),
 
-  markQuestionUsed: (index) => set((state) => ({
-    questions: state.questions.map(q => 
-      q.index === index ? { ...q, used: true } : q
-    )
-  })),
+  markQuestionUsed: (index) => {
+    set((state) => ({
+      questions: state.questions.map(q => 
+        q.index === index ? { ...q, used: true } : q
+      )
+    }));
+  },
 
-  resetAllQuestionsUsed: () => set((state) => ({
-    questions: state.questions.map(q => ({ ...q, used: false }))
-  })),
+  resetAllQuestionsUsed: () => {
+    get().pushUndoSnapshot();
+    set((state) => ({
+      questions: state.questions.map(q => ({ ...q, used: false }))
+    }));
+  },
 
   nextQuestion: () => set((state) => {
     const roundQuestions = state.questions.filter(q => q.roundCode === state.activeRound && !q.used);
@@ -225,38 +279,53 @@ export const useQuizStore = create<QuizState>()(
 
   revealAnswer: () => set({ isAnswerRevealed: true }),
 
-  awardPoints: (teamId, customVal) => set((state) => {
-    if (state.gameState !== 'PLAYING') return {};
-    
-    const roundQuestions = state.questions.filter(q => q.roundCode === state.activeRound && !q.used);
-    if (roundQuestions.length === 0) return {};
-    
-    const currentQ = roundQuestions[state.currentQuestionIndex];
-    const pointsToAdd = customVal !== undefined ? customVal : currentQ.scoreVal;
-    
-    return {
-      teams: state.teams.map((t) =>
-        t.id === teamId ? { ...t, score: t.score + pointsToAdd } : t
-      ),
-    };
-  }),
+  awardPoints: (teamId, customVal) => {
+    get().pushUndoSnapshot();
+    set((state) => {
+      if (state.gameState !== 'PLAYING') return {};
+      
+      const roundQuestions = state.questions.filter(q => q.roundCode === state.activeRound && !q.used);
+      if (roundQuestions.length === 0) return {};
+      
+      const currentQ = roundQuestions[state.currentQuestionIndex];
+      const pointsToAdd = customVal !== undefined ? customVal : currentQ.scoreVal;
+      
+      return {
+        teams: state.teams.map((t) =>
+          t.id === teamId ? { ...t, score: t.score + pointsToAdd } : t
+        ),
+      };
+    });
+  },
 
-  setTeams: (teams) => set({ teams }),
+  setTeams: (teams) => {
+    get().pushUndoSnapshot();
+    set({ teams });
+  },
   
-  addTeam: (name) => set((state) => {
-    const maxId = state.teams.reduce((max, t) => Math.max(max, t.id), 0);
-    return {
-      teams: [...state.teams, { id: maxId + 1, name, score: 0 }]
-    };
-  }),
+  addTeam: (name) => {
+    get().pushUndoSnapshot();
+    set((state) => {
+      const maxId = state.teams.reduce((max, t) => Math.max(max, t.id), 0);
+      return {
+        teams: [...state.teams, { id: maxId + 1, name, score: 0 }]
+      };
+    });
+  },
   
-  removeTeam: (id) => set((state) => ({
-    teams: state.teams.filter(t => t.id !== id)
-  })),
+  removeTeam: (id) => {
+    get().pushUndoSnapshot();
+    set((state) => ({
+      teams: state.teams.filter(t => t.id !== id)
+    }));
+  },
 
-  updateTeamScore: (id, delta) => set((state) => ({
-    teams: state.teams.map(t => t.id === id ? { ...t, score: t.score + delta } : t)
-  })),
+  updateTeamScore: (id, delta) => {
+    get().pushUndoSnapshot();
+    set((state) => ({
+      teams: state.teams.map(t => t.id === id ? { ...t, score: t.score + delta } : t)
+    }));
+  },
 
   updateTeamName: (id, name) => set((state) => ({
     teams: state.teams.map(t => t.id === id ? { ...t, name } : t)

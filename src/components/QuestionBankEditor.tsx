@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { PasswordModal } from './PasswordModal';
+import { HostCheatSheetModal } from './HostCheatSheetModal';
 import { 
   Search, 
   Plus, 
@@ -16,7 +17,8 @@ import {
   ChevronRight, 
   Filter, 
   X,
-  HelpCircle
+  HelpCircle,
+  Printer
 } from 'lucide-react';
 
 interface QuestionBankEditorProps {
@@ -35,6 +37,7 @@ export const QuestionBankEditor: React.FC<QuestionBankEditorProps> = ({ onClose 
   // Authentication Lock state
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(true);
+  const [showCheatSheetModal, setShowCheatSheetModal] = useState<boolean>(false);
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -195,7 +198,28 @@ export const QuestionBankEditor: React.FC<QuestionBankEditorProps> = ({ onClose 
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => setShowCheatSheetModal(true)}
+            title="Generate printable host cheat sheet and answer key"
+            style={{
+              padding: '10px 14px',
+              backgroundColor: 'var(--yellow)',
+              color: 'var(--dark-green)',
+              fontWeight: 900,
+              borderRadius: '10px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.95rem'
+            }}
+          >
+            <Printer size={18} strokeWidth={2.5} />
+            Print Cheat Sheet
+          </button>
+
           <button 
             onClick={() => setIsAddModalOpen(true)}
             style={{
@@ -660,13 +684,19 @@ export const QuestionBankEditor: React.FC<QuestionBankEditorProps> = ({ onClose 
                 }}
                 style={{ flex: 1, padding: '10px', backgroundColor: 'var(--wrong-red)', color: 'var(--white)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
               >
-                Delete
+                Delete Q#{deletingQuestionIndex + 1}
               </button>
             </div>
           </div>
         </div>,
         document.body
       )}
+
+      {/* Host Cheat Sheet Printable Modal */}
+      <HostCheatSheetModal 
+        isOpen={showCheatSheetModal}
+        onClose={() => setShowCheatSheetModal(false)}
+      />
     </div>
   );
 };

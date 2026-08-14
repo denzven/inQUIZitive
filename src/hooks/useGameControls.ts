@@ -1,32 +1,38 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
+import { useRapidFireStore } from '../store/useRapidFireStore';
+import { playButtonClick, playTileChime } from '../utils/soundEffects';
 
 /**
  * Custom React hook that binds global keyboard controls for live presenter gameplay.
- * Active only when `gameState === 'PLAYING'` and the focused element is not an input/textarea.
+ * Active across presenter gameplay and global state transitions.
  * 
  * Key bindings:
- * - `Space`: Reveals current question answer.
- * - `ArrowRight`: Advances to the next question in the round.
- * - `ArrowLeft`: Navigates to the previous question.
- * - `1-9`: Directly awards points to the corresponding team ID (1 through 9).
+ * - `Ctrl+Z` / `Cmd+Z`: Reverts last state action (score, question, team updates).
+ * - `+` or `=`: Emergency +5 Seconds added to active Rapid Fire countdown timer.
+ * - `H` or `h`: Toggles Stealth Presentation Overlay.
+ * - `Space`: Reveals current question answer (with 300ms debounce).
+ * - `ArrowRight`: Advances to next question in round.
+ * - `ArrowLeft`: Navigates to previous question.
+ * - `1-9`: Directly awards points to corresponding team ID (1 through 9).
  */
 export const useGameControls = () => {
   const {
     gameState,
-    setGameState,
     nextQuestion,
     prevQuestion,
     revealAnswer,
     awardPoints,
+    undoLastAction,
+    toggleStealthMode,
   } = useQuizStore();
+
+  const lastKeyTimeRef = useRef<number>(0);
 
   useEffect(() => {
     /**
      * Window keydown event handler for presenter shortcuts.
      * Checks focused input elements to prevent accidental triggers while typing.
-     * 
-     * @param e - The KeyboardEvent object dispatched by the browser.
      */
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input
@@ -37,11 +43,51 @@ export const useGameControls = () => {
         return;
       }
 
+      // Universal Ctrl+Z / Cmd+Z Undo handling across all views
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        const success = undoLastAction();
+        if (success) {
+          playButtonClick();
+        }
+        return;
+      }
+
+      // Universal 'H' stealth mode toggle
+      if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        toggleStealthMode();
+        playButtonClick();
+        return;
+      }
+
+      // Emergency +5s timer buffer for Rapid Fire round
+      if (e.key === '+' || e.key === '=') {
+        const rfStore = useRapidFireStore.getState();
+        if (rfStore.rfState === 'PLAYING' || rfStore.rfState === 'FEEDBACK') {
+          e.preventDefault();
+          rfStore.setTimer(prev => prev + 5);
+          playTileChime(1);
+          return;
+        }
+      }
+
+      // 300ms Debouncing Lock to prevent accidental double-tap triggering
+      const now = Date.now();
+      if (now - lastKeyTimeRef.current < 300) {
+        if ([' ', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+          e.preventDefault();
+          return;
+        }
+      }
+
       if (gameState !== 'PLAYING') return;
+
+      lastKeyTimeRef.current = now;
 
       switch (e.key) {
         case ' ': // Spacebar
-          e.preventDefault(); // Prevent scrolling
+          e.preventDefault();
           revealAnswer();
           break;
         case 'ArrowRight':
@@ -81,10 +127,8 @@ export const useGameControls = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [gameState, nextQuestion, prevQuestion, revealAnswer, awardPoints, setGameState]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, nextQuestion, prevQuestion, revealAnswer, awardPoints, undoLastAction, toggleStealthMode]);
 };
+
 

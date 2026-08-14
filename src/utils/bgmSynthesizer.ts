@@ -9,22 +9,41 @@ let stepCount = 0;
 let currentActiveScreenBgmKey: SfxKey | null = null;
 
 /**
- * Maps game state screen names to their respective BGM key in AudioStore.
+ * Maps game state screen names and active round codes to their respective BGM key in AudioStore.
  * Returns null for quiet screens (e.g. SETTINGS, ABOUT) where background music is disabled.
  */
-export function getScreenBgmKey(gameState: string): SfxKey | null {
+export function getScreenBgmKey(gameState: string, activeRound?: string | null): SfxKey | null {
+  if (gameState === 'PLAYING' && activeRound) {
+    switch (activeRound) {
+      case 'RF':
+        return 'bgm_rapid_fire';
+      case 'SWJ':
+        return 'bgm_spin_wheel';
+      case 'TTT':
+        return 'bgm_tictactoe';
+      case 'B':
+        return 'bgm_buzzer';
+      default:
+        break;
+    }
+  }
+
   switch (gameState) {
     case 'MENU':
       return 'bgm_menu';
     case 'START':
       return 'bgm_rounds';
     case 'RAPID_FIRE':
+    case 'RF':
       return 'bgm_rapid_fire';
     case 'SPIN_WHEEL':
+    case 'SWJ':
       return 'bgm_spin_wheel';
     case 'TICTACTOE':
+    case 'TTT':
       return 'bgm_tictactoe';
     case 'BUZZER':
+    case 'B':
       return 'bgm_buzzer';
     case 'LEADERBOARD':
       return 'bgm_leaderboard';
@@ -43,42 +62,59 @@ export function getScreenBgmKey(gameState: string): SfxKey | null {
  * attempting custom MP3 playback first or falling back to unique synthesized theme.
  * Stops BGM if navigating to a quiet screen (e.g. SETTINGS).
  *
- * @param gameState - The current screen or game round name (e.g. MENU, RAPID_FIRE, SPIN_WHEEL).
+ * @param gameState - The current screen or game round name (e.g. MENU, PLAYING, START).
+ * @param activeRound - Optional active round code (e.g. 'RF', 'SWJ', 'TTT', 'B') or boolean ignoreDisabled flag.
  * @param ignoreDisabled - If true, starts BGM even if disabled (for preview).
  * @param isPreview - If true, starts audio instantly without fade-in (for Settings preview).
  */
-export function playScreenBgm(gameState: string, ignoreDisabled = false, isPreview = false): void {
-  const targetKey = getScreenBgmKey(gameState);
+export function playScreenBgm(
+  gameState: string, 
+  activeRound?: string | null | boolean, 
+  ignoreDisabled = false, 
+  isPreview = false
+): void {
+  let round: string | null = null;
+  let ignore = ignoreDisabled;
+  let preview = isPreview;
+
+  if (typeof activeRound === 'boolean') {
+    preview = ignoreDisabled;
+    ignore = activeRound;
+  } else {
+    round = activeRound || null;
+  }
+
+  const targetKey = getScreenBgmKey(gameState, round);
 
   // If navigating to a silent screen (e.g. SETTINGS), stop background music cleanly!
   if (!targetKey) {
-    if (!isPreview) {
+    if (!preview) {
       stopBgm();
     }
     return;
   }
 
-  if (currentActiveScreenBgmKey === targetKey && isBgmPlaying() && !isPreview) {
+  if (currentActiveScreenBgmKey === targetKey && isBgmPlaying() && !preview) {
     return;
   }
 
   // Stop previous screen BGM (instantly if in Settings preview)
-  stopBgm(isPreview);
+  stopBgm(preview);
 
   currentActiveScreenBgmKey = targetKey;
 
   // 1. Try playing custom uploaded MP3 for this specific screen
-  if (playCustomSoundbite(targetKey, ignoreDisabled, isPreview)) {
+  if (playCustomSoundbite(targetKey, ignore, preview)) {
     return;
   }
 
   // 2. Fallback: try playing general 'bgm' custom MP3 if set
-  if (playCustomSoundbite('bgm', ignoreDisabled, isPreview)) {
+  if (playCustomSoundbite('bgm', ignore, preview)) {
     return;
   }
 
   // 3. Fallback: run unique synthesized background music loop for this screen
-  startBgmForKey(targetKey, ignoreDisabled, isPreview);
+  startBgmForKey(targetKey, ignore, preview);
 }
 
 /**
