@@ -21,9 +21,9 @@ export const SpinWheelScreen: React.FC = () => {
     };
   }, []);
 
-  /** Data grouping: filters SWJ round questions into topic mappings and ensures >= 4 fallback topics */
+  /** Data grouping: filters unused SWJ round questions into topic mappings and ensures >= 4 fallback topics */
   const { allTopics, topicMap } = useMemo(() => {
-    const swj = questions.filter(q => q.roundCode === 'SWJ');
+    const swj = questions.filter(q => q.roundCode === 'SWJ' && !q.used);
     const map = new Map<string, Question[]>();
     swj.forEach(q => {
       const t = q.topic || 'Bonus';
@@ -44,6 +44,8 @@ export const SpinWheelScreen: React.FC = () => {
     }
     return { allTopics: topics, topicMap: map };
   }, [questions]);
+
+  const totalUnusedSwjCount = useMemo(() => questions.filter(q => q.roundCode === 'SWJ' && !q.used).length, [questions]);
 
   // 2. Persisted State
   const {
@@ -82,9 +84,9 @@ export const SpinWheelScreen: React.FC = () => {
     setSwState('SPINNING');
     spinStartTimeRef.current = Date.now();
 
-    // Pick 4 strictly UNIQUE, non-repeating topics (prioritizing topics with unused questions)
+    // Pick 4 strictly UNIQUE, non-repeating topics with unused questions
     const topicsWithUnused = allTopics.filter(t => (topicMap.get(t) || []).some(q => !q.used));
-    const pool = topicsWithUnused.length >= 4 ? topicsWithUnused : allTopics;
+    const pool = topicsWithUnused.length > 0 ? topicsWithUnused : allTopics;
     
     // Seeded random sample without replacement (bypassed if NOSHUFFLE seed)
     spinCountRef.current += 1;
@@ -381,6 +383,27 @@ export const SpinWheelScreen: React.FC = () => {
                 );
               })}
             </div>
+
+            {totalUnusedSwjCount < 16 && (
+              <div style={{
+                backgroundColor: 'rgba(231, 76, 60, 0.15)',
+                border: '2px solid var(--wrong-red)',
+                borderRadius: '16px',
+                padding: '10px 20px',
+                marginTop: '15px',
+                maxWidth: '650px',
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.25)'
+              }}>
+                <div style={{ color: 'var(--yellow)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <span>⚠️</span>
+                  <span>Question Quantity Warning</span>
+                </div>
+                <p style={{ color: 'var(--white)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                  Only {totalUnusedSwjCount} unused SWJ question(s) available (16 required for 4 full categories). Used questions were excluded to prevent duplicates.
+                </p>
+              </div>
+            )}
 
             {/* Action Control Buttons */}
             <div style={{ 

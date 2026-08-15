@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { useRapidFireStore } from '../store/useRapidFireStore';
+import { useAudioStore } from '../store/useAudioStore';
 import { playButtonClick, playTileChime } from '../utils/soundEffects';
 
 /**
@@ -59,6 +60,48 @@ export const useGameControls = () => {
         toggleStealthMode();
         playButtonClick();
         return;
+      }
+
+      // Universal 'S' Settings screen navigation
+      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        useQuizStore.getState().setGameState('SETTINGS');
+        playButtonClick();
+        return;
+      }
+
+      // Universal 'F' Fullscreen mode toggle
+      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+        playButtonClick();
+        return;
+      }
+
+      // Universal 'M' audio mute toggle
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        const audioStore = useAudioStore.getState();
+        audioStore.toggleMute();
+        playButtonClick();
+        return;
+      }
+
+      // Universal 'P' or 'K' key to toggle pause/resume on Rapid Fire timer
+      if ((e.key.toLowerCase() === 'p' || e.key.toLowerCase() === 'k') && !e.ctrlKey && !e.metaKey) {
+        const rfStore = useRapidFireStore.getState();
+        if (rfStore.rfState === 'PLAYING' || rfStore.rfState === 'FEEDBACK') {
+          e.preventDefault();
+          rfStore.setIsPaused(!rfStore.isPaused);
+          playButtonClick();
+          return;
+        }
       }
 
       // Emergency +5s timer buffer for Rapid Fire round

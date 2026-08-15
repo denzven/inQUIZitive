@@ -20,6 +20,35 @@ export const AboutScreen: React.FC = () => {
     </>
   );
 
+  const kbdBadgeStyle: React.CSSProperties = {
+    backgroundColor: 'var(--white)',
+    color: 'var(--dark-green)',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    boxShadow: '0 2px 0 #999',
+    display: 'inline-block'
+  };
+
+  const shortcuts = [
+    { keys: ['1', '2', '3', '4'], desc: 'Select Option A, B, C, or D' },
+    { keys: ['Space'], desc: 'Reveal Correct Answer' },
+    { keys: ['←', '→'], desc: 'Previous / Next Question (Auto-Passes Unanswered Question)' },
+    { keys: ['Enter'], desc: 'Start Round / Start Timer' },
+    { keys: ['P', 'K'], desc: 'Pause / Resume Countdown Timer' },
+    { keys: ['1 - 5', 'T', 'L', 'R', 'S', 'A'], desc: 'Main Menu: Navigate to Start (T), Leaderboard (L), Rules (R), Settings (S), About (A)' },
+    { keys: ['2 - 5'], desc: 'Start Screen: Directly Launch Quiz Rounds 2-5' },
+    { keys: ['1', '2', '←', '→'], desc: 'Rules Screen: Switch Player / Host Rules Tabs' },
+    { keys: ['F'], desc: 'Toggle Fullscreen Projection Mode' },
+    { keys: ['M'], desc: 'Toggle Mute / Unmute Audio' },
+    { keys: ['H'], desc: 'Toggle Stealth Presentation Mode' },
+    { keys: ['Esc'], desc: 'Return to Home / Main Menu' },
+    { keys: ['1 - 9'], desc: 'Award Points to Team 1 through 9' },
+    { keys: ['+'], desc: 'Emergency +5s Rapid Fire Timer Buffer' },
+    { keys: ['Ctrl', 'Z'], desc: 'Undo Last Score / Question Action' },
+  ];
+
   return (
     <ScreenLayout 
       backgroundDecor={decorCircles} 
@@ -28,7 +57,6 @@ export const AboutScreen: React.FC = () => {
       showHomeButton={true}
       onHomeClick={() => { playButtonClick(); setGameState('MENU'); }}
     >
-
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', zIndex: 1, padding: '0 20px', boxSizing: 'border-box' }}>
         <h1 className="title animate-slide-up" style={{ marginTop: 0, marginBottom: 'clamp(15px, 3vh, 30px)', fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>ABOUT</h1>
         
@@ -62,33 +90,23 @@ export const AboutScreen: React.FC = () => {
           <div className="card animate-slide-up" style={{ flex: '1 1 100%', backgroundColor: 'var(--dark-teal)', border: '3px solid var(--teal)', padding: '30px', margin: 0, boxSizing: 'border-box', animationDelay: '0.2s' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', color: 'var(--yellow)' }}>
               <Keyboard size={36} />
-              <h2 style={{ margin: 0, fontSize: '2rem' }}>Keyboard Shortcuts</h2>
+              <h2 style={{ margin: 0, fontSize: '2rem' }}>Presenter Keyboard Shortcuts</h2>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', fontSize: '1.1rem' }}>
-              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>Space</kbd> or <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>Click</kbd>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', fontSize: '1.1rem' }}>
+              {shortcuts.map((item, idx) => (
+                <div key={idx} style={{ backgroundColor: 'rgba(0,0,0,0.25)', padding: '16px 20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {item.keys.map((k, kIdx) => (
+                      <React.Fragment key={kIdx}>
+                        {kIdx > 0 && <span style={{ color: 'var(--light-orange)', fontWeight: 'bold' }}>/</span>}
+                        <kbd style={kbdBadgeStyle}>{k}</kbd>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div style={{ color: 'var(--white)', opacity: 0.95, fontSize: '1rem', lineHeight: 1.3 }}>{item.desc}</div>
                 </div>
-                <div style={{ color: 'var(--white)', opacity: 0.9 }}>Reveal Correct Answer</div>
-              </div>
-              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>←</kbd> / <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>→</kbd>
-                </div>
-                <div style={{ color: 'var(--white)', opacity: 0.9 }}>Previous / Next Question</div>
-              </div>
-              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>1</kbd> - <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>9</kbd>
-                </div>
-                <div style={{ color: 'var(--white)', opacity: 0.9 }}>Award points to Team 1-9</div>
-              </div>
-              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <kbd style={{ backgroundColor: 'var(--white)', color: 'var(--dark-green)', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 2px 0 #999' }}>Esc</kbd>
-                </div>
-                <div style={{ color: 'var(--white)', opacity: 0.9 }}>Return to Menu</div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -97,4 +115,3 @@ export const AboutScreen: React.FC = () => {
     </ScreenLayout>
   );
 };
-

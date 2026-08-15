@@ -16,16 +16,27 @@
    Design System Tokens & Theme Variables
    ========================================================================== */
 :root {
-  /* Brand Color Palette */
-  --dark-green: #264653;
-  --teal: #2a9d8f;
-  --dark-teal: #1c695f;
-  --yellow: #e9c46a;
-  --light-orange: #f4a261;
-  --orange: #e76f51;
-  --white: #e8eddf;
-  --correct-green: #2ecc71;
-  --wrong-red: #e74c3c;
+  /* Semantic Color System */
+  --color-primary: #2a9d8f;           /* Main brand primary teal */
+  --color-primary-dark: #264653;      /* Deep canvas background */
+  --color-primary-container: #1c695f; /* Container/card background */
+  --color-accent: #e9c46a;            /* Golden accent highlight */
+  --color-secondary: #f4a261;         /* Soft orange subtitle/badge accent */
+  --color-action: #e76f51;            /* Primary call-to-action button */
+  --color-surface: #e8eddf;           /* Clean white text/surface */
+  --color-success: #2ecc71;           /* Correct feedback green */
+  --color-danger: #e74c3c;            /* Wrong feedback red */
+
+  /* Legacy Color Aliases (for full backward compatibility) */
+  --dark-green: var(--color-primary-dark);
+  --teal: var(--color-primary);
+  --dark-teal: var(--color-primary-container);
+  --yellow: var(--color-accent);
+  --light-orange: var(--color-secondary);
+  --orange: var(--color-action);
+  --white: var(--color-surface);
+  --correct-green: var(--color-success);
+  --wrong-red: var(--color-danger);
   
   /* Glassmorphism & UI Accents */
   --dark-overlay: rgba(0, 0, 0, 0.85);
@@ -169,11 +180,12 @@ button:active, .btn:active {
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-button:focus,
 button:focus-visible,
-.btn:focus,
-.btn:focus-visible {
-  outline: 4px auto var(--yellow);
+.btn:focus-visible,
+.menu-btn:focus-visible,
+.option-card:focus-visible {
+  outline: 3px solid var(--yellow) !important;
+  outline-offset: 2px !important;
 }
 
 /* Button Variants */

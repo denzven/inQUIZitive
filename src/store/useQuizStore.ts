@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { reshuffleAllQuestions } from '../utils/excelParser';
+import { useRapidFireStore } from './useRapidFireStore';
+import { useBuzzerStore } from './useBuzzerStore';
+import { useSpinWheelStore } from './useSpinWheelStore';
+import { useTicTacToeStore } from './useTicTacToeStore';
 
 /**
  * Represents a competing team in the quiz competition.
@@ -45,6 +49,17 @@ export interface QuizState {
 
   /** Color theme configuration tokens */
   theme: {
+    primaryDark: string;
+    primary: string;
+    primaryContainer: string;
+    accent: string;
+    secondary: string;
+    action: string;
+    surface: string;
+    success: string;
+    danger: string;
+
+    // Legacy aliases
     darkGreen: string;
     teal: string;
     darkTeal: string;
@@ -55,6 +70,11 @@ export interface QuizState {
     correctGreen: string;
     wrongRed: string;
   };
+
+  /** Sets entire theme object or single color token */
+  setTheme: (theme: Partial<QuizState['theme']>) => void;
+  /** Resets theme to default palette */
+  resetTheme: () => void;
   /** Randomization seed for wheel/grids or 'NOSHUFFLE' safeword */
   seed: string | number;
   /** Subtitle banner text displayed on screens */
@@ -126,16 +146,167 @@ export interface QuizState {
   setHasLoaded: () => void;
 }
 
-const defaultTheme = {
-  darkGreen: '#264653',
-  teal: '#2a9d8f',
-  darkTeal: '#1c695f',
-  yellow: '#e9c46a',
-  lightOrange: '#f4a261',
-  orange: '#e76f51',
-  white: '#e8eddf',
-  correctGreen: '#2ecc71',
-  wrongRed: '#e74c3c',
+export interface ThemePalette {
+  primaryDark: string;
+  primary: string;
+  primaryContainer: string;
+  accent: string;
+  secondary: string;
+  action: string;
+  surface: string;
+  success: string;
+  danger: string;
+}
+
+export const PRESET_THEMES: Record<string, {
+  id: string;
+  name: string;
+  description: string;
+  colors: ThemePalette;
+}> = {
+  ariseClassic: {
+    id: 'ariseClassic',
+    name: 'Arise Classic (Default)',
+    description: 'Signature quiz competition palette with deep teal, forest canvas & golden highlights',
+    colors: {
+      primaryDark: '#1f3742',
+      primaryContainer: '#144d46',
+      primary: '#2a9d8f',
+      accent: '#e9c46a',
+      action: '#e76f51',
+      surface: '#ffffff',
+      secondary: '#8ab4f8',
+      success: '#2ecc71',
+      danger: '#e74c3c'
+    }
+  },
+  nord: {
+    id: 'nord',
+    name: 'Nord Frost',
+    description: 'Arctic ice palette with deep polar canvas, frost blue & aurora yellow',
+    colors: {
+      primaryDark: '#242933',
+      primaryContainer: '#3b4252',
+      primary: '#81a1c1',
+      accent: '#ebcb8b',
+      action: '#bf616a',
+      surface: '#e5e9f0',
+      secondary: '#a3be8c',
+      success: '#a3be8c',
+      danger: '#bf616a'
+    }
+  },
+  oneDark: {
+    id: 'oneDark',
+    name: 'One Dark Pro',
+    description: 'Iconic developer dark theme with soft cyan primary & chalk gold accents',
+    colors: {
+      primaryDark: '#1e2227',
+      primaryContainer: '#282c34',
+      primary: '#528bff',
+      accent: '#e5c07b',
+      action: '#e06c75',
+      surface: '#abb2bf',
+      secondary: '#98c379',
+      success: '#98c379',
+      danger: '#e06c75'
+    }
+  },
+  dracula: {
+    id: 'dracula',
+    name: 'Dracula Dark',
+    description: 'Vibrant dark theme featuring soft purple, dracula yellow & rich pink',
+    colors: {
+      primaryDark: '#191a21',
+      primaryContainer: '#282a36',
+      primary: '#9a86fd',
+      accent: '#f1fa8c',
+      action: '#ff7bc1',
+      surface: '#f8f8f2',
+      secondary: '#50fa7b',
+      success: '#50fa7b',
+      danger: '#ff5555'
+    }
+  },
+  catppuccin: {
+    id: 'catppuccin',
+    name: 'Catppuccin',
+    description: 'Soothing crust canvas with mauve primary, warm yellow & red action',
+    colors: {
+      primaryDark: '#11111b',
+      primaryContainer: '#1e1e2e',
+      primary: '#cba6f7',
+      accent: '#f9e2af',
+      action: '#f38ba8',
+      surface: '#cdd6f4',
+      secondary: '#a6e3a1',
+      success: '#a6e3a1',
+      danger: '#f38ba8'
+    }
+  },
+  cyberpunk: {
+    id: 'cyberpunk',
+    name: 'Cyber Neon',
+    description: 'High-octane night city canvas with mint cyan, neon gold & deep magenta',
+    colors: {
+      primaryDark: '#090911',
+      primaryContainer: '#141424',
+      primary: '#02c39a',
+      accent: '#fce114',
+      action: '#f50057',
+      surface: '#e0e0ff',
+      secondary: '#7b2cbf',
+      success: '#02c39a',
+      danger: '#f50057'
+    }
+  },
+  midnightGold: {
+    id: 'midnightGold',
+    name: 'Midnight Gold',
+    description: 'Onyx canvas with metallic gold primary, bright amber & royal crimson',
+    colors: {
+      primaryDark: '#121217',
+      primaryContainer: '#1e1e26',
+      primary: '#d4af37',
+      accent: '#f5d061',
+      action: '#9b2226',
+      surface: '#f5f5f5',
+      secondary: '#8b7355',
+      success: '#10b981',
+      danger: '#9b2226'
+    }
+  },
+  debugBlack: {
+    id: 'debugBlack',
+    name: 'OLED Black',
+    description: 'True black #000000 canvas with graphite card, electric cyan & warning yellow',
+    colors: {
+      primaryDark: '#000000',
+      primaryContainer: '#1a1a1a',
+      primary: '#14f1d9',
+      accent: '#ffeb3b',
+      action: '#ff4081',
+      surface: '#ffffff',
+      secondary: '#b0bec5',
+      success: '#00ff00',
+      danger: '#ff0000'
+    }
+  }
+};
+
+export const defaultTheme = {
+  ...PRESET_THEMES.ariseClassic.colors,
+
+  // Legacy aliases synced 1:1
+  darkGreen: PRESET_THEMES.ariseClassic.colors.primaryDark,
+  teal: PRESET_THEMES.ariseClassic.colors.primary,
+  darkTeal: PRESET_THEMES.ariseClassic.colors.primaryContainer,
+  yellow: PRESET_THEMES.ariseClassic.colors.accent,
+  lightOrange: PRESET_THEMES.ariseClassic.colors.secondary,
+  orange: PRESET_THEMES.ariseClassic.colors.action,
+  white: PRESET_THEMES.ariseClassic.colors.surface,
+  correctGreen: PRESET_THEMES.ariseClassic.colors.success,
+  wrongRed: PRESET_THEMES.ariseClassic.colors.danger,
 };
 
 /**
@@ -231,14 +402,19 @@ export const useQuizStore = create<QuizState>()(
 
   setAdminPasscode: (adminPasscode) => set({ adminPasscode }),
   
-  startRound: (roundCode) => set(() => {
-    return {
+  startRound: (roundCode) => {
+    if (roundCode === 'RF') useRapidFireStore.getState().resetRf();
+    if (roundCode === 'B') useBuzzerStore.getState().resetBuzzer();
+    if (roundCode === 'SWJ') useSpinWheelStore.getState().resetSw();
+    if (roundCode === 'TTT') useTicTacToeStore.getState().resetTtt();
+
+    set({
       gameState: 'PLAYING',
       activeRound: roundCode,
       currentQuestionIndex: 0,
       isAnswerRevealed: false,
-    };
-  }),
+    });
+  },
 
   markQuestionUsed: (index) => {
     set((state) => ({
@@ -332,9 +508,47 @@ export const useQuizStore = create<QuizState>()(
   })),
 
   setThemeColor: (key, color) => set((state) => {
-    const newTheme = { ...state.theme, [key]: color };
-    return { theme: newTheme };
+    const updated = { ...state.theme, [key]: color };
+    // Synchronize semantic & legacy keys 1:1
+    if (key === 'primaryDark') updated.darkGreen = color;
+    if (key === 'darkGreen') updated.primaryDark = color;
+    if (key === 'primary') updated.teal = color;
+    if (key === 'teal') updated.primary = color;
+    if (key === 'primaryContainer') updated.darkTeal = color;
+    if (key === 'darkTeal') updated.primaryContainer = color;
+    if (key === 'accent') updated.yellow = color;
+    if (key === 'yellow') updated.accent = color;
+    if (key === 'secondary') updated.lightOrange = color;
+    if (key === 'lightOrange') updated.secondary = color;
+    if (key === 'action') updated.orange = color;
+    if (key === 'orange') updated.action = color;
+    if (key === 'surface') updated.white = color;
+    if (key === 'white') updated.surface = color;
+    if (key === 'success') updated.correctGreen = color;
+    if (key === 'correctGreen') updated.success = color;
+    if (key === 'danger') updated.wrongRed = color;
+    if (key === 'wrongRed') updated.danger = color;
+
+    return { theme: updated };
   }),
+
+  setTheme: (newPartialTheme) => set((state) => {
+    const merged = { ...state.theme, ...newPartialTheme };
+    // Synchronize aliases
+    if (newPartialTheme.primaryDark) merged.darkGreen = newPartialTheme.primaryDark;
+    if (newPartialTheme.primary) merged.teal = newPartialTheme.primary;
+    if (newPartialTheme.primaryContainer) merged.darkTeal = newPartialTheme.primaryContainer;
+    if (newPartialTheme.accent) merged.yellow = newPartialTheme.accent;
+    if (newPartialTheme.secondary) merged.lightOrange = newPartialTheme.secondary;
+    if (newPartialTheme.action) merged.orange = newPartialTheme.action;
+    if (newPartialTheme.surface) merged.white = newPartialTheme.surface;
+    if (newPartialTheme.success) merged.correctGreen = newPartialTheme.success;
+    if (newPartialTheme.danger) merged.wrongRed = newPartialTheme.danger;
+
+    return { theme: merged };
+  }),
+
+  resetTheme: () => set({ theme: defaultTheme }),
 
   setSeed: (seed) => set((state) => {
     const reshuffled = reshuffleAllQuestions(state.questions, seed);

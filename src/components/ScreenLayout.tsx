@@ -90,6 +90,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
               onHomeClick();
             }}
             aria-label="Home"
+            title="Home (Shortcut: Esc)"
           >
             <Home style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
@@ -103,7 +104,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
               stopWheelTick();
               onSettingsClick();
             }}
-            aria-label="Settings"
+            aria-label="Settings (Shortcut: S)"
+            title="Settings (Shortcut: S)"
           >
             <Settings style={{ width: 'clamp(20px, 2.5vw, 32px)', height: 'clamp(20px, 2.5vw, 32px)' }} color="var(--dark-green)" strokeWidth={1.5} />
           </button>
@@ -134,8 +136,8 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
             backgroundColor: isMuted ? 'var(--orange)' : 'var(--dark-teal)',
             border: `2px solid ${isMuted ? 'var(--wrong-red)' : 'var(--teal)'}`
           }}
-          aria-label={isMuted ? "Unmute Audio" : "Mute Audio"}
-          title={isMuted ? "Unmute Audio" : "Mute Audio"}
+          aria-label={isMuted ? "Unmute Audio (Shortcut: M)" : "Mute Audio (Shortcut: M)"}
+          title={isMuted ? "Unmute Audio (Shortcut: M)" : "Mute Audio (Shortcut: M)"}
         >
           {isMuted ? <VolumeX size={24} color="var(--white)" /> : <Volume2 size={24} color="var(--white)" />}
         </button>

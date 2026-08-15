@@ -31,6 +31,8 @@ export interface RapidFireState {
   userAnswers: Record<number, number>;
   /** Map tracking revealed questions */
   revealedQuestions: Record<number, boolean>;
+  /** Map tracking passed questions that can be revisited */
+  passedQuestions: Record<number, boolean>;
 
   /** Sets questions for Rapid Fire round */
   setRfQuestions: (questions: Question[]) => void;
@@ -54,6 +56,10 @@ export interface RapidFireState {
   setUserAnswer: (qIdx: number, optIdx: number) => void;
   /** Marks question index as revealed */
   setQuestionRevealed: (qIdx: number) => void;
+  /** Marks question index as passed */
+  passQuestion: (qIdx: number) => void;
+  /** Removes question index from passed map */
+  removePassQuestion: (qIdx: number) => void;
   /** Resets entire Rapid Fire state back to initial default */
   resetRf: () => void;
 }
@@ -70,6 +76,7 @@ const initialState = {
   isCorrect: false,
   userAnswers: {},
   revealedQuestions: {},
+  passedQuestions: {},
 };
 
 /**
@@ -102,6 +109,14 @@ export const useRapidFireStore = create<RapidFireState>()(
       setQuestionRevealed: (qIdx) => set((state) => ({
         revealedQuestions: { ...state.revealedQuestions, [qIdx]: true }
       })),
+      passQuestion: (qIdx) => set((state) => ({
+        passedQuestions: { ...state.passedQuestions, [qIdx]: true }
+      })),
+      removePassQuestion: (qIdx) => set((state) => {
+        const nextPassed = { ...state.passedQuestions };
+        delete nextPassed[qIdx];
+        return { passedQuestions: nextPassed };
+      }),
       resetRf: () => set(initialState),
     }),
     {

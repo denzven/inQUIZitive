@@ -20,6 +20,20 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
 }) => {
   const [filterType, setFilterType] = useState<'all' | 'error' | 'placeholder' | 'warning'>('all');
 
+  // Close on Escape key press
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancel]);
+
   if (!isOpen || !auditResult) return null;
 
   const { totalRows, validCount, errorCount, placeholderCount, warningCount, issues } = auditResult;

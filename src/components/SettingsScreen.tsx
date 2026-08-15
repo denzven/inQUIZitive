@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useQuizStore } from '../store/useQuizStore';
+import { useQuizStore, PRESET_THEMES } from '../store/useQuizStore';
 import { fetchExcelData, exportProgressToExcel, auditExcelData, type AuditResult } from '../utils/excelParser';
 import { isNoShuffle } from '../utils/random';
 import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette, Shuffle, Edit3, Volume2, VolumeX, Bell, AlertOctagon, CheckCircle2, XCircle, Clock, Play, Square, Sparkles, MousePointerClick, Music, RotateCw } from 'lucide-react';
@@ -7,6 +7,7 @@ import trialSheetUrl from '../assets/trial_iQz_sheet.xlsx?url';
 import { ScreenLayout } from './ScreenLayout';
 import { SpreadsheetAuditModal } from './SpreadsheetAuditModal';
 import { QuestionBankEditor } from './QuestionBankEditor';
+import { CustomColorPickerModal } from './CustomColorPickerModal';
 import { useAudioStore, type SfxKey } from '../store/useAudioStore';
 import { playTickTock, playTileChime, playBuzzerLockout, playCorrectFanfare, playWrongBuzz, playButtonClick, playBubblePopSequence, playWheelTick, stopWheelTick } from '../utils/soundEffects';
 import { startBgmForKey, stopBgm, isBgmPlaying } from '../utils/bgmSynthesizer';
@@ -25,6 +26,8 @@ export const SettingsScreen: React.FC = () => {
     setSeed, 
     theme, 
     setThemeColor, 
+    setTheme,
+    resetTheme,
     questions, 
     loadQuestions, 
     resetAllQuestionsUsed 
@@ -348,31 +351,38 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  /** Color picker circular button component */
+  const [activePickerToken, setActivePickerToken] = useState<{ label: string; key: keyof typeof theme } | null>(null);
+
+  /** Color picker circular button component triggering Custom Color Picker Modal */
   const ColorPickerDot = ({ label, colorKey }: { label: string, colorKey: keyof typeof theme }) => (
-    <div title={label} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-      <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <input 
-          type="color" 
-          value={theme[colorKey]} 
-          onChange={(e) => setThemeColor(colorKey, e.target.value)}
-          style={{ opacity: 0, position: 'absolute', width: '0', height: '0' }}
-        />
-        <div style={{ 
-          width: '32px', height: '32px', 
-          backgroundColor: theme[colorKey],
+    <div title={`Click to customize ${label}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+      <button 
+        type="button"
+        onClick={() => setActivePickerToken({ label, key: colorKey })}
+        style={{ 
+          width: '36px',
+          height: '36px',
+          minWidth: '36px',
+          minHeight: '36px',
+          maxWidth: '36px',
+          maxHeight: '36px',
+          padding: 0,
+          margin: 0,
           borderRadius: '50%',
-          border: '2px solid var(--white)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          transition: 'transform 0.2s'
-        }} 
+          backgroundColor: theme[colorKey],
+          border: '3px solid var(--white)',
+          boxShadow: '0 3px 8px rgba(0,0,0,0.3)',
+          cursor: 'pointer',
+          transition: 'transform 0.2s ease',
+          boxSizing: 'border-box',
+          display: 'inline-block',
+          flexShrink: 0,
+          outline: 'none'
+        }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        />
-      </label>
-      <span style={{ fontSize: '0.75rem', opacity: 0.8, maxWidth: '65px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        {label.split(' ')[0]}
-      </span>
+      />
+      <span style={{ fontSize: '0.75rem', color: 'var(--white)', fontWeight: 'bold', textAlign: 'center' }}>{label}</span>
     </div>
   );
 
@@ -735,20 +745,82 @@ export const SettingsScreen: React.FC = () => {
 
             {/* Theme Palette Card */}
             <div className="card" style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
-                <Palette size={24} />
-                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Theme Palette</h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--yellow)', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Palette size={24} />
+                  <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Semantic Theme Palette Editor</h2>
+                </div>
+                <button 
+                  onClick={resetTheme}
+                  title="Reset Theme Palette to Default"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'var(--dark-teal)',
+                    color: 'var(--yellow)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--yellow)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <RotateCcw size={14} />
+                  Reset
+                </button>
               </div>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-around', paddingTop: '5px' }}>
-                <ColorPickerDot label="Background" colorKey="darkGreen" />
-                <ColorPickerDot label="Teal" colorKey="teal" />
-                <ColorPickerDot label="Dark Teal" colorKey="darkTeal" />
-                <ColorPickerDot label="Yellow" colorKey="yellow" />
-                <ColorPickerDot label="Orange" colorKey="orange" />
-                <ColorPickerDot label="White" colorKey="white" />
-                <ColorPickerDot label="Correct" colorKey="correctGreen" />
-                <ColorPickerDot label="Wrong" colorKey="wrongRed" />
+
+              {/* Color Picker Swatches Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', textAlign: 'center', padding: '10px 0' }}>
+                <ColorPickerDot label="Canvas (Dark)" colorKey="primaryDark" />
+                <ColorPickerDot label="Primary Teal" colorKey="primary" />
+                <ColorPickerDot label="Container Teal" colorKey="primaryContainer" />
+                <ColorPickerDot label="Accent Gold" colorKey="accent" />
+                <ColorPickerDot label="Secondary Soft" colorKey="secondary" />
+                <ColorPickerDot label="Action Coral" colorKey="action" />
+                <ColorPickerDot label="Surface Text" colorKey="surface" />
+                <ColorPickerDot label="Success Green" colorKey="success" />
+                <ColorPickerDot label="Danger Red" colorKey="danger" />
+              </div>
+
+              {/* Preset Palettes */}
+              <div style={{ marginTop: '12px', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--light-orange)', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
+                  Professional Theme Presets
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {Object.values(PRESET_THEMES).map((preset) => (
+                    <button 
+                      key={preset.id}
+                      onClick={() => setTheme(preset.colors)}
+                      title={preset.description}
+                      style={{ 
+                        padding: '8px 10px', 
+                        fontSize: '0.8rem', 
+                        borderRadius: '10px', 
+                        backgroundColor: preset.colors.primaryDark, 
+                        color: preset.colors.accent, 
+                        border: `2px solid ${preset.colors.primary}`, 
+                        cursor: 'pointer', 
+                        fontWeight: 'bold',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.85rem' }}>{preset.name}</span>
+                      <div style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.primaryDark, border: '1px solid #fff' }} />
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.primary, border: '1px solid #fff' }} />
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.accent, border: '1px solid #fff' }} />
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.action, border: '1px solid #fff' }} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -960,6 +1032,15 @@ export const SettingsScreen: React.FC = () => {
             setShowAuditModal(false);
             setMsg('Excel import cancelled.');
           }}
+        />
+        {/* Custom Color Picker Modal */}
+        <CustomColorPickerModal 
+          isOpen={!!activePickerToken}
+          tokenName={activePickerToken?.label || ''}
+          colorKey={activePickerToken?.key || ''}
+          currentColor={activePickerToken ? theme[activePickerToken.key] : '#000000'}
+          onSave={(key, newHex) => setThemeColor(key as any, newHex)}
+          onClose={() => setActivePickerToken(null)}
         />
 
       </div>

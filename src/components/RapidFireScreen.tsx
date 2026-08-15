@@ -4,12 +4,12 @@ import { Play, Pause, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 import { useRapidFireStore } from '../store/useRapidFireStore';
 import { seededShuffle } from '../utils/random';
-import { playTickTock, playCorrectFanfare, playWrongBuzz, playBuzzerLockout } from '../utils/soundEffects';
+import { playTickTock, playCorrectFanfare, playWrongBuzz, playBuzzerLockout, playTileChime } from '../utils/soundEffects';
 
 /**
  * RapidFireScreen Component.
  * Manages the high-intensity Rapid Fire round where a contestant must answer up to 10 questions in 60 seconds.
- * Handles countdown timer tick, pause/resume, feedback state, bonus point calculation, and answer verification.
+ * Handles countdown timer tick, pause/resume, pass & revisit queue, feedback state, bonus point calculation, and answer verification.
  */
 export const RapidFireScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
@@ -27,6 +27,7 @@ export const RapidFireScreen: React.FC = () => {
     setIsCorrect,
     userAnswers, setUserAnswer,
     revealedQuestions, setQuestionRevealed,
+    passedQuestions, passQuestion, removePassQuestion,
     resetRf
   } = useRapidFireStore();
 
@@ -61,19 +62,52 @@ export const RapidFireScreen: React.FC = () => {
   }, [rfState, isPaused, timer, setTimer, setRfState]);
 
   /** Feedback delay effect before automatically advancing to next question */
+  /** Feedback delay effect before automatically advancing to next question */
   useEffect(() => {
     if (rfState === 'FEEDBACK' && !isPaused) {
       const timeout = setTimeout(() => {
-        if (currentIdx + 1 < rfQuestions.length && timer > 0) {
+        const answeredCount = Object.keys(userAnswers).length;
+        if (answeredCount >= rfQuestions.length) {
+          setRfState('END');
+          return;
+        }
+
+        // Find next unanswered question
+        let nextIdx = -1;
+        for (let i = currentIdx + 1; i < rfQuestions.length; i++) {
+          if (userAnswers[i] === undefined && !passedQuestions[i]) {
+            nextIdx = i;
+            break;
+          }
+        }
+        if (nextIdx === -1) {
+          for (let i = 0; i < rfQuestions.length; i++) {
+            if (userAnswers[i] === undefined && !passedQuestions[i]) {
+              nextIdx = i;
+              break;
+            }
+          }
+        }
+        // Revisit passed questions if no fresh questions remain
+        if (nextIdx === -1) {
+          for (let i = 0; i < rfQuestions.length; i++) {
+            if (userAnswers[i] === undefined) {
+              nextIdx = i;
+              break;
+            }
+          }
+        }
+
+        if (nextIdx !== -1 && timer > 0) {
           setRfState('PLAYING');
-          setCurrentIdx(prev => prev + 1);
+          setCurrentIdx(nextIdx);
         } else {
           setRfState('END');
         }
       }, 750);
       return () => clearTimeout(timeout);
     }
-  }, [rfState, isPaused, currentIdx, rfQuestions.length, timer]);
+  }, [rfState, isPaused, currentIdx, rfQuestions.length, timer, userAnswers, passedQuestions, setRfState, setCurrentIdx]);
 
   /** Marks current question as used in global store upon display */
   useEffect(() => {
@@ -111,13 +145,66 @@ export const RapidFireScreen: React.FC = () => {
       }
     }
 
+    // Remove from passed queue if answered
+    if (passedQuestions[currentIdx]) {
+      removePassQuestion(currentIdx);
+    }
+
     setUserAnswer(currentIdx, optIndex);
     setQuestionRevealed(currentIdx);
     setSelectedOptIdx(optIndex);
     setIsCorrect(correct);
 
     setRfState('FEEDBACK');
-  }, [rfState, isPaused, rfQuestions, currentIdx, userAnswers, setUserAnswer, setQuestionRevealed, setSelectedOptIdx, setIsCorrect, setScore, setCorrectCount, setRfState]);
+  }, [rfState, isPaused, rfQuestions, currentIdx, userAnswers, passedQuestions, removePassQuestion, setUserAnswer, setQuestionRevealed, setSelectedOptIdx, setIsCorrect, setScore, setCorrectCount, setRfState]);
+
+  /** Passes current question and advances to next unanswered/unpassed question */
+  const handlePass = useCallback(() => {
+    if ((rfState !== 'PLAYING' && rfState !== 'FEEDBACK') || isPaused) return;
+
+    passQuestion(currentIdx);
+    playTileChime(0);
+
+    // 1. Look for un-answered AND un-passed question after currentIdx
+    let nextIdx = -1;
+    for (let i = currentIdx + 1; i < rfQuestions.length; i++) {
+      if (userAnswers[i] === undefined && !passedQuestions[i]) {
+        nextIdx = i;
+        break;
+      }
+    }
+    // 2. Wrap around from start for un-answered AND un-passed question
+    if (nextIdx === -1) {
+      for (let i = 0; i < currentIdx; i++) {
+        if (userAnswers[i] === undefined && !passedQuestions[i]) {
+          nextIdx = i;
+          break;
+        }
+      }
+    }
+    // 3. Revisit next passed question if all fresh questions attempted
+    if (nextIdx === -1) {
+      for (let i = currentIdx + 1; i < rfQuestions.length; i++) {
+        if (userAnswers[i] === undefined) {
+          nextIdx = i;
+          break;
+        }
+      }
+      if (nextIdx === -1) {
+        for (let i = 0; i <= currentIdx; i++) {
+          if (userAnswers[i] === undefined) {
+            nextIdx = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (nextIdx !== -1) {
+      setRfState('PLAYING');
+      setCurrentIdx(nextIdx);
+    }
+  }, [rfState, isPaused, currentIdx, rfQuestions.length, userAnswers, passedQuestions, passQuestion, setRfState, setCurrentIdx]);
 
   const currentQ = rfQuestions[currentIdx];
 
@@ -128,12 +215,16 @@ export const RapidFireScreen: React.FC = () => {
     }
   }, [currentIdx, setCurrentIdx]);
 
-  /** Navigates to next question index */
+  /** Navigates to next question index, automatically passing if unanswered */
   const handleNext = useCallback(() => {
-    if (currentIdx < rfQuestions.length - 1) {
-      setCurrentIdx(prev => prev + 1);
+    if (userAnswers[currentIdx] === undefined) {
+      handlePass();
+    } else {
+      if (currentIdx < rfQuestions.length - 1) {
+        setCurrentIdx(prev => prev + 1);
+      }
     }
-  }, [currentIdx, rfQuestions.length, setCurrentIdx]);
+  }, [currentIdx, rfQuestions.length, userAnswers, handlePass, setCurrentIdx]);
 
   /** Reveals answer for current question */
   const handleReveal = useCallback(() => {
@@ -148,23 +239,54 @@ export const RapidFireScreen: React.FC = () => {
     setGameState('MENU');
   }, [resetRf, setGameState]);
 
-  /** Binds keyboard shortcuts (1-4 for option pick, Space to reveal, Arrows to navigate, Esc to return) */
+  /** Binds keyboard shortcuts (1-4 for options, X to pass, K to pause/resume, Space to reveal, Arrows to navigate, Enter to start, Esc to return) */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && !isPaused) {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      const lowerKey = e.key.toLowerCase();
+
+      if (lowerKey === 'x') {
+        if (rfState === 'PLAYING' || rfState === 'FEEDBACK') {
+          e.preventDefault();
+          handlePass();
+        }
+      } else if (lowerKey === 'k') {
+        if (rfState === 'PLAYING' || rfState === 'FEEDBACK') {
+          e.preventDefault();
+          setIsPaused(!isPaused);
+        }
+      } else if (rfState === 'READY') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          setRfState('PLAYING');
+        }
+      } else if ((rfState === 'PLAYING' || rfState === 'FEEDBACK') && !isPaused) {
         if (e.key === '1') handleAnswer(0);
         if (e.key === '2') handleAnswer(1);
         if (e.key === '3') handleAnswer(2);
         if (e.key === '4') handleAnswer(3);
       }
-      if (e.key === ' ') handleReveal();
-      if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'Escape') handleReturnToMenu();
+      if (e.key === ' ') {
+        e.preventDefault();
+        handleReveal();
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrev();
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNext();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleReturnToMenu();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [rfState, isPaused, handleAnswer, handleReveal, handlePrev, handleNext, handleReturnToMenu]);
+  }, [rfState, isPaused, handleAnswer, handlePass, handleReveal, handlePrev, handleNext, handleReturnToMenu, setRfState, setIsPaused]);
 
   /** Computes accuracy bonus score */
   const bonus = useMemo(() => {
@@ -189,11 +311,57 @@ export const RapidFireScreen: React.FC = () => {
         {/* READY STATE */}
         {rfState === 'READY' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, margin: 'auto' }}>
-            <button onClick={() => setRfState('PLAYING')} style={{ padding: 'clamp(12px, 2vh, 20px) clamp(30px, 5vw, 60px)', fontSize: 'clamp(1.5rem, 4vw, 3rem)', backgroundColor: 'var(--teal)' }}>
-              Start Timer
-            </button>
-            <p style={{ color: 'var(--light-orange)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '15px' }}>Press Start to begin 60s timer.</p>
-            <p style={{ color: 'var(--yellow)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '10px' }}>Questions Loaded: {rfQuestions.length}</p>
+            {rfQuestions.length > 0 ? (
+              <>
+                <button 
+                  onClick={() => setRfState('PLAYING')} 
+                  title="Start Timer (Shortcut: Enter)"
+                  style={{ padding: 'clamp(12px, 2vh, 20px) clamp(30px, 5vw, 60px)', fontSize: 'clamp(1.5rem, 4vw, 3rem)', backgroundColor: 'var(--teal)' }}
+                >
+                  Start Timer
+                </button>
+                <p style={{ color: 'var(--light-orange)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '15px' }}>Press Start or Enter to begin 60s timer.</p>
+                <p style={{ color: 'var(--yellow)', fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', marginTop: '10px' }}>Questions Loaded: {rfQuestions.length} / 10</p>
+
+                {rfQuestions.length < 10 && (
+                  <div style={{
+                    backgroundColor: 'rgba(231, 76, 60, 0.15)',
+                    border: '2px solid var(--wrong-red)',
+                    borderRadius: '16px',
+                    padding: '12px 24px',
+                    marginTop: '15px',
+                    maxWidth: '650px',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 15px rgba(231, 76, 60, 0.25)'
+                  }}>
+                    <div style={{ color: 'var(--yellow)', fontSize: 'clamp(1rem, 2vw, 1.2rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <span>⚠️</span>
+                      <span>Question Quantity Warning</span>
+                    </div>
+                    <p style={{ color: 'var(--white)', fontSize: 'clamp(0.85rem, 1.8vw, 1rem)', margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                      Only {rfQuestions.length} unused question(s) available (10 required). Used questions were excluded to prevent duplicates.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{
+                backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                border: '2px solid var(--wrong-red)',
+                borderRadius: '20px',
+                padding: '24px 30px',
+                maxWidth: '650px',
+                textAlign: 'center',
+                boxShadow: '0 4px 20px rgba(231, 76, 60, 0.3)'
+              }}>
+                <p style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', color: 'var(--yellow)', margin: '0 0 10px 0', fontWeight: 'bold' }}>
+                  ⚠️ No Unused Questions Available
+                </p>
+                <p style={{ color: 'var(--white)', fontSize: 'clamp(1rem, 2vw, 1.2rem)', margin: 0 }}>
+                  All Rapid Fire round (Code 'RF') questions have already been used. Used questions are excluded to prevent repeats.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -202,8 +370,15 @@ export const RapidFireScreen: React.FC = () => {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(10px, 3vw, 50px)', alignItems: 'center' }}>
-              <div className="card" style={{ padding: '6px 20px', margin: 0, fontSize: 'clamp(1rem, 2vw, 1.5rem)', fontWeight: 'bold', borderRadius: '14px' }}>
-                Score: {score}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="card" style={{ padding: '6px 20px', margin: 0, fontSize: 'clamp(1rem, 2vw, 1.5rem)', fontWeight: 'bold', borderRadius: '14px' }}>
+                  Score: {score}
+                </div>
+                {Object.keys(passedQuestions).length > 0 && (
+                  <div className="card" style={{ padding: '6px 16px', margin: 0, fontSize: 'clamp(0.9rem, 1.8vw, 1.3rem)', fontWeight: 'bold', borderRadius: '14px', backgroundColor: 'var(--dark-teal)', color: 'var(--yellow)' }}>
+                    Passed: {Object.keys(passedQuestions).length}
+                  </div>
+                )}
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 25px)' }}>
@@ -222,15 +397,24 @@ export const RapidFireScreen: React.FC = () => {
                 >
                   {timer}s
                 </div>
-                <button onClick={() => setIsPaused(!isPaused)} style={{ padding: '8px 12px', borderRadius: '14px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}>
+                <button 
+                  onClick={() => setIsPaused(!isPaused)} 
+                  title={isPaused ? "Resume Timer (Shortcut: K)" : "Pause Timer (Shortcut: K)"}
+                  style={{ padding: '8px 12px', borderRadius: '14px', backgroundColor: isPaused ? 'var(--yellow)' : 'var(--orange)' }}
+                >
                   {isPaused ? <Play style={{ width: 'clamp(20px, 2.5vw, 28px)', height: 'clamp(20px, 2.5vw, 28px)' }} color="var(--dark-green)" /> : <Pause style={{ width: 'clamp(20px, 2.5vw, 28px)', height: 'clamp(20px, 2.5vw, 28px)' }} color="var(--white)" />}
                 </button>
               </div>
             </div>
 
             <div className="card" style={{ flex: '1 1 0px', margin: 'clamp(8px, 1.5vh, 18px) clamp(10px, 3vw, 50px)', minHeight: 'clamp(100px, 16vh, 220px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: 'clamp(16px, 2.5vh, 30px)' }}>
-              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold' }}>
-                {currentIdx + 1}/{rfQuestions.length}
+              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Question {currentIdx + 1} / {rfQuestions.length}</span>
+                {passedQuestions[currentIdx] && (
+                  <span style={{ backgroundColor: 'var(--orange)', color: 'var(--white)', padding: '2px 10px', borderRadius: '10px', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
+                    PASSED - REVISIT
+                  </span>
+                )}
               </div>
               <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
@@ -251,14 +435,25 @@ export const RapidFireScreen: React.FC = () => {
                   }
                 }
 
+                const optLetter = String.fromCharCode(65 + i);
+
                 return (
                   <div 
                     key={i} 
+                    role="button"
+                    tabIndex={0}
                     className="option-card"
                     onClick={() => handleAnswer(i)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleAnswer(i);
+                      }
+                    }}
+                    title={`Option ${optLetter} (Shortcut: ${i + 1})`}
                     style={{ backgroundColor: bgColor, cursor: 'pointer' }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{optLetter}</span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
@@ -270,6 +465,7 @@ export const RapidFireScreen: React.FC = () => {
               <button 
                 onClick={handlePrev} 
                 disabled={currentIdx === 0}
+                title="Previous Question (Shortcut: ←)"
                 style={{ 
                   padding: 'clamp(8px, 1.4vh, 12px) clamp(14px, 2.5vw, 28px)', 
                   fontSize: 'clamp(0.95rem, 2vw, 1.4rem)', 
@@ -285,6 +481,7 @@ export const RapidFireScreen: React.FC = () => {
 
               <button 
                 onClick={handleReveal} 
+                title="Reveal Answer (Shortcut: Space)"
                 style={{ 
                   padding: 'clamp(10px, 1.6vh, 14px) clamp(18px, 3vw, 36px)', 
                   fontSize: 'clamp(1rem, 2.2vw, 1.5rem)', 
@@ -299,17 +496,20 @@ export const RapidFireScreen: React.FC = () => {
 
               <button 
                 onClick={handleNext} 
-                disabled={currentIdx === rfQuestions.length - 1}
+                disabled={currentIdx === rfQuestions.length - 1 && userAnswers[currentIdx] !== undefined}
+                title={userAnswers[currentIdx] === undefined ? "Pass Question & Advance (Shortcut: →)" : "Next Question (Shortcut: →)"}
                 style={{ 
                   padding: 'clamp(8px, 1.4vh, 12px) clamp(14px, 2.5vw, 28px)', 
                   fontSize: 'clamp(0.95rem, 2vw, 1.4rem)', 
                   backgroundColor: 'var(--orange)',
-                  opacity: currentIdx === rfQuestions.length - 1 ? 0.5 : 1,
-                  cursor: currentIdx === rfQuestions.length - 1 ? 'not-allowed' : 'pointer',
+                  color: 'var(--white)',
+                  fontWeight: 'bold',
+                  opacity: (currentIdx === rfQuestions.length - 1 && userAnswers[currentIdx] !== undefined) ? 0.5 : 1,
+                  cursor: (currentIdx === rfQuestions.length - 1 && userAnswers[currentIdx] !== undefined) ? 'not-allowed' : 'pointer',
                   borderRadius: '14px'
                 }}
               >
-                Next
+                {userAnswers[currentIdx] === undefined ? 'Pass' : 'Next'}
                 <ChevronRight style={{ width: 'clamp(18px, 2.2vw, 24px)', height: 'clamp(18px, 2.2vw, 24px)', verticalAlign: 'middle', marginLeft: '4px' }} />
               </button>
             </div>

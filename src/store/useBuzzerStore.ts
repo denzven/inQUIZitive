@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Question } from './useQuizStore';
 
 /** Represents the current state of the Buzzer round */
-export type BuzzerState = 'READY' | 'PLAYING';
+export type BuzzerState = 'READY' | 'PLAYING' | 'END';
 
 /**
  * Zustand store interface for managing the Buzzer Round state.

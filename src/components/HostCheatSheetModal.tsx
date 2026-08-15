@@ -11,6 +11,20 @@ interface HostCheatSheetModalProps {
 export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen, onClose }) => {
   const { questions, subtitle } = useQuizStore();
 
+  // Close on Escape key press
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Group questions by round code

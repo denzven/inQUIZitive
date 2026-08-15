@@ -50,7 +50,19 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
     loadPasscodeFromFile();
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

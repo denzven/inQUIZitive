@@ -18,9 +18,11 @@ export const TicTacToeScreen: React.FC = () => {
   const teamX = teams[0] ? teams[0].name : 'Team X';
   const teamO = teams[1] ? teams[1].name : 'Team O';
 
+  const unusedTttCount = useMemo(() => questions.filter(q => q.roundCode === 'TTT' && !q.used).length, [questions]);
+
   /** Prepares 9 questions allocated for the 3x3 Tic-Tac-Toe grid */
   const tttQuestions = useMemo(() => {
-    const available = questions.filter(q => q.roundCode === 'TTT');
+    const available = questions.filter(q => q.roundCode === 'TTT' && !q.used);
     const shuffled = seededShuffle(available, `${seed}_ttt`);
     // Fill up to 9 with dummy if needed
     const list = [...shuffled];
@@ -149,6 +151,28 @@ export const TicTacToeScreen: React.FC = () => {
         }}>
           Tic-Tac-Toe (Tiebreaker)
         </h1>
+
+        {/* QUESTION QUANTITY WARNING BANNER */}
+        {unusedTttCount < 9 && (
+          <div style={{
+            backgroundColor: 'rgba(231, 76, 60, 0.15)',
+            border: '2px solid var(--wrong-red)',
+            borderRadius: '16px',
+            padding: '8px 20px',
+            marginBottom: '10px',
+            maxWidth: '650px',
+            textAlign: 'center',
+            boxShadow: '0 4px 15px rgba(231, 76, 60, 0.25)'
+          }}>
+            <div style={{ color: 'var(--yellow)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <span>⚠️</span>
+              <span>Question Quantity Warning</span>
+            </div>
+            <p style={{ color: 'var(--white)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+              Only {unusedTttCount} unused TTT question(s) available (9 required). Used questions were excluded to prevent duplicates.
+            </p>
+          </div>
+        )}
 
         {/* TEAM BADGES WITH LUCIDE ICONS */}
         <div style={{ 

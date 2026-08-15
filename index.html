@@ -47,10 +47,66 @@
     <meta property="twitter:url" content="https://denzven.github.io/inQUIZitive/" />
     <meta property="twitter:title" content="inQUIZitive" />
     <meta property="twitter:description" content="A sleek, highly customizable interactive quiz platform." />
-    <meta property="twitter:image" content="https://denzven.github.io/inQUIZitive/banner.png" />
+    <!-- Immediate Theme Restoration for HTML Preloader Sync -->
+    <style>
+      :root {
+        --color-primary: #2a9d8f;
+        --color-primary-dark: #264653;
+        --color-primary-container: #1c695f;
+        --color-accent: #e9c46a;
+        --color-secondary: #f4a261;
+        --color-action: #e76f51;
+        --color-surface: #e8eddf;
+
+        --dark-green: #264653;
+        --teal: #2a9d8f;
+        --dark-teal: #1c695f;
+        --yellow: #e9c46a;
+        --light-orange: #f4a261;
+        --orange: #e76f51;
+        --white: #e8eddf;
+      }
+    </style>
+    <script>
+      (function() {
+        try {
+          var raw = localStorage.getItem('inquizitive-storage');
+          if (raw) {
+            var data = JSON.parse(raw);
+            if (data && data.state && data.state.theme) {
+              var theme = data.state.theme;
+              var root = document.documentElement;
+              var primaryDark = theme.primaryDark || theme.darkGreen || '#264653';
+              var primary = theme.primary || theme.teal || '#2a9d8f';
+              var primaryContainer = theme.primaryContainer || theme.darkTeal || '#1c695f';
+              var accent = theme.accent || theme.yellow || '#e9c46a';
+              var secondary = theme.secondary || theme.lightOrange || '#f4a261';
+              var action = theme.action || theme.orange || '#e76f51';
+              var surface = theme.surface || theme.white || '#e8eddf';
+
+              root.style.setProperty('--color-primary-dark', primaryDark);
+              root.style.setProperty('--color-primary', primary);
+              root.style.setProperty('--color-primary-container', primaryContainer);
+              root.style.setProperty('--color-accent', accent);
+              root.style.setProperty('--color-secondary', secondary);
+              root.style.setProperty('--color-action', action);
+              root.style.setProperty('--color-surface', surface);
+
+              root.style.setProperty('--dark-green', primaryDark);
+              root.style.setProperty('--teal', primary);
+              root.style.setProperty('--dark-teal', primaryContainer);
+              root.style.setProperty('--yellow', accent);
+              root.style.setProperty('--light-orange', secondary);
+              root.style.setProperty('--orange', action);
+              root.style.setProperty('--white', surface);
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
-    <div id="preloader" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:#264653; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999; transition: opacity 0.5s ease;">
+    <div id="preloader" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:var(--color-primary-dark, var(--dark-green, #264653)); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999999; transition: opacity 0.5s ease;">
       <style>
         @keyframes spinPulse {
           0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
@@ -60,14 +116,14 @@
         .preloader-spinner {
           width: 60px;
           height: 60px;
-          border: 6px solid #2a9d8f;
-          border-top-color: #e9c46a;
+          border: 6px solid var(--color-primary, var(--teal, #2a9d8f));
+          border-top-color: var(--color-accent, var(--yellow, #e9c46a));
           border-radius: 50%;
           animation: spinPulse 1.5s ease-in-out infinite;
           margin-bottom: 20px;
         }
         .preloader-text {
-          color: #e8eddf;
+          color: var(--color-surface, var(--white, #e8eddf));
           font-family: system-ui, -apple-system, sans-serif;
           font-size: 2.5rem;
           font-weight: bold;
@@ -75,10 +131,10 @@
           margin: 0;
         }
         .preloader-text span {
-          color: #e9c46a;
+          color: var(--color-accent, var(--yellow, #e9c46a));
         }
         .preloader-subtext {
-          color: #2a9d8f;
+          color: var(--color-secondary, var(--light-orange, #f4a261));
           font-family: system-ui, -apple-system, sans-serif;
           margin-top: 10px;
           font-size: 1.2rem;

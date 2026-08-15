@@ -37,6 +37,29 @@ export const RulesScreen: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [printDocMode, setPrintDocMode] = useState<'players' | 'host' | 'formal'>('players');
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      if (e.key === '1') {
+        e.preventDefault();
+        setActiveTab('players');
+      } else if (e.key === '2') {
+        e.preventDefault();
+        setActiveTab('app');
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setActiveTab(prev => (prev === 'players' ? 'app' : 'players'));
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        playButtonClick();
+        setGameState('MENU');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setGameState]);
+
   const generalGuidelines = [
     { label: 'a', text: 'The quiz progresses through four stage rounds after qualifying screening.' },
     { label: 'b', text: 'Points will be entirely reset to zero at the start of new rounds following eliminations to ensure a levelled baseline for advancing teams.' },

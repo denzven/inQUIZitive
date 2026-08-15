@@ -40,6 +40,18 @@ function App() {
   /** Syncs Zustand theme colors to document root CSS variables */
   useEffect(() => {
     const root = document.documentElement;
+    // Semantic Tokens
+    root.style.setProperty('--color-primary-dark', theme.darkGreen);
+    root.style.setProperty('--color-primary', theme.teal);
+    root.style.setProperty('--color-primary-container', theme.darkTeal);
+    root.style.setProperty('--color-accent', theme.yellow);
+    root.style.setProperty('--color-secondary', theme.lightOrange);
+    root.style.setProperty('--color-action', theme.orange);
+    root.style.setProperty('--color-surface', theme.white);
+    root.style.setProperty('--color-success', theme.correctGreen);
+    root.style.setProperty('--color-danger', theme.wrongRed);
+
+    // Legacy Aliases
     root.style.setProperty('--dark-green', theme.darkGreen);
     root.style.setProperty('--teal', theme.teal);
     root.style.setProperty('--dark-teal', theme.darkTeal);
@@ -105,13 +117,12 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [gameState, setGameState]);
 
-  /** 3. Intercepts F5 / Ctrl+R / Escape keys during active play */
+  /** 3. Intercepts F5 / Ctrl+R keys during active play */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState !== 'PLAYING') return;
 
       const isProtectedKey = 
-        e.key === 'Escape' ||
         e.key === 'F5' || 
         (e.ctrlKey && e.key.toLowerCase() === 'r') || 
         (e.metaKey && e.key.toLowerCase() === 'r');
