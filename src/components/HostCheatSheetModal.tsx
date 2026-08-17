@@ -161,14 +161,28 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                 backgroundColor: '#e74c3c',
                 color: '#ffffff',
                 border: 'none',
-                padding: '8px 14px',
-                borderRadius: '10px',
+                width: '38px',
+                height: '38px',
+                minWidth: '38px',
+                minHeight: '38px',
+                maxWidth: '38px',
+                maxHeight: '38px',
+                padding: 0,
+                margin: 0,
+                borderRadius: '50%',
+                aspectRatio: '1 / 1',
+                boxSizing: 'border-box',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '1rem'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: '0 3px 8px rgba(0,0,0,0.2)'
               }}
+              title="Close Modal"
             >
-              <X size={20} />
+              <X size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -218,6 +232,16 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                     <p style={{ margin: '0 0 8px', fontWeight: 600, color: '#1a1a1a', fontSize: '1.05rem' }}>
                       {q.question}
                     </p>
+
+                    {q.image && (
+                      <div style={{ margin: '8px 0', textAlign: 'center' }}>
+                        <img 
+                          src={q.image} 
+                          alt={`Q${idx + 1} Image`} 
+                          style={{ maxHeight: '110px', maxWidth: '100%', borderRadius: '6px', border: '1px solid #ccc', objectFit: 'contain' }} 
+                        />
+                      </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '0.92rem' }}>
                       {q.options.map((opt, oIdx) => {

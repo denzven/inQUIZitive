@@ -14,7 +14,14 @@
 export const isNoShuffle = (seed: string | number | undefined | null): boolean => {
   if (seed === undefined || seed === null) return false;
   const str = String(seed).trim().toUpperCase().replace(/[\s_-]/g, '');
-  return str === 'NOSHUFFLE' || str === 'NOSUFFLE';
+  return (
+    str === 'NOSHUFFLE' ||
+    str === 'NOSUFFLE' ||
+    str === 'OFF' ||
+    str === 'NONE' ||
+    str.startsWith('NOSHUFFLE') ||
+    str.startsWith('NOSUFFLE')
+  );
 };
 
 /**

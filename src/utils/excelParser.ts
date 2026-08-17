@@ -1,6 +1,16 @@
 import * as XLSX from 'xlsx';
 import type { Question } from '../store/useQuizStore';
 import { shuffleOptionsWithSeed } from './random';
+import { extractExcelImages, injectImagesToWorkbookZip } from './excelImageExtractor';
+import { preloadQuestionImages } from './imagePreloader';
+
+/**
+ * Helper to convert File or ArrayBuffer to ArrayBuffer reliably.
+ */
+const getArrayBufferFromFile = async (file: File | ArrayBuffer): Promise<ArrayBuffer> => {
+  if (file instanceof ArrayBuffer) return file;
+  return await file.arrayBuffer();
+};
 
 /**
  * Asynchronously parses an uploaded Excel file or ArrayBuffer containing quiz questions.
@@ -14,25 +24,12 @@ export const parseExcelData = async (
   file: File | ArrayBuffer,
   seed: string | number = '12342026'
 ): Promise<Question[]> => {
-  return new Promise((resolve, reject) => {
-    try {
-      let data: any;
-      if (file instanceof File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          data = e.target?.result;
-          resolve(processWorkbook(data, 'binary', seed));
-        };
-        reader.onerror = (err) => reject(err);
-        reader.readAsBinaryString(file);
-      } else {
-        // It's an ArrayBuffer
-        resolve(processWorkbook(file, 'array', seed));
-      }
-    } catch (err) {
-      reject(err);
-    }
-  });
+  const arrayBuffer = await getArrayBufferFromFile(file);
+  const extracted = await extractExcelImages(arrayBuffer);
+  const parsedQuestions = processWorkbook(arrayBuffer, 'array', seed, extracted.byRow);
+  // Preload all question images (HTTP/HTTPS URLs & Data URLs) into browser cache
+  preloadQuestionImages(parsedQuestions).catch(err => console.warn('Image preloader notice:', err));
+  return parsedQuestions;
 };
 
 /**
@@ -67,26 +64,61 @@ const isPlaceholderText = (text: string): boolean => {
 };
 
 /**
+ * Helper to resolve round code from Round Code column or descriptive Round column.
+ */
+const resolveRoundCode = (row: any): string => {
+  const code = getCellValue(row['Round Code']) || getCellValue(row['RoundCode']);
+  if (code) return code;
+  const roundName = getCellValue(row['Round']) || getCellValue(row['Round Name']);
+  if (!roundName) return 'RF';
+  const lower = roundName.toLowerCase();
+  if (lower.includes('rapid')) return 'RF';
+  if (lower.includes('jeopardy') || lower.includes('spin')) return 'SWJ';
+  if (lower.includes('buzzer')) return 'B';
+  if (lower.includes('tic') || lower.includes('tac')) return 'TTT';
+  return roundName;
+};
+
+/**
+ * Detects the 0-based range offset (header row) of an Excel worksheet.
+ * If Row 1 contains standard header keywords ('questions' or 'round code' or 'answer'), range is 0.
+ * Otherwise, defaults to range 2 (skipping 2 title/instruction rows as in standard templates).
+ */
+const detectWorkbookHeaderRange = (worksheet: XLSX.WorkSheet): number => {
+  try {
+    const row1Json = XLSX.utils.sheet_to_json<any>(worksheet, { range: 0, header: 1 })[0] || [];
+    const row1Text = JSON.stringify(row1Json).toLowerCase();
+    if (row1Text.includes('question') || row1Text.includes('round') || row1Text.includes('answer')) {
+      return 0;
+    }
+  } catch (err) {
+    console.warn('Header detection notice:', err);
+  }
+  return 2;
+};
+
+/**
  * Internal helper to read an Excel workbook sheet and map raw row objects into normalized Question instances.
- * Skips the first 2 header rows to align with spreadsheet specifications.
+ * Dynamically detects header row position to support both standard templates and backup exports.
  * 
  * @param data - The raw binary string or ArrayBuffer data of the spreadsheet.
  * @param type - The XLSX parser reading format ('binary' | 'array').
  * @param seed - Randomization seed string or number.
+ * @param imageMap - Optional map of openXml row indices to image Data URLs.
  * @returns An array of normalized `Question` objects with deterministically shuffled answer options.
  */
 const processWorkbook = (
   data: any,
   type: 'binary' | 'array',
-  seed: string | number = '12342026'
+  seed: string | number = '12342026',
+  imageMap: Map<number, string> = new Map()
 ): Question[] => {
   const workbook = XLSX.read(data, { type });
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
 
-  // The python app ignored the first 2 rows. 
-  // We can do this by passing range: 2 to sheet_to_json, which treats row 3 as the header.
-  const rawData = XLSX.utils.sheet_to_json<any>(worksheet, { range: 2, defval: '' });
+  const rangeOffset = detectWorkbookHeaderRange(worksheet);
+  const rawData = XLSX.utils.sheet_to_json<any>(worksheet, { range: rangeOffset, defval: '' });
 
   const questions: Question[] = [];
 
@@ -106,15 +138,29 @@ const processWorkbook = (
     // Shuffle options deterministically using global seed and question index
     const shuffledOptions = shuffleOptionsWithSeed(rawOptions, seed, index);
 
+    // OpenXML row index calculation:
+    // If rangeOffset === 0 (Row 1 header), data item 0 is at OpenXML row 1 (Excel row 2).
+    // If rangeOffset === 2 (Row 3 header), data item 0 is at OpenXML row 3 (Excel row 4).
+    const expectedOpenXmlRow = rangeOffset === 0 ? index + 1 : index + 3;
+    const extractedImage = 
+      imageMap.get(expectedOpenXmlRow) || 
+      imageMap.get(index + 1) || 
+      imageMap.get(index + 2) || 
+      imageMap.get(index + 3) || 
+      imageMap.get(index + 4);
+
+    const textImage = getCellValue(row['Image']) || getCellValue(row['Image URL']) || getCellValue(row['Image Base64']);
+
     const q: Question = {
       index: index,
-      roundCode: getCellValue(row['Round Code']),
+      roundCode: resolveRoundCode(row),
       topic: getCellValue(row['Topic']),
       used: getCellValue(row['Used']).toLowerCase() === 'yes',
       question: questionText,
+      image: extractedImage || (textImage !== '' ? textImage : undefined),
       answer: rawAns,
       options: shuffledOptions,
-      scoreVal: Number(row['Cost (Score)']) || 10,
+      scoreVal: Number(row['Cost (Score)']) || Number(row['Cost']) || Number(row['Score']) || 10,
     };
 
     questions.push(q);
@@ -188,6 +234,7 @@ export interface AuditResult {
   errorCount: number;
   placeholderCount: number;
   warningCount: number;
+  imageCount: number;
   issues: AuditIssue[];
   cleanQuestions: Question[];
 }
@@ -204,23 +251,9 @@ export const auditExcelData = async (
   file: File | ArrayBuffer,
   seed: string | number = '12342026'
 ): Promise<AuditResult> => {
-  return new Promise((resolve, reject) => {
-    try {
-      if (file instanceof File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const data = e.target?.result;
-          resolve(processAuditWorkbook(data, 'binary', seed));
-        };
-        reader.onerror = (err) => reject(err);
-        reader.readAsBinaryString(file);
-      } else {
-        resolve(processAuditWorkbook(file, 'array', seed));
-      }
-    } catch (err) {
-      reject(err);
-    }
-  });
+  const arrayBuffer = await getArrayBufferFromFile(file);
+  const extracted = await extractExcelImages(arrayBuffer);
+  return processAuditWorkbook(arrayBuffer, 'array', seed, extracted.byRow, extracted.totalExtracted);
 };
 
 /**
@@ -229,13 +262,16 @@ export const auditExcelData = async (
 const processAuditWorkbook = (
   data: any,
   type: 'binary' | 'array',
-  seed: string | number = '12342026'
+  seed: string | number = '12342026',
+  imageMap: Map<number, string> = new Map(),
+  extractedImageCount: number = 0
 ): AuditResult => {
   const workbook = XLSX.read(data, { type });
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
   
-  const rawData = XLSX.utils.sheet_to_json<any>(worksheet, { range: 2, defval: '' });
+  const rangeOffset = detectWorkbookHeaderRange(worksheet);
+  const rawData = XLSX.utils.sheet_to_json<any>(worksheet, { range: rangeOffset, defval: '' });
 
   const issues: AuditIssue[] = [];
   const cleanQuestions: Question[] = [];
@@ -244,7 +280,7 @@ const processAuditWorkbook = (
   let totalRows = 0;
 
   rawData.forEach((row, idx) => {
-    const excelRowIndex = idx + 4; // Header is row 3, 0-index row is row 4
+    const excelRowIndex = rangeOffset === 0 ? idx + 2 : idx + 4;
     totalRows++;
     let rowHasFatalError = false;
 
@@ -257,6 +293,17 @@ const processAuditWorkbook = (
     const rawTopic = getCellValue(row['Topic']);
     const rawCost = row['Cost (Score)'];
     const snippet = rawQuestionText ? (rawQuestionText.length > 45 ? rawQuestionText.substring(0, 45) + '...' : rawQuestionText) : `Row ${excelRowIndex}`;
+
+    const expectedOpenXmlRow = rangeOffset === 0 ? idx + 1 : idx + 3;
+    const extractedImage = 
+      imageMap.get(expectedOpenXmlRow) || 
+      imageMap.get(idx + 1) || 
+      imageMap.get(idx + 2) || 
+      imageMap.get(idx + 3) || 
+      imageMap.get(idx + 4);
+
+    const textImage = getCellValue(row['Image']) || getCellValue(row['Image URL']) || getCellValue(row['Image Base64']);
+    const questionImage = extractedImage || (textImage !== '' ? textImage : undefined);
 
     // Check 1: Missing Question Text
     if (rawQuestionText === '') {
@@ -386,6 +433,7 @@ const processAuditWorkbook = (
         topic: rawTopic || 'General',
         used: getCellValue(row['Used']).toLowerCase() === 'yes',
         question: rawQuestionText,
+        image: questionImage,
         answer: rawAnswerText,
         options: shuffledOptions,
         scoreVal: numericScore,
@@ -397,6 +445,7 @@ const processAuditWorkbook = (
   const placeholderCount = issues.filter(i => i.type === 'placeholder').length;
   const warningCount = issues.filter(i => i.type === 'warning').length;
   const validCount = cleanQuestions.length;
+  const imageCount = cleanQuestions.filter(q => Boolean(q.image)).length || extractedImageCount;
 
   return {
     totalRows,
@@ -404,9 +453,20 @@ const processAuditWorkbook = (
     errorCount,
     placeholderCount,
     warningCount,
+    imageCount,
     issues,
     cleanQuestions,
   };
+};
+
+const getRoundLabel = (code: string): string => {
+  switch (code?.toUpperCase()) {
+    case 'RF': return 'Rapid Fire';
+    case 'SWJ': return 'Spin Wheel Jeopardy';
+    case 'B': return 'Buzzer';
+    case 'TTT': return 'Tic-Tac-Toe';
+    default: return code || 'General';
+  }
 };
 
 /**
@@ -416,21 +476,66 @@ const processAuditWorkbook = (
  * @param questions - Current array of `Question` items including their `used` status.
  * @param teams - Current array of `Team` objects with updated scores.
  */
-export const exportProgressToExcel = (questions: Question[], teams: any[]) => {
-  const wsQuestions = XLSX.utils.json_to_sheet(questions.map(q => {
+export const exportProgressToExcel = async (questions: Question[], teams: any[]) => {
+  const questionRows = questions.map((q, idx) => {
     const incorrectOptions = q.options.filter(o => o !== q.answer);
+    const textCellValue = q.image && !q.image.startsWith('data:image/') ? q.image : '';
+
     return {
-      'Round Code': q.roundCode,
-      'Topic': q.topic,
+      'SrNo.': idx + 1,
+      'Used': q.used ? 'Yes' : 'No',
+      'Topic': q.topic || '',
       'Questions': q.question,
+      'Image': textCellValue,
       'Answer': q.answer,
       '2': incorrectOptions[0] || '',
       '3': incorrectOptions[1] || '',
       '4': incorrectOptions[2] || '',
       'Cost (Score)': q.scoreVal,
-      'Used': q.used ? 'Yes' : 'No'
+      'Round Code': q.roundCode || '',
+      'Round': getRoundLabel(q.roundCode)
     };
-  }));
+  });
+
+  const headerOrder = [
+    'SrNo.',
+    'Used',
+    'Topic',
+    'Questions',
+    'Image',
+    'Answer',
+    '2',
+    '3',
+    '4',
+    'Cost (Score)',
+    'Round Code',
+    'Round'
+  ];
+
+  const wsQuestions = XLSX.utils.json_to_sheet(questionRows, { header: headerOrder });
+
+  // Set explicit column widths for readability in Excel
+  wsQuestions['!cols'] = [
+    { wch: 8 },   // A: SrNo.
+    { wch: 8 },   // B: Used
+    { wch: 18 },  // C: Topic
+    { wch: 45 },  // D: Questions
+    { wch: 25 },  // E: Image
+    { wch: 22 },  // F: Answer
+    { wch: 22 },  // G: 2
+    { wch: 22 },  // H: 3
+    { wch: 22 },  // I: 4
+    { wch: 14 },  // J: Cost (Score)
+    { wch: 14 },  // K: Round Code
+    { wch: 20 },  // L: Round
+  ];
+
+  // Set explicit row heights so embedded pictures render large and clearly in Excel
+  const rowHeights = [{ hpt: 28 }]; // Row 1 Header height (28pt)
+  questions.forEach(q => {
+    rowHeights.push({ hpt: q.image ? 65 : 24 });
+  });
+  wsQuestions['!rows'] = rowHeights;
 
   const wsTeams = XLSX.utils.json_to_sheet(teams.map(t => ({
     'Team ID': t.id,
@@ -439,11 +544,28 @@ export const exportProgressToExcel = (questions: Question[], teams: any[]) => {
   })));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, wsQuestions, "Questions_Progress");
+  XLSX.utils.book_append_sheet(wb, wsQuestions, "Questions");
   XLSX.utils.book_append_sheet(wb, wsTeams, "Teams_Progress");
 
-  XLSX.writeFile(wb, "InQUIZitive_Progress.xlsx");
+  try {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = await injectImagesToWorkbookZip(wbout, questions.map((q, idx) => ({ image: q.image, index: idx })));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `InQUIZitive_Progress_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  } catch (err) {
+    console.error("Export progress failed:", err);
+    XLSX.writeFile(wb, "InQUIZitive_Progress.xlsx");
+  }
 };
+
 
 
 

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { PasswordModal } from './PasswordModal';
 import { HostCheatSheetModal } from './HostCheatSheetModal';
+import { QuestionImage } from './QuestionImage';
 import { 
   Search, 
   Plus, 
@@ -18,7 +19,9 @@ import {
   Filter, 
   X,
   HelpCircle,
-  Printer
+  Printer,
+  Upload,
+  Image
 } from 'lucide-react';
 
 interface QuestionBankEditorProps {
@@ -491,6 +494,23 @@ export const QuestionBankEditor: React.FC<QuestionBankEditorProps> = ({ onClose 
                     }}>
                       {q.scoreVal} pts
                     </span>
+
+                    {q.image && (
+                      <span style={{
+                        backgroundColor: 'rgba(52, 152, 219, 0.25)',
+                        border: '1px solid #5DADE2',
+                        color: '#5DADE2',
+                        fontSize: '0.78rem',
+                        padding: '2px 8px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <Image size={12} /> Image Attached
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -558,9 +578,14 @@ export const QuestionBankEditor: React.FC<QuestionBankEditorProps> = ({ onClose 
                   </div>
                 </div>
 
-                {/* Question Text */}
-                <div style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--white)', lineHeight: 1.35 }}>
-                  {q.question}
+                {/* Question Text & Image */}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  {q.image && (
+                    <QuestionImage src={q.image} maxHeight="85px" style={{ flexShrink: 0, margin: 0 }} />
+                  )}
+                  <div style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--white)', lineHeight: 1.35, flex: 1 }}>
+                    {q.question}
+                  </div>
                 </div>
 
                 {/* Options Breakdown Grid */}
@@ -719,6 +744,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   const incorrectOptions = initialData ? initialData.options.filter(o => o !== initialData.answer) : [];
 
   const [question, setQuestion] = useState(initialData?.question || '');
+  const [image, setImage] = useState<string>(initialData?.image || '');
   const [answer, setAnswer] = useState(initialData?.answer || '');
   const [opt2, setOpt2] = useState(incorrectOptions[0] || '');
   const [opt3, setOpt3] = useState(incorrectOptions[1] || '');
@@ -731,6 +757,19 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (evt.target?.result) {
+          setImage(evt.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -758,6 +797,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
 
     onSave({
       question: question.trim(),
+      image: image || undefined,
       answer: answer.trim(),
       options: rawOptions,
       roundCode: roundCode.trim() || 'General',
@@ -799,8 +839,33 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ margin: 0, color: 'var(--yellow)', fontSize: '1.5rem' }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--white)', cursor: 'pointer' }}>
-            <X size={22} />
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: '36px',
+              height: '36px',
+              minWidth: '36px',
+              minHeight: '36px',
+              maxWidth: '36px',
+              maxHeight: '36px',
+              padding: 0,
+              margin: 0,
+              borderRadius: '50%',
+              aspectRatio: '1 / 1',
+              boxSizing: 'border-box',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              border: '1px solid var(--yellow)',
+              color: 'var(--white)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
+            title="Close Modal"
+          >
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -817,6 +882,78 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
               required
               style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }}
             />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>
+              Question Image (Optional - Embedded Offline)
+            </label>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {image && (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img src={image} alt="Preview" style={{ height: '48px', borderRadius: '8px', border: '1px solid var(--teal)', objectFit: 'contain' }} />
+                  <button
+                    type="button"
+                    onClick={() => setImage('')}
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      width: '24px',
+                      height: '24px',
+                      minWidth: '24px',
+                      minHeight: '24px',
+                      maxWidth: '24px',
+                      maxHeight: '24px',
+                      padding: 0,
+                      margin: 0,
+                      borderRadius: '50%',
+                      aspectRatio: '1 / 1',
+                      boxSizing: 'border-box',
+                      backgroundColor: 'var(--wrong-red)',
+                      color: 'var(--white)',
+                      border: '2px solid var(--white)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                      flexShrink: 0,
+                      outline: 'none'
+                    }}
+                    title="Remove Image"
+                  >
+                    <X size={14} strokeWidth={3} />
+                  </button>
+                </div>
+              )}
+              <input 
+                type="file"
+                accept="image/*"
+                id="modal-image-upload"
+                onChange={handleImageChange}
+                style={{ display: 'none' }}
+              />
+              <label 
+                htmlFor="modal-image-upload"
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  border: '1px solid var(--teal)',
+                  borderRadius: '8px',
+                  color: 'var(--white)',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '0.85rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Upload size={14} />
+                {image ? 'Replace Image' : 'Upload Image'}
+              </label>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

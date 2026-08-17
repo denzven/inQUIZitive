@@ -23,6 +23,7 @@ export interface Question {
   roundCode: string;
   topic: string;
   question: string;
+  image?: string;
   options: string[];
   answer: string;
   scoreVal: number;

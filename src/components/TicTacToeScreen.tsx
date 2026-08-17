@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
+import { QuestionImage } from './QuestionImage';
 import { Trophy, X, Circle, RotateCcw, Home } from 'lucide-react';
 import { useTicTacToeStore } from '../store/useTicTacToeStore';
 import { seededShuffle } from '../utils/random';
 import { playTileChime, playCorrectFanfare, playWrongBuzz } from '../utils/soundEffects';
+import { preloadQuestionImages } from '../utils/imagePreloader';
 
 /**
  * TicTacToeScreen Component (Tiebreaker Round).
@@ -33,15 +35,20 @@ export const TicTacToeScreen: React.FC = () => {
         roundCode: 'TTT',
         topic: 'Tiebreaker',
         question: `Tiebreaker Question ${i}`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        answer: 'Option A',
+        answer: 'Correct Answer',
+        options: ['Correct Answer', 'Option B', 'Option C', 'Option D'],
         scoreVal: 10,
-        used: false,
+        used: false
       });
       i++;
     }
     return list.slice(0, 9);
   }, [questions, seed]);
+
+  /** Preload grid images into browser cache */
+  useEffect(() => {
+    preloadQuestionImages(tttQuestions);
+  }, [tttQuestions]);
 
 
   // Persisted Store State
@@ -81,6 +88,7 @@ export const TicTacToeScreen: React.FC = () => {
    * @param index - The cell index (0 to 8).
    */
   const handleTileClick = (index: number) => {
+    (document.activeElement as HTMLElement)?.blur();
     if (winner) return;
     playTileChime(index);
     setSelectedIdx(index);
@@ -102,6 +110,7 @@ export const TicTacToeScreen: React.FC = () => {
    * @param claim - Symbol to claim cell ('X' | 'O' | null).
    */
   const handleAssignTile = (claim: 'X' | 'O' | null) => {
+    (document.activeElement as HTMLElement)?.blur();
     if (selectedIdx === null || selectedIdx === -1) return;
 
     if (claim === 'X' || claim === 'O') {
@@ -117,6 +126,55 @@ export const TicTacToeScreen: React.FC = () => {
     setSelectedIdx(-1);
     setIsAnswerRevealed(false);
   };
+
+  /** Keyboard shortcuts listener for Tic-Tac-Toe Tiebreaker */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      const lowerKey = e.key.toLowerCase();
+
+      if (selectedIdx !== -1 && selectedIdx !== null) {
+        // Active Question Modal View
+        if (e.key === ' ') {
+          e.preventDefault();
+          setIsAnswerRevealed(true);
+        } else if (isAnswerRevealed) {
+          if (lowerKey === 'x') {
+            e.preventDefault();
+            handleAssignTile('X');
+          } else if (lowerKey === 'o') {
+            e.preventDefault();
+            handleAssignTile('O');
+          } else if (lowerKey === 'u' || lowerKey === 'p') {
+            e.preventDefault();
+            handleAssignTile(null);
+          }
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setSelectedIdx(-1);
+          setIsAnswerRevealed(false);
+        }
+      } else {
+        // Grid View: 1-9 key presses launch corresponding grid tile
+        if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+          const tileIdx = parseInt(e.key) - 1;
+          if (tileIdx >= 0 && tileIdx < 9 && board[tileIdx] === null) {
+            e.preventDefault();
+            handleTileClick(tileIdx);
+          }
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          resetTtt();
+          setGameState('MENU');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIdx, isAnswerRevealed, board, handleAssignTile, handleTileClick, setIsAnswerRevealed, setSelectedIdx, resetTtt, setGameState]);
 
   const activeQuestion = selectedIdx !== -1 ? tttQuestions[selectedIdx] : null;
 
@@ -327,6 +385,8 @@ export const TicTacToeScreen: React.FC = () => {
                 Tile #{selectedIdx! + 1} Question
               </h3>
               
+              {activeQuestion.image && <QuestionImage src={activeQuestion.image} maxHeight="180px" />}
+
               <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', color: 'var(--white)', margin: '10px auto 25px auto', textAlign: 'center', width: '100%', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {activeQuestion.question}
               </h2>

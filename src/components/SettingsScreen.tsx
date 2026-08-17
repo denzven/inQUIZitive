@@ -307,9 +307,9 @@ export const SettingsScreen: React.FC = () => {
   };
 
   /** Exports current question used state and team scores to Excel backup file */
-  const handleExportProgress = () => {
+  const handleExportProgress = async () => {
     const state = useQuizStore.getState();
-    exportProgressToExcel(state.questions, state.teams);
+    await exportProgressToExcel(state.questions, state.teams);
     setMsg('Progress exported to Excel!');
   };
 
@@ -466,7 +466,7 @@ export const SettingsScreen: React.FC = () => {
                   width: '100%', 
                   borderRadius: '10px', 
                   overflow: 'hidden',
-                  border: '2px solid var(--teal)',
+                  border: `2px solid ${isNoShuffle(seed) ? 'var(--orange)' : 'var(--teal)'}`,
                   backgroundColor: 'var(--white)',
                   boxSizing: 'border-box'
                 }}>
@@ -488,6 +488,27 @@ export const SettingsScreen: React.FC = () => {
                     }}
                     placeholder="e.g., 12342026 or NOSHUFFLE"
                   />
+                  <button 
+                    type="button"
+                    onClick={() => setSeed(isNoShuffle(seed) ? '12342026' : 'NOSHUFFLE')}
+                    title={isNoShuffle(seed) ? "Switch to Random Seed" : "Disable Option & Question Shuffling (NOSHUFFLE)"}
+                    style={{ 
+                      padding: '0 12px',
+                      backgroundColor: isNoShuffle(seed) ? 'var(--orange)' : 'var(--dark-teal)', 
+                      color: 'var(--white)',
+                      border: 'none',
+                      borderLeft: '2px solid var(--teal)',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 'bold',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {isNoShuffle(seed) ? 'NOSHUFFLE (ACTIVE)' : 'DISABLE SHUFFLE'}
+                  </button>
                   <button 
                     type="button"
                     onClick={handleRandomizeSeed}

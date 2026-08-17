@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { Play, Pause, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
+import { QuestionImage } from './QuestionImage';
 import { useRapidFireStore } from '../store/useRapidFireStore';
 import { seededShuffle } from '../utils/random';
 import { playTickTock, playCorrectFanfare, playWrongBuzz, playBuzzerLockout, playTileChime } from '../utils/soundEffects';
+import { preloadQuestionImages } from '../utils/imagePreloader';
 
 /**
  * RapidFireScreen Component.
@@ -36,7 +38,11 @@ export const RapidFireScreen: React.FC = () => {
     if (rfQuestions.length === 0) {
       const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
       const shuffled = seededShuffle(available, `${seed}_rf`);
-      setRfQuestions(shuffled.slice(0, 10));
+      const selected = shuffled.slice(0, 10);
+      setRfQuestions(selected);
+      preloadQuestionImages(selected);
+    } else {
+      preloadQuestionImages(rfQuestions);
     }
   }, [rfQuestions.length, questions, setRfQuestions, seed]);
 
@@ -125,6 +131,7 @@ export const RapidFireScreen: React.FC = () => {
    * @param optIndex - Selected option index (0 to 3)
    */
   const handleAnswer = useCallback((optIndex: number) => {
+    (document.activeElement as HTMLElement)?.blur();
     if ((rfState !== 'PLAYING' && rfState !== 'FEEDBACK') || isPaused) return;
     
     const currentQ = rfQuestions[currentIdx];
@@ -210,13 +217,21 @@ export const RapidFireScreen: React.FC = () => {
 
   /** Navigates to previous question index */
   const handlePrev = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
+    setRfState('PLAYING');
+    setSelectedOptIdx(-1);
+    setIsCorrect(false);
     if (currentIdx > 0) {
       setCurrentIdx(prev => prev - 1);
     }
-  }, [currentIdx, setCurrentIdx]);
+  }, [currentIdx, setCurrentIdx, setRfState, setSelectedOptIdx, setIsCorrect]);
 
   /** Navigates to next question index, automatically passing if unanswered */
   const handleNext = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
+    setRfState('PLAYING');
+    setSelectedOptIdx(-1);
+    setIsCorrect(false);
     if (userAnswers[currentIdx] === undefined) {
       handlePass();
     } else {
@@ -224,10 +239,11 @@ export const RapidFireScreen: React.FC = () => {
         setCurrentIdx(prev => prev + 1);
       }
     }
-  }, [currentIdx, rfQuestions.length, userAnswers, handlePass, setCurrentIdx]);
+  }, [currentIdx, rfQuestions.length, userAnswers, handlePass, setCurrentIdx, setRfState, setSelectedOptIdx, setIsCorrect]);
 
   /** Reveals answer for current question */
   const handleReveal = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
     if (currentQ) {
       setQuestionRevealed(currentIdx);
     }
@@ -416,6 +432,7 @@ export const RapidFireScreen: React.FC = () => {
                   </span>
                 )}
               </div>
+              {currentQ.image && <QuestionImage src={currentQ.image} maxHeight="160px" style={{ marginTop: '24px' }} />}
               <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 
@@ -427,7 +444,7 @@ export const RapidFireScreen: React.FC = () => {
                 const isSelected = i === currentSelectedOptIdx;
                 const isRightAnswer = opt === currentQ.answer;
 
-                if (isCurrentRevealed || rfState === 'FEEDBACK') {
+                if (isCurrentRevealed || (rfState === 'FEEDBACK' && currentSelectedOptIdx !== -1)) {
                   if (isSelected) {
                     bgColor = isRightAnswer ? 'var(--correct-green)' : 'var(--wrong-red)';
                   } else if (isRightAnswer) {

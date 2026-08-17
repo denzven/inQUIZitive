@@ -67,10 +67,14 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanInput = inputPasscode.trim();
+    const upperInput = cleanInput.toUpperCase();
+
     const isCorrect = 
-      cleanInput === adminPasscode || 
-      cleanInput === 'ARISE2026' || 
-      cleanInput === filePasscode;
+      cleanInput === adminPasscode ||
+      upperInput === (adminPasscode || '').toUpperCase() || 
+      cleanInput === '1234' || 
+      upperInput === 'ARISE2026' || 
+      upperInput === (filePasscode || '').toUpperCase();
 
     if (isCorrect) {
       setErrorMsg('');
@@ -84,16 +88,20 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
   const handleChangePasscode = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanOld = oldPasscode.trim();
+    const upperOld = cleanOld.toUpperCase();
+
     const isOldCorrect = 
-      cleanOld === adminPasscode || 
-      cleanOld === 'ARISE2026' || 
-      cleanOld === filePasscode;
+      cleanOld === adminPasscode ||
+      upperOld === (adminPasscode || '').toUpperCase() || 
+      cleanOld === '1234' || 
+      upperOld === 'ARISE2026' || 
+      upperOld === (filePasscode || '').toUpperCase();
 
     if (!isOldCorrect) {
       setChangeMsg({ text: 'Current passcode is incorrect.', isError: true });
       return;
     }
-    if (!newPasscode || newPasscode.length < 3) {
+    if (!newPasscode || newPasscode.trim().length < 3) {
       setChangeMsg({ text: 'New passcode must be at least 3 characters.', isError: true });
       return;
     }
@@ -168,7 +176,7 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
             <div style={{ position: 'relative' }}>
               <input 
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Enter Passcode (default: 1234)"
+                placeholder="Enter Passcode (e.g. 1234 or ARISE2026)"
                 value={inputPasscode}
                 onChange={(e) => setInputPasscode(e.target.value)}
                 autoFocus

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
+import { QuestionImage } from './QuestionImage';
 import { useSpinWheelStore } from '../store/useSpinWheelStore';
-import { seededShuffle } from '../utils/random';
+import { seededShuffle, isNoShuffle } from '../utils/random';
 import { playTileChime, playCorrectFanfare, playWrongBuzz, playWheelTick, stopWheelTick } from '../utils/soundEffects';
+import { preloadQuestionImages } from '../utils/imagePreloader';
+import { AlertTriangle, Sparkles, Award, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 /**
  * SpinWheelScreen Component (Spin Wheel & Jeopardy Round).
@@ -14,6 +17,13 @@ export const SpinWheelScreen: React.FC = () => {
   const { questions, setGameState, markQuestionUsed, seed } = useQuizStore();
   const spinCountRef = useRef<number>(0);
 
+  /** Preloads all question images into browser memory when entering Spin Wheel screen */
+  useEffect(() => {
+    if (questions.length > 0) {
+      preloadQuestionImages(questions);
+    }
+  }, [questions]);
+
   /** Ensures spinner audio is immediately stopped when leaving or unmounting the screen */
   useEffect(() => {
     return () => {
@@ -21,27 +31,107 @@ export const SpinWheelScreen: React.FC = () => {
     };
   }, []);
 
-  /** Data grouping: filters unused SWJ round questions into topic mappings and ensures >= 4 fallback topics */
-  const { allTopics, topicMap } = useMemo(() => {
-    const swj = questions.filter(q => q.roundCode === 'SWJ' && !q.used);
-    const map = new Map<string, Question[]>();
-    swj.forEach(q => {
-      const t = q.topic || 'Bonus';
-      if (!map.has(t)) map.set(t, []);
-      map.get(t)!.push(q);
+  /**
+   * Selects 4 questions for a Jeopardy topic column, ensuring exactly one 10-point,
+   * one 20-point, one 30-point, and one 40-point question per topic with zero point duplicates.
+   */
+  const getTieredQuestionsForTopic = useCallback((allTopicQs: Question[]): Question[] => {
+    if (!allTopicQs || allTopicQs.length === 0) return [];
+
+    const targetTiers = [10, 20, 30, 40];
+    const selected: Question[] = [];
+    const usedIndices = new Set<number>();
+
+    targetTiers.forEach((targetVal) => {
+      // 1. Try to find an unused question matching exact targetVal
+      let matchIdx = allTopicQs.findIndex(
+        (q, idx) => !usedIndices.has(idx) && !q.used && q.scoreVal === targetVal
+      );
+
+      // 2. Try to find any question matching exact targetVal
+      if (matchIdx === -1) {
+        matchIdx = allTopicQs.findIndex(
+          (q, idx) => !usedIndices.has(idx) && q.scoreVal === targetVal
+        );
+      }
+
+      // 3. Fallback to any unused question for this topic
+      if (matchIdx === -1) {
+        matchIdx = allTopicQs.findIndex(
+          (q, idx) => !usedIndices.has(idx) && !q.used
+        );
+      }
+
+      // 4. Fallback to any question for this topic
+      if (matchIdx === -1) {
+        matchIdx = allTopicQs.findIndex((_, idx) => !usedIndices.has(idx));
+      }
+
+      if (matchIdx !== -1) {
+        usedIndices.add(matchIdx);
+        const originalQ = allTopicQs[matchIdx];
+        // Clone question with target scoreVal guaranteed (10, 20, 30, 40)
+        selected.push({
+          ...originalQ,
+          scoreVal: targetVal
+        });
+      }
     });
-    let topics = Array.from(map.keys());
-    
-    // Fallback if < 4 topics exist
-    let i = 1;
-    while (topics.length < 4) {
-      const dummyTopic = `Bonus ${i++}`;
-      topics.push(dummyTopic);
-      map.set(dummyTopic, Array(4).fill({
-        index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false,
-        question: 'Bonus Question', answer: 'A', options: ['A','B','C','D'], scoreVal: 10
-      }));
+
+    return selected;
+  }, []);
+
+  /** Data grouping: filters SWJ round questions into topic mappings, auto-partitioning if < 4 distinct topics exist */
+  const { allTopics, topicMap } = useMemo(() => {
+    const swj = questions.filter(q => q.roundCode === 'SWJ');
+    const rawMap = new Map<string, Question[]>();
+    swj.forEach(q => {
+      const t = (q.topic && q.topic.trim()) || 'General Quiz';
+      if (!rawMap.has(t)) rawMap.set(t, []);
+      rawMap.get(t)!.push(q);
+    });
+
+    const map = new Map<string, Question[]>();
+    const rawTopics = Array.from(rawMap.keys());
+
+    if (rawTopics.length >= 4) {
+      rawTopics.forEach(t => map.set(t, rawMap.get(t)!));
+    } else if (rawTopics.length > 0) {
+      // Partition available questions into 4 sub-categories so all 4 columns are populated with real questions
+      rawTopics.forEach(baseTopic => {
+        const topicQs = rawMap.get(baseTopic)!;
+        if (topicQs.length >= 8) {
+          const chunkSize = Math.ceil(topicQs.length / 4);
+          for (let c = 0; c < 4; c++) {
+            const subTopicName = rawTopics.length === 1 
+              ? `${baseTopic} ${['I', 'II', 'III', 'IV'][c] || c + 1}`
+              : `${baseTopic} Part ${c + 1}`;
+            const chunk = topicQs.slice(c * chunkSize, (c + 1) * chunkSize);
+            if (chunk.length > 0) {
+              map.set(subTopicName, chunk);
+            }
+          }
+        } else {
+          map.set(baseTopic, topicQs);
+        }
+      });
     }
+
+    let topics = Array.from(map.keys());
+
+    // Ensure at least 4 topics exist with valid 10-40 fallback questions
+    let fallbackIdx = 1;
+    while (topics.length < 4) {
+      const dummyTopic = `Bonus Tier ${fallbackIdx++}`;
+      topics.push(dummyTopic);
+      map.set(dummyTopic, [
+        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 10 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 10 },
+        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 20 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 20 },
+        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 30 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 30 },
+        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 40 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 40 },
+      ]);
+    }
+
     return { allTopics: topics, topicMap: map };
   }, [questions]);
 
@@ -60,6 +150,30 @@ export const SpinWheelScreen: React.FC = () => {
     resetSw
   } = useSpinWheelStore();
 
+  /** Computes answered question progress stats for Jeopardy board view */
+  const boardProgress = useMemo(() => {
+    let usedCount = 0;
+    let totalTiles = 0;
+    selectedTopics.forEach(t => {
+      const list = boardQuestions[t] || getTieredQuestionsForTopic(topicMap.get(t) || []);
+      totalTiles += list.length;
+      usedCount += list.filter(q => q.used).length;
+    });
+    return { usedCount, totalTiles };
+  }, [selectedTopics, boardQuestions, topicMap, getTieredQuestionsForTopic]);
+
+  /** Checks if any chosen topic has fewer than 4 unused questions to display warning banner */
+  const incompleteTopicsWarning = useMemo(() => {
+    const warnings: { topic: string; unusedCount: number }[] = [];
+    selectedTopics.forEach(t => {
+      const unusedQs = (topicMap.get(t) || []).filter(q => !q.used);
+      if (unusedQs.length < 4) {
+        warnings.push({ topic: t, unusedCount: unusedQs.length });
+      }
+    });
+    return warnings;
+  }, [selectedTopics, topicMap]);
+
   // 3. Python Slot Machine Reel Engine (Ported from round_spin_wheel.py)
   const slotH = 270;
   const itemH = 90;
@@ -76,32 +190,132 @@ export const SpinWheelScreen: React.FC = () => {
   const spinStartTimeRef = useRef<number>(0);
   const animFrameRef = useRef<number | null>(null);
 
+  /** Pre-initializes selectedTopics, boardQuestions, and reel offsets on mount */
+  useEffect(() => {
+    const centerOffset = (slotH - itemH) / 2;
+
+    if (selectedTopics.length < 4) {
+      const p1Topics = allTopics.filter(t => (topicMap.get(t) || []).filter(q => !q.used).length >= 4);
+      const p2Topics = allTopics.filter(t => {
+        const u = (topicMap.get(t) || []).filter(q => !q.used).length;
+        return u > 0 && u < 4;
+      });
+      const p3Topics = allTopics.filter(t => !p1Topics.includes(t) && !p2Topics.includes(t));
+
+      const combinedPool = [...p1Topics, ...p2Topics, ...p3Topics];
+      const chosenTopics: string[] = [];
+      combinedPool.forEach(t => {
+        if (chosenTopics.length < 4 && !chosenTopics.includes(t)) {
+          chosenTopics.push(t);
+        }
+      });
+      let bonusIdx = 1;
+      while (chosenTopics.length < 4) {
+        const bTopic = `Bonus ${bonusIdx++}`;
+        if (!chosenTopics.includes(bTopic)) {
+          chosenTopics.push(bTopic);
+        }
+      }
+
+      setSelectedTopics(chosenTopics);
+      const bMap: Record<string, Question[]> = {};
+      chosenTopics.forEach(t => {
+        const allTopicQs = topicMap.get(t) || [];
+        bMap[t] = getTieredQuestionsForTopic(allTopicQs);
+      });
+      setBoardQuestions(bMap);
+
+      const initialOffsets = chosenTopics.map(t => {
+        const idx = Math.max(0, allTopics.indexOf(t));
+        return idx * itemH - centerOffset;
+      });
+      offsetsRef.current = initialOffsets;
+      setSlotOffsets(initialOffsets);
+    } else {
+      const initialOffsets = selectedTopics.map(t => {
+        const idx = Math.max(0, allTopics.indexOf(t));
+        return idx * itemH - centerOffset;
+      });
+      offsetsRef.current = initialOffsets;
+      setSlotOffsets(initialOffsets);
+    }
+  }, [selectedTopics, allTopics, topicMap, getTieredQuestionsForTopic, setSelectedTopics, setBoardQuestions, slotH, itemH]);
+
   /**
    * Triggers the 4-column Slot Machine Reel Spin animation loop.
-   * Selects 4 unique category topics and decelerates each reel with staggered easing.
+   * Prioritizes topics with 4+ valid unused questions, ensuring strictly unique topics per board
+   * across both Seeded Shuffle and NO SHUFFLE modes.
    */
   const startSpin = () => {
     setSwState('SPINNING');
     spinStartTimeRef.current = Date.now();
 
-    // Pick 4 strictly UNIQUE, non-repeating topics with unused questions
-    const topicsWithUnused = allTopics.filter(t => (topicMap.get(t) || []).some(q => !q.used));
-    const pool = topicsWithUnused.length > 0 ? topicsWithUnused : allTopics;
-    
-    // Seeded random sample without replacement (bypassed if NOSHUFFLE seed)
+    // Priority Topic Selection Engine:
+    // P1: Topics with 4+ unused questions (Full complete categories)
+    const p1Topics = allTopics.filter(t => {
+      const unused = (topicMap.get(t) || []).filter(q => !q.used);
+      return unused.length >= 4;
+    });
+
+    // P2: Topics with 1 to 3 unused questions
+    const p2Topics = allTopics.filter(t => {
+      const unused = (topicMap.get(t) || []).filter(q => !q.used);
+      return unused.length > 0 && unused.length < 4;
+    });
+
+    // P3: Remaining topics
+    const p3Topics = allTopics.filter(t => !p1Topics.includes(t) && !p2Topics.includes(t));
+
     spinCountRef.current += 1;
-    const shuffled = seededShuffle(pool, `${seed}_spin_${spinCountRef.current}`);
-    const chosenTopics = shuffled.slice(0, 4);
+    const isNoShuf = isNoShuffle(seed);
+
+    let s1: string[];
+    let s2: string[];
+    let s3: string[];
+
+    if (isNoShuf) {
+      // In NO SHUFFLE mode: deterministically shift/rotate topics by spin count
+      const shiftAmount = ((spinCountRef.current - 1) * 4) % (allTopics.length || 1);
+      const rotatedAll = [...allTopics.slice(shiftAmount), ...allTopics.slice(0, shiftAmount)];
+      
+      s1 = rotatedAll.filter(t => p1Topics.includes(t));
+      s2 = rotatedAll.filter(t => p2Topics.includes(t));
+      s3 = rotatedAll.filter(t => p3Topics.includes(t));
+    } else {
+      // In Seeded Shuffle mode: shuffle each priority tier independently
+      s1 = seededShuffle(p1Topics, `${seed}_p1_${spinCountRef.current}`);
+      s2 = seededShuffle(p2Topics, `${seed}_p2_${spinCountRef.current}`);
+      s3 = seededShuffle(p3Topics, `${seed}_p3_${spinCountRef.current}`);
+    }
+
+    const combinedPool = [...s1, ...s2, ...s3];
+
+    // Pick 4 strictly UNIQUE, non-repeating topics
+    const chosenTopics: string[] = [];
+    combinedPool.forEach(t => {
+      if (chosenTopics.length < 4 && !chosenTopics.includes(t)) {
+        chosenTopics.push(t);
+      }
+    });
+
+    // Fallback: Fill remaining slots with distinct "Bonus N" topics if needed
+    let bonusIdx = 1;
+    while (chosenTopics.length < 4) {
+      const bTopic = `Bonus ${bonusIdx++}`;
+      if (!chosenTopics.includes(bTopic)) {
+        chosenTopics.push(bTopic);
+      }
+    }
+
     const chosenIndices = chosenTopics.map(t => Math.max(0, allTopics.indexOf(t)));
-    
     finalIndicesRef.current = chosenIndices;
 
     // PRE-SAVE topics to store in case of crash during animation
     setSelectedTopics(chosenTopics);
     const bMap: Record<string, Question[]> = {};
     chosenTopics.forEach(t => {
-      const qs = (topicMap.get(t) || []).filter(q => !q.used);
-      bMap[t] = qs.slice(0, 4);
+      const allTopicQs = topicMap.get(t) || [];
+      bMap[t] = getTieredQuestionsForTopic(allTopicQs);
     });
     setBoardQuestions(bMap);
 
@@ -186,6 +400,7 @@ export const SpinWheelScreen: React.FC = () => {
    * @param optIndex - Selected option index
    */
   const handleAnswer = useCallback((optIndex: number) => {
+    (document.activeElement as HTMLElement)?.blur();
     if (swState !== 'QUESTION_VIEW' || !currentQ) return;
     
     const selectedText = currentQ.options[optIndex];
@@ -224,6 +439,7 @@ export const SpinWheelScreen: React.FC = () => {
    * @param q - The selected Question item.
    */
   const handleTileClick = (q: Question) => {
+    (document.activeElement as HTMLElement)?.blur();
     playTileChime(q.index);
     setCurrentQ(q);
     
@@ -249,6 +465,47 @@ export const SpinWheelScreen: React.FC = () => {
       setIsCorrect(false);
     }
   };
+
+  /** Keyboard shortcuts listener for Spin & Jeopardy */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      const lowerKey = e.key.toLowerCase();
+
+      if (swState === 'SPIN_READY') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          startSpin();
+        }
+      } else if (swState === 'SPIN_DONE') {
+        if (e.key === 'Enter' || e.key === ' ' || lowerKey === 'b') {
+          e.preventDefault();
+          setSwState('BOARD');
+        } else if (lowerKey === 'r') {
+          e.preventDefault();
+          startSpin();
+        }
+      } else if (swState === 'QUESTION_VIEW' && currentQ) {
+        if (e.key === '1') handleAnswer(0);
+        if (e.key === '2') handleAnswer(1);
+        if (e.key === '3') handleAnswer(2);
+        if (e.key === '4') handleAnswer(3);
+        if (e.key === 'Escape' || lowerKey === 'b') {
+          e.preventDefault();
+          setSwState('BOARD');
+        }
+      } else if (swState === 'BOARD') {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          resetSw();
+          setGameState('MENU');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [swState, currentQ, handleAnswer, setSwState, resetSw, setGameState]);
 
   return (
     <ScreenLayout
@@ -343,20 +600,6 @@ export const SpinWheelScreen: React.FC = () => {
                         });
                       })}
                     </div>
-
-                    {/* Top Cylinder Gradient Fade (dark_green fade) */}
-                    <div style={{
-                      position: 'absolute', top: 0, left: 0, right: 0, height: 'clamp(35px, 6vh, 60px)',
-                      background: 'linear-gradient(to bottom, rgba(38, 70, 83, 0.85), transparent)',
-                      pointerEvents: 'none', zIndex: 6
-                    }} />
-
-                    {/* Bottom Cylinder Gradient Fade (dark_green fade) */}
-                    <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: 'clamp(35px, 6vh, 60px)',
-                      background: 'linear-gradient(to top, rgba(38, 70, 83, 0.85), transparent)',
-                      pointerEvents: 'none', zIndex: 6
-                    }} />
 
                     {/* Center Glass Highlight Overlay */}
                     <div style={{
@@ -457,7 +700,8 @@ export const SpinWheelScreen: React.FC = () => {
                       color: 'var(--dark-green)',
                       borderRadius: '14px',
                       flex: '1 1 auto',
-                      maxWidth: '280px'
+                      maxWidth: '360px',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     To Jeopardy Board &gt;
@@ -468,66 +712,186 @@ export const SpinWheelScreen: React.FC = () => {
           </div>
         )}
 
-        {/* BOARD VIEW */}
+        {/* REFINED JEOPARDY BOARD VIEW */}
         {swState === 'BOARD' && (
-          <div style={{ 
+          <div className="animate-slide-up" style={{ 
             display: 'flex', 
-            gap: 'clamp(4px, 1.5vw, 30px)', 
-            marginTop: 'clamp(10px, 2vh, 20px)', 
+            flexDirection: 'column', 
+            alignItems: 'center',
             width: '100%', 
             maxWidth: '1400px', 
-            justifyContent: 'center',
+            flex: 1,
             padding: '0 clamp(4px, 1.5vw, 15px)',
             boxSizing: 'border-box'
           }}>
-            {selectedTopics.map((topic, colIdx) => {
-              const list = boardQuestions[topic] || (topicMap.get(topic) || []).filter(q => !q.used).slice(0, 4);
+            {/* BOARD CONTROLS & PROGRESS BANNER */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              marginBottom: 'clamp(10px, 2vh, 18px)',
+              padding: '8px 18px',
+              backgroundColor: 'var(--dark-teal)',
+              border: '2px solid var(--teal)',
+              borderRadius: '18px',
+              boxSizing: 'border-box',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--yellow)', fontWeight: 800, fontSize: 'clamp(0.95rem, 2vw, 1.25rem)' }}>
+                <Sparkles size={22} color="var(--yellow)" />
+                <span>JEOPARDY BOARD</span>
+              </div>
 
-              return (
-                <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vh, 20px)', flex: '1 1 0px', minWidth: 0, maxWidth: '280px' }}>
-                  <div style={{ 
-                    backgroundColor: 'var(--yellow)', 
-                    color: 'var(--dark-green)', 
-                    padding: 'clamp(8px, 1.5vh, 15px) clamp(4px, 1vw, 10px)', 
-                    borderRadius: 'clamp(8px, 1.5vw, 15px)', 
-                    textAlign: 'center', 
-                    fontWeight: 'bold', 
-                    fontSize: 'clamp(0.75rem, 2.2vw, 1.5rem)',
-                    lineHeight: 1.15,
-                    minHeight: 'clamp(44px, 7vh, 60px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    wordBreak: 'break-word',
-                    boxSizing: 'border-box'
-                  }}>
-                    {topic}
-                  </div>
-                  
-                  {list.map((q, rowIdx) => (
-                    <button 
-                      key={rowIdx} 
-                      onClick={() => handleTileClick(q)}
-                      style={{ 
-                        padding: 'clamp(10px, 2vh, 20px) clamp(4px, 1vw, 10px)', 
-                        fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', 
-                        backgroundColor: q.used ? 'var(--dark-green)' : 'var(--teal)',
-                        color: q.used ? 'var(--dark-teal)' : 'var(--white)',
-                        border: q.used ? '1px solid var(--dark-teal)' : 'none',
-                        boxShadow: q.used ? 'none' : undefined,
-                        cursor: 'pointer',
-                        borderRadius: 'clamp(8px, 1.5vw, 15px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {q.scoreVal}
-                    </button>
-                  ))}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: 'var(--dark-green)',
+                padding: '6px 18px',
+                borderRadius: '20px',
+                color: 'var(--white)',
+                fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
+                fontWeight: 'bold',
+                border: '1px solid var(--teal)'
+              }}>
+                <Award size={18} color="var(--yellow)" />
+                <span>Progress: {boardProgress.usedCount} / {boardProgress.totalTiles} Answered</span>
+              </div>
+
+              <button 
+                onClick={startSpin}
+                title="Spin categories reel again (Shortcut: R)"
+                style={{
+                  padding: '8px 20px',
+                  fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
+                  backgroundColor: 'var(--orange)',
+                  color: 'var(--white)',
+                  borderRadius: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                <RotateCcw size={16} />
+                Respin Categories
+              </button>
+            </div>
+
+            {/* INCOMPLETE TOPICS WARNING BANNER */}
+            {incompleteTopicsWarning.length > 0 && (
+              <div style={{
+                width: '100%',
+                backgroundColor: 'rgba(231, 76, 60, 0.18)',
+                border: '2px solid var(--wrong-red)',
+                borderRadius: '14px',
+                padding: '10px 16px',
+                marginBottom: 'clamp(10px, 1.8vh, 16px)',
+                boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                color: 'var(--yellow)',
+                fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.2)'
+              }}>
+                <AlertTriangle size={22} color="var(--wrong-red)" style={{ flexShrink: 0 }} />
+                <div>
+                  <span style={{ color: 'var(--yellow)' }}>Category Question Warning: </span>
+                  <span style={{ color: 'var(--white)', fontWeight: 600 }}>
+                    {incompleteTopicsWarning.map(w => `${w.topic} (${w.unusedCount} unused)`).join(', ')}.
+                  </span>
+                  <span style={{ fontWeight: 400, color: 'rgba(255, 255, 255, 0.8)', marginLeft: '6px' }}>
+                    Fewer than 4 questions were available; fallback questions are mapped to maintain 10-40 tiers.
+                  </span>
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {/* 4 JEOPARDY COLUMNS GRID */}
+            <div style={{ 
+              display: 'flex', 
+              gap: 'clamp(6px, 1.5vw, 24px)', 
+              width: '100%', 
+              justifyContent: 'center',
+              boxSizing: 'border-box'
+            }}>
+              {selectedTopics.map((topic, colIdx) => {
+                const list = boardQuestions[topic] || getTieredQuestionsForTopic(topicMap.get(topic) || []);
+
+                return (
+                  <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.8vh, 18px)', flex: '1 1 0px', minWidth: 0, maxWidth: '300px' }}>
+                    
+                    {/* SOLID YELLOW CATEGORY HEADER */}
+                    <div style={{ 
+                      backgroundColor: 'var(--yellow)', 
+                      color: 'var(--dark-green)', 
+                      padding: 'clamp(10px, 1.8vh, 16px) clamp(6px, 1vw, 12px)', 
+                      borderRadius: '16px', 
+                      textAlign: 'center', 
+                      fontWeight: 900, 
+                      fontSize: 'clamp(0.8rem, 2.2vw, 1.45rem)',
+                      lineHeight: 1.15,
+                      minHeight: 'clamp(48px, 8vh, 68px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      wordBreak: 'break-word',
+                      boxSizing: 'border-box',
+                      border: '2px solid var(--yellow)',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {topic}
+                    </div>
+                    
+                    {/* 4 POINT VALUE TILES */}
+                    {list.map((q, rowIdx) => {
+                      const isTileUsed = q.used;
+
+                      return (
+                        <button 
+                          key={rowIdx} 
+                          onClick={() => handleTileClick(q)}
+                          className={isTileUsed ? 'jeopardy-tile-used' : 'jeopardy-tile-active'}
+                          title={isTileUsed ? `Review ${q.scoreVal} Points Question` : `Select ${q.scoreVal} Points Question`}
+                          style={{ 
+                            position: 'relative',
+                            padding: 'clamp(12px, 2.2vh, 22px) clamp(4px, 1vw, 10px)', 
+                            fontSize: 'clamp(1.4rem, 3.8vw, 3rem)', 
+                            fontWeight: 900,
+                            letterSpacing: '1px',
+                            backgroundColor: isTileUsed ? 'var(--dark-green)' : 'var(--teal)',
+                            color: isTileUsed ? 'var(--dark-teal)' : 'var(--white)',
+                            border: isTileUsed 
+                              ? '2px solid var(--dark-teal)' 
+                              : '2px solid var(--light-orange)',
+                            cursor: 'pointer',
+                            borderRadius: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                          }}
+                        >
+                          {isTileUsed && (
+                            <CheckCircle2 
+                              size={18} 
+                              color="var(--correct-green)" 
+                              style={{ position: 'absolute', top: '8px', right: '10px', opacity: 0.85 }} 
+                            />
+                          )}
+                          <span>{q.scoreVal}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -546,11 +910,13 @@ export const SpinWheelScreen: React.FC = () => {
               minHeight: 'clamp(100px, 18vh, 220px)', 
               margin: '0 clamp(10px, 3vw, 50px) clamp(8px, 1.5vh, 18px)', 
               display: 'flex', 
+              flexDirection: 'column',
               alignItems: 'center', 
               justifyContent: 'center', 
               textAlign: 'center',
               padding: 'clamp(16px, 3vh, 30px)' 
             }}>
+              {currentQ.image && <QuestionImage src={currentQ.image} maxHeight="180px" style={{ marginBottom: '12px' }} />}
               <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 

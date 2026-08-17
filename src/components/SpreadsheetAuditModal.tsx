@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, AlertOctagon, CheckCircle2, FileCheck, X, Sparkles, Edit3 } from 'lucide-react';
+import { AlertTriangle, AlertOctagon, CheckCircle2, FileCheck, X, Sparkles, Edit3, Image } from 'lucide-react';
 import type { AuditResult } from '../utils/excelParser';
 
 interface SpreadsheetAuditModalProps {
@@ -36,7 +36,7 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
 
   if (!isOpen || !auditResult) return null;
 
-  const { totalRows, validCount, errorCount, placeholderCount, warningCount, issues } = auditResult;
+  const { totalRows, validCount, errorCount, placeholderCount, warningCount, imageCount = 0, issues } = auditResult;
 
   const filteredIssues = issues.filter(issue => {
     if (filterType === 'error') return issue.type === 'error';
@@ -94,38 +94,52 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
       >
         {/* Close Button */}
         <button 
+          type="button"
           onClick={onCancel}
           style={{
             position: 'absolute',
             top: '18px',
             right: '18px',
-            background: 'none',
-            border: 'none',
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            minHeight: '36px',
+            maxWidth: '36px',
+            maxHeight: '36px',
+            padding: 0,
+            margin: 0,
+            borderRadius: '50%',
+            aspectRatio: '1 / 1',
+            boxSizing: 'border-box',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid var(--teal)',
             color: 'var(--white)',
-            opacity: 0.8,
             cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <X size={22} />
-        </button>
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
-          <div style={{
-            width: '52px',
-            height: '52px',
-            borderRadius: '16px',
-            backgroundColor: errorCount > 0 ? 'rgba(231, 76, 60, 0.2)' : placeholderCount > 0 ? 'rgba(155, 89, 182, 0.25)' : warningCount > 0 ? 'rgba(244, 162, 97, 0.2)' : 'rgba(46, 204, 113, 0.2)',
-            border: `2px solid ${errorCount > 0 ? 'var(--wrong-red)' : placeholderCount > 0 ? '#9b59b6' : warningCount > 0 ? 'var(--yellow)' : 'var(--correct-green)'}`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'background-color 0.15s ease'
+          }}
+          title="Close Modal"
+        >
+          <X size={20} strokeWidth={2.5} />
+        </button>
+
+        {/* Header Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '16px',
+            backgroundColor: errorCount > 0 ? 'rgba(231, 76, 60, 0.2)' : (warningCount > 0 ? 'rgba(244, 162, 97, 0.2)' : 'rgba(42, 157, 143, 0.2)'),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: `1.5px solid ${errorCount > 0 ? 'var(--wrong-red)' : (warningCount > 0 ? 'var(--light-orange)' : 'var(--teal)')}`
           }}>
             {errorCount > 0 ? (
               <AlertOctagon size={28} color="var(--wrong-red)" />
-            ) : placeholderCount > 0 ? (
-              <AlertTriangle size={28} color="#d7bde2" />
             ) : warningCount > 0 ? (
               <AlertTriangle size={28} color="var(--yellow)" />
             ) : (
@@ -137,7 +151,7 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
               Spreadsheet Pre-Flight Audit
             </h2>
             <p style={{ margin: '2px 0 0', fontSize: '0.88rem', color: 'var(--white)', opacity: 0.85 }}>
-              Automatically audited {totalRows} spreadsheet rows for fatal errors, unedited templates & scores.
+              Automatically audited {totalRows} spreadsheet rows for fatal errors, embedded images & scores.
             </p>
           </div>
         </div>
@@ -145,7 +159,7 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
         {/* Metrics Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(6, 1fr)',
           gap: '8px',
           marginBottom: '16px'
         }}>
@@ -156,6 +170,10 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--correct-green)' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--correct-green)' }}>Valid Qs</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--correct-green)' }}>{validCount}</div>
+          </div>
+          <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', border: '1px solid #3498db' }}>
+            <div style={{ fontSize: '0.72rem', color: '#5DADE2', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}><Image size={11} /> Images</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#5DADE2' }}>{imageCount}</div>
           </div>
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', border: `1px solid ${errorCount > 0 ? 'var(--wrong-red)' : 'var(--teal)'}` }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--wrong-red)' }}>Fatal Errors</div>

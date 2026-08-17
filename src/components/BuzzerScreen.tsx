@@ -2,9 +2,11 @@ import React, { useEffect, useCallback } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { useBuzzerStore } from '../store/useBuzzerStore';
 import { ScreenLayout } from './ScreenLayout';
+import { QuestionImage } from './QuestionImage';
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { seededShuffle } from '../utils/random';
 import { playCorrectFanfare, playWrongBuzz } from '../utils/soundEffects';
+import { preloadQuestionImages } from '../utils/imagePreloader';
 
 /**
  * BuzzerScreen Component.
@@ -27,7 +29,11 @@ export const BuzzerScreen: React.FC = () => {
     if (buzzerQuestions.length === 0) {
       const available = questions.filter(q => q.roundCode === 'B' && !q.used);
       const shuffled = seededShuffle(available, `${seed}_buzzer`);
-      setBuzzerQuestions(shuffled.slice(0, 20));
+      const selected = shuffled.slice(0, 20);
+      setBuzzerQuestions(selected);
+      preloadQuestionImages(selected);
+    } else {
+      preloadQuestionImages(buzzerQuestions);
     }
   }, [buzzerQuestions.length, questions, setBuzzerQuestions, seed]);
 
@@ -42,6 +48,7 @@ export const BuzzerScreen: React.FC = () => {
 
   /** Navigates to next question index or finishes round on final question */
   const handleNext = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
     if (currentIdx < buzzerQuestions.length - 1) {
       setCurrentIdx(prev => prev + 1);
     } else {
@@ -52,6 +59,7 @@ export const BuzzerScreen: React.FC = () => {
 
   /** Navigates to previous question index */
   const handlePrev = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
     if (currentIdx > 0) {
       setCurrentIdx(prev => prev - 1);
     }
@@ -63,6 +71,7 @@ export const BuzzerScreen: React.FC = () => {
    * @param optIdx - Selected option index
    */
   const handleOptionClick = useCallback((optIdx: number) => {
+    (document.activeElement as HTMLElement)?.blur();
     if (!currentQ) return;
     const selectedOpt = currentQ.options[optIdx];
     if (selectedOpt === currentQ.answer) {
@@ -76,6 +85,7 @@ export const BuzzerScreen: React.FC = () => {
 
   /** Reveals answer for current question */
   const handleReveal = useCallback(() => {
+    (document.activeElement as HTMLElement)?.blur();
     if (currentQ) {
       setQuestionRevealed(currentIdx);
     }
@@ -218,6 +228,7 @@ export const BuzzerScreen: React.FC = () => {
               <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold' }}>
                 Question {currentIdx + 1} / {buzzerQuestions.length}
               </div>
+              {currentQ?.image && <QuestionImage src={currentQ.image} maxHeight="160px" style={{ marginTop: '24px' }} />}
               <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>
                 {currentQ?.question}
               </h2>
