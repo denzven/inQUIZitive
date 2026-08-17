@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://denzven.github.io/inQUIZitive/</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://denzven.github.io/inQUIZitive/banner.png</image:loc>
+      <image:title>inQUIZitive - Modern Interactive Live Event Quiz Platform</image:title>
+      <image:caption>Interactive quiz platform banner showcasing Rapid Fire, Spin Wheel, Tic-Tac-Toe, and Speed Buzzer game modes.</image:caption>
+    </image:image>
   </url>
 </urlset>

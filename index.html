@@ -8,45 +8,144 @@
     <meta name="theme-color" content="#264653" />
     <link rel="canonical" href="https://denzven.github.io/inQUIZitive/" />
     
+    <link rel="manifest" href="site.webmanifest" />
+
     <!-- Primary Meta Tags -->
-    <title>INQUIZITIVE</title>
-    <meta name="title" content="inQUIZitive" />
-    <meta name="description" content="A sleek, highly customizable interactive quiz platform." />
-    <meta name="keywords" content="quiz, interactive, inquisitive, inQUIZitive, trivia, game, pwa, react, customizable" />
+    <title>inQUIZitive | Modern Interactive Live Event Quiz Platform</title>
+    <meta name="title" content="inQUIZitive | Modern Interactive Live Event Quiz Platform" />
+    <meta name="description" content="An automated, interactive live event quiz platform and PWA featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer mode, Excel question imports, real-time scoreboards, and offline presentation capabilities." />
+    <meta name="keywords" content="inQUIZitive, quiz app, trivia software, live event quiz, quizmaster tool, rapid fire quiz, spin wheel quiz, speed buzzer system, excel question loader, react 19 quiz, pwa trivia, offline quiz generator, pub quiz scoreboard, stage quiz presenter, classroom trivia" />
     <meta name="author" content="Denzven" />
-    <meta name="robots" content="index, follow" />
+    <meta name="publisher" content="Denzven" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="language" content="English" />
     <meta name="revisit-after" content="7 days" />
+    <meta name="application-name" content="inQUIZitive" />
+    <meta name="apple-mobile-web-app-title" content="inQUIZitive" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <!-- Schema.org Markup -->
+    <!-- Schema.org WebApplication & SoftwareApplication Markup -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "inQUIZitive",
-      "url": "https://denzven.github.io/inQUIZitive/",
-      "description": "A sleek, highly customizable interactive quiz platform.",
-      "applicationCategory": "GameApplication",
-      "operatingSystem": "Any",
-      "author": {
-        "@type": "Person",
-        "name": "Denzven"
-      }
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://denzven.github.io/inQUIZitive/#software",
+          "name": "inQUIZitive",
+          "alternateName": ["Inquizitive Quiz App", "inQUIZitive PWA", "Live Stage Quizmaster Platform"],
+          "url": "https://denzven.github.io/inQUIZitive/",
+          "description": "An automated, multi-round quiz platform and Progressive Web App (PWA) for live event hosting, school competitions, and corporate trivia nights.",
+          "applicationCategory": "GameApplication, EducationalApplication, BusinessApplication",
+          "operatingSystem": "Web Browser, Windows, macOS, Linux, iOS, Android",
+          "softwareVersion": "1.0.0",
+          "inLanguage": "en",
+          "screenshot": "https://denzven.github.io/inQUIZitive/banner.png",
+          "image": "https://denzven.github.io/inQUIZitive/banner.png",
+          "offers": {
+            "@type": "Offer",
+            "price": "0.00",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Rapid Fire Timer Countdown Round",
+            "Spin Wheel Topic Selector",
+            "Tic-Tac-Toe 3x3 Playoff Grid",
+            "Speed Reaction Buzzer Mode",
+            "Excel XLSX Question Bank Import & Audit",
+            "Real-Time Custom Live Scoreboard",
+            "100% Offline PWA Functionality",
+            "Presenter Keyboard Hotkey Controls",
+            "Printable Rules Document PDF Generator"
+          ],
+          "author": {
+            "@type": "Person",
+            "name": "Denzven",
+            "url": "https://github.com/denzven"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://denzven.github.io/inQUIZitive/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is inQUIZitive?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "inQUIZitive is an automated, modern interactive live event quiz platform built for quizmasters, schools, colleges, corporate events, and trivia hosts to conduct multi-round competitions without backend servers."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I import questions into inQUIZitive?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can import questions into inQUIZitive by uploading a Microsoft Excel (.xlsx) file formatted with columns for Round, Question, Option A, Option B, Option C, Option D, Answer, and Points."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does inQUIZitive work offline?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! inQUIZitive is built as a Progressive Web App (PWA). Once opened or installed in your browser, it runs completely offline with zero active internet required."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What game modes are available in inQUIZitive?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "inQUIZitive includes 4 interactive game modes: Rapid Fire (high-intensity countdown), Spin Wheel (random topic selector), Tic-Tac-Toe (strategic grid), and Speed Buzzer mode."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is inQUIZitive free?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, inQUIZitive is a 100% free and open-source web application licensed under the MIT License."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://denzven.github.io/inQUIZitive/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://denzven.github.io/inQUIZitive/"
+            }
+          ]
+        }
+      ]
     }
     </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="inQUIZitive" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="https://denzven.github.io/inQUIZitive/" />
-    <meta property="og:title" content="inQUIZitive" />
-    <meta property="og:description" content="A sleek, highly customizable interactive quiz platform." />
+    <meta property="og:title" content="inQUIZitive | Modern Interactive Live Event Quiz Platform" />
+    <meta property="og:description" content="An automated, interactive live event quiz platform and PWA featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer mode, Excel question imports, and real-time scoreboards." />
     <meta property="og:image" content="https://denzven.github.io/inQUIZitive/banner.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="inQUIZitive Live Quiz Platform Header Banner" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://denzven.github.io/inQUIZitive/" />
-    <meta property="twitter:title" content="inQUIZitive" />
-    <meta property="twitter:description" content="A sleek, highly customizable interactive quiz platform." />
+    <meta property="twitter:title" content="inQUIZitive | Modern Interactive Live Event Quiz Platform" />
+    <meta property="twitter:description" content="An automated, interactive live event quiz platform and PWA featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer mode, Excel question imports, and real-time scoreboards." />
+    <meta property="twitter:image" content="https://denzven.github.io/inQUIZitive/banner.png" />
+    <meta property="twitter:image:alt" content="inQUIZitive Live Quiz Platform Header Banner" />
     <!-- Immediate Theme Restoration for HTML Preloader Sync -->
     <style>
       :root {
@@ -144,6 +243,28 @@
       <h1 class="preloader-text">in<span>QUIZ</span>itive</h1>
       <p class="preloader-subtext">Initializing Assets...</p>
     </div>
+    <noscript>
+      <div style="padding: 40px; font-family: sans-serif; background-color: #264653; color: #e8eddf; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <h1>inQUIZitive - Modern Interactive Live Event Quiz Platform</h1>
+        <p><strong>inQUIZitive</strong> is an automated, web-based Progressive Web App (PWA) designed for quizmasters, schools, colleges, and corporate trivia hosts to conduct multi-round live competitions with zero backend or server setup.</p>
+        
+        <h2>Key Features</h2>
+        <ul>
+          <li><strong>4 Interactive Game Modes:</strong> Rapid Fire, Spin Wheel, Tic-Tac-Toe Grid, and Speed Buzzer Mode.</li>
+          <li><strong>Excel Question Bank Import:</strong> Upload .xlsx spreadsheets directly into the application with automatic layout auditing.</li>
+          <li><strong>Live Scoreboard &amp; Leaderboard:</strong> Real-time score tracking, customizable team colors, and point management.</li>
+          <li><strong>100% Offline Capability:</strong> Progressive Web App (PWA) architecture allowing complete offline execution.</li>
+          <li><strong>Presenter Keyboard Shortcuts:</strong> Fast hotkey controls for live stage projection.</li>
+        </ul>
+
+        <h2>Frequently Asked Questions</h2>
+        <h3>How do I import questions into inQUIZitive?</h3>
+        <p>Upload a Microsoft Excel (.xlsx) file with standard columns for Round, Question, Option A, Option B, Option C, Option D, Answer, and Points.</p>
+
+        <h3>Does inQUIZitive work offline?</h3>
+        <p>Yes, once loaded, inQUIZitive runs 100% offline in your browser as a PWA.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

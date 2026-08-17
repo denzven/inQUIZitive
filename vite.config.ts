@@ -9,14 +9,15 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['Q.ico', 'apple-touch-icon.png', 'masked-icon.png'],
+      includeAssets: ['Q.ico', 'apple-touch-icon.png', 'masked-icon.png', 'sitemap.xml', 'site.webmanifest', 'banner.png'],
       manifest: {
-        name: 'InQUIZitive',
-        short_name: 'InQUIZitive',
-        description: 'Automated, multi-round quiz software for live events',
+        name: 'inQUIZitive - Live Event Quiz & Trivia Platform',
+        short_name: 'inQUIZitive',
+        description: 'Automated, multi-round quiz software for live events featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer, and Excel imports.',
         theme_color: '#264653',
         background_color: '#264653',
         display: 'standalone',
+        categories: ['education', 'games', 'entertainment', 'utilities'],
         icons: [
           {
             src: 'pwa-192x192.png',

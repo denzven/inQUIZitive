@@ -1,0 +1,34 @@
+{
+  "name": "inQUIZitive - Live Event Quiz & Trivia Platform",
+  "short_name": "inQUIZitive",
+  "description": "An automated, multi-round quiz software for live events, featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer, and Excel imports.",
+  "start_url": "/inQUIZitive/",
+  "display": "standalone",
+  "background_color": "#264653",
+  "theme_color": "#264653",
+  "orientation": "any",
+  "categories": [
+    "education",
+    "games",
+    "entertainment",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
