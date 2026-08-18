@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { PRESET_THEMES, findMatchingPreset } from '../config/themes';
+import { findMatchingPreset } from '../config/themes';
 
 /**
  * Modular Theme Background Overlay Renderer.
