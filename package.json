@@ -12,7 +12,7 @@
     "cap:sync": "cap sync",
     "cap:android": "cap open android",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "tsc -b && vite build && electron-builder",
+    "electron:build": "tsc -b && vite build && electron-builder --publish never",
     "dist:desktop": "npm run electron:build",
     "lint": "oxlint",
     "preview": "vite preview",
@@ -55,6 +55,7 @@
     "appId": "com.inquizitive.app",
     "productName": "inQUIZitive",
     "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
+    "publish": null,
     "directories": {
       "output": "dist/desktop"
     },
