@@ -2,6 +2,8 @@
   "name": "inquizitive-pwa",
   "private": true,
   "version": "0.0.0",
+  "author": "Denzven <denzven@users.noreply.github.com>",
+  "description": "Automated, multi-round quiz software for live events featuring Rapid Fire, Spin Wheel, Tic-Tac-Toe, Speed Buzzer, and Excel imports.",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
@@ -54,6 +56,7 @@
   "build": {
     "appId": "com.inquizitive.app",
     "productName": "inQUIZitive",
+    "desktopName": "inQUIZitive",
     "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
     "publish": null,
     "directories": {
@@ -80,6 +83,8 @@
         "snap",
         "tar.gz"
       ],
+      "maintainer": "Denzven <denzven@users.noreply.github.com>",
+      "syncDesktopName": true,
       "icon": "public/pwa-512x512.png",
       "category": "Education"
     },
