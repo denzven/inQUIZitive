@@ -1,4 +1,4 @@
-name: Build Native Apps (APK & Desktop)
+name: Build Native Apps & Distribution Artifacts
 
 on:
   push:
@@ -9,8 +9,39 @@ permissions:
   contents: read
 
 jobs:
+  build-web-bundle:
+    name: Build Web Static Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Package Web Bundle
+        run: |
+          mkdir -p dist/web
+          cd dist && zip -r web/inQUIZitive-web-static.zip . -x "desktop/*" "android/*" "web/*"
+
+      - name: Upload Web Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inQUIZitive-web-static-zip
+          path: dist/web/inQUIZitive-web-static.zip
+
   build-android:
-    name: Build Android APK
+    name: Build Android (APK & AAB)
     runs-on: ubuntu-latest
 
     steps:
@@ -42,23 +73,35 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug
+          mkdir -p ../dist/android
+          cp app/build/outputs/apk/debug/app-debug.apk ../dist/android/inQUIZitive-android-debug.apk
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: inQUIZitive-android-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: dist/android/inQUIZitive-android-debug.apk
 
-      - name: Build Android Release APK (Unsigned)
+      - name: Build Android Release APK & AAB
         run: |
           cd android
           ./gradlew assembleRelease
+          ./gradlew bundleRelease
+          mkdir -p ../dist/android
+          cp app/build/outputs/apk/release/app-release-unsigned.apk ../dist/android/inQUIZitive-android-release-unsigned.apk
+          cp app/build/outputs/bundle/release/app-release.aab ../dist/android/inQUIZitive-android-release.aab
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: inQUIZitive-android-release-unsigned-apk
-          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: dist/android/inQUIZitive-android-release-unsigned.apk
+
+      - name: Upload Release AAB Artifact (Google Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: inQUIZitive-android-release-aab
+          path: dist/android/inQUIZitive-android-release.aab
 
   build-desktop:
     name: Build Desktop (${{ matrix.name }})
@@ -95,10 +138,12 @@ jobs:
         with:
           name: inQUIZitive-desktop-${{ matrix.name }}
           path: |
-            release-builds/*.exe
-            release-builds/*.AppImage
-            release-builds/*.dmg
-            release-builds/*.deb
-            release-builds/*.tar.gz
-            release-builds/*.zip
+            dist/desktop/*.exe
+            dist/desktop/*.AppImage
+            dist/desktop/*.dmg
+            dist/desktop/*.deb
+            dist/desktop/*.rpm
+            dist/desktop/*.snap
+            dist/desktop/*.tar.gz
+            dist/desktop/*.zip
           if-no-files-found: ignore
