@@ -1,12 +1,21 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+function getIconPath() {
+  const icoPath = path.join(__dirname, '../public/Q.ico');
+  const pngPath = path.join(__dirname, '../public/pwa-512x512.png');
+  if (fs.existsSync(icoPath)) return icoPath;
+  if (fs.existsSync(pngPath)) return pngPath;
+  return undefined;
+}
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     title: 'inQUIZitive - Live Event Quiz & Trivia Platform',
-    icon: path.join(__dirname, '../public/Q.ico'),
+    icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
