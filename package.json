@@ -56,7 +56,6 @@
   "build": {
     "appId": "com.inquizitive.app",
     "productName": "inQUIZitive",
-    "desktopName": "inQUIZitive",
     "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
     "publish": null,
     "directories": {
