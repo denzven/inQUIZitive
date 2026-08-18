@@ -7,7 +7,10 @@ export default defineConfig(() => {
   const isGhPages = process.env.VITE_BUILD_TARGET === 'gh-pages';
   return {
     base: isGhPages ? '/inQUIZitive/' : './',
-  plugins: [
+    build: {
+      emptyOutDir: false
+    },
+    plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
