@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuizStore } from './store/useQuizStore';
-import { PRESET_THEMES, findMatchingPreset } from './config/themes';
+import { findMatchingPreset } from './config/themes';
 import { fetchExcelData } from './utils/excelParser';
 import { useGameControls } from './hooks/useGameControls';
 import { Scoreboard } from './components/Scoreboard';

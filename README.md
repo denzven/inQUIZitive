@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="public/banner.png" alt="inQUIZitive Banner" width="100%" style="border-radius: 12px;">
+  <a href="https://denzven.github.io/inQUIZitive/">
+    <img src="public/banner.png" alt="inQUIZitive Banner" width="100%" style="border-radius: 12px;">
+  </a>
 </p>
 
 <h1 align="center">🎯 inQUIZitive</h1>

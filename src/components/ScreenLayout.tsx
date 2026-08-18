@@ -179,7 +179,9 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           {!hideTitle && (
             <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
               <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-secondary)', margin: 0, zIndex: 1, fontWeight: 700 }}>{subtitle}</h2>
-              <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(5px, 2vh, 20px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+              <a href="https://denzven.github.io/inQUIZitive/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(5px, 2vh, 20px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+              </a>
             </div>
           )}
           

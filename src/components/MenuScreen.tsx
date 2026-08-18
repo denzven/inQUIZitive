@@ -218,7 +218,9 @@ export const MenuScreen: React.FC = () => {
       >
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
           <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
-          <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+          <a href="https://denzven.github.io/inQUIZitive/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+          </a>
         </div>
         
         <div className="menu-grid animate-slide-up" style={{ zIndex: 1, animationDelay: '0.2s', boxSizing: 'border-box', margin: 0 }}>
