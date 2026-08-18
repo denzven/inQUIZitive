@@ -3,8 +3,10 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/inQUIZitive/' : '/',
+export default defineConfig(() => {
+  const isGhPages = process.env.VITE_BUILD_TARGET === 'gh-pages';
+  return {
+    base: isGhPages ? '/inQUIZitive/' : './',
   plugins: [
     react(),
     VitePWA({
@@ -74,5 +76,7 @@ export default defineConfig(({ mode }) => ({
         enabled: false
       }
     })
-  ],
-}))
+  ]
+};
+})
+
