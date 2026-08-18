@@ -69,7 +69,7 @@
         "nsis",
         "portable"
       ],
-      "icon": "public/Q.ico"
+      "icon": "public/pwa-512x512.png"
     },
     "linux": {
       "target": [
