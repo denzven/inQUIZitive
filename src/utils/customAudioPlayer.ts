@@ -75,6 +75,53 @@ export function playCustomSoundbite(sfxKey: SfxKey, ignoreDisabled = false, isPr
 }
 
 /**
+ * Plays an explicit MP3 audio file URL (e.g. /audio/Hedwig_theme_harry_potter.mp3) for a BGM key.
+ */
+export function playMp3Url(sfxKey: SfxKey, url: string, ignoreDisabled = false, isPreview = false): boolean {
+  if (!ignoreDisabled && isSfxDisabled(sfxKey)) return true;
+
+  const ctx = getAudioContext();
+  const master = getMasterGain();
+  if (!ctx || !master) return false;
+
+  try {
+    stopCustomSoundbite(sfxKey, isPreview);
+
+    const audio = new Audio(url);
+    activeAudioElements[sfxKey] = audio;
+
+    const source = ctx.createMediaElementSource(audio);
+    const gainNode = ctx.createGain();
+    activeAudioGainNodes[sfxKey] = gainNode;
+
+    if (isBgmKey(sfxKey)) {
+      audio.loop = true;
+      if (isPreview) {
+        gainNode.gain.setValueAtTime(0.8, ctx.currentTime);
+      } else {
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.8);
+      }
+    } else {
+      gainNode.gain.setValueAtTime(1.0, ctx.currentTime);
+    }
+
+    source.connect(gainNode);
+    gainNode.connect(master);
+
+    audio.play().catch(console.error);
+    audio.onended = () => {
+      activeAudioElements[sfxKey] = undefined;
+      activeAudioGainNodes[sfxKey] = undefined;
+    };
+    return true;
+  } catch (e) {
+    console.warn(`Failed to play MP3 URL ${url}:`, e);
+    return false;
+  }
+}
+
+/**
  * Stops playback of custom audio element with smooth 2.0-second fade-out for BGM (or instant 0s stop if isPreview is true).
  */
 export function stopCustomSoundbite(sfxKey: SfxKey, isPreview = false): void {

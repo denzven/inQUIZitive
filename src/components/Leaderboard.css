@@ -10,7 +10,7 @@
 }
 
 .test-title {
-  color: var(--yellow);
+  color: var(--color-accent);
   font-size: clamp(2.2rem, min(6vw, 5vh), 4.2rem);
   margin: 0 0 clamp(10px, 2vh, 20px) 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
@@ -32,8 +32,8 @@
   padding: clamp(8px, 1.5vh, 10px) clamp(14px, 3vw, 20px);
   font-size: clamp(0.85rem, 2.5vw, 1.2rem);
   border-radius: 10px;
-  background-color: var(--teal);
-  color: var(--white);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
@@ -42,22 +42,22 @@
 
 .global-btn:hover {
   transform: translateY(-2px);
-  background-color: var(--dark-teal);
-  border-color: var(--yellow);
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-accent);
 }
 
 .global-btn.active {
-  background-color: var(--yellow);
-  color: var(--dark-green);
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
 }
 
 .global-btn.btn-reset {
-  background-color: var(--wrong-red);
+  background-color: var(--color-danger);
 }
 
 .global-btn.btn-reset:hover {
-  background-color: #ff3b30;
-  border-color: var(--white);
+  background-color: color-mix(in srgb, var(--color-danger) 85%, black);
+  border-color: var(--color-surface);
 }
 
 .test-grid {
@@ -82,11 +82,11 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--dark-teal);
-  border: clamp(2px, 0.5vw, 4px) solid var(--teal);
+  background-color: var(--color-primary-container);
+  border: clamp(2px, 0.5vw, 4px) solid var(--color-primary);
   border-radius: clamp(12px, 2vw, 20px);
   height: clamp(160px, 26vh, 260px);
-  color: var(--yellow);
+  color: var(--color-accent);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
   padding: clamp(8px, 2vw, 16px);
   margin: 0; 
@@ -97,17 +97,18 @@
 
 .test-box:hover {
   transform: scale(1.02);
+  border-color: var(--color-accent);
 }
 
 .team-name-input {
   background: transparent;
   border: none;
-  color: var(--yellow);
+  color: var(--color-surface);
   font-size: clamp(0.9rem, 2.8vw, 1.6rem);
   font-weight: bold;
   text-align: center;
   outline: none;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid color-mix(in srgb, var(--color-surface) 20%, transparent);
   width: 100%;
   min-width: 0;
   font-family: inherit;
@@ -121,6 +122,7 @@
 .test-box-content {
   font-size: clamp(2.2rem, 7vw, 4.5rem);
   font-weight: 900;
+  color: var(--color-accent);
   display: flex;
   flex: 1;
   align-items: center;
@@ -150,11 +152,13 @@
 }
 
 .btn-minus {
-  background-color: var(--wrong-red);
+  background-color: var(--color-danger);
+  color: var(--color-surface);
 }
 
 .btn-plus {
-  background-color: var(--correct-green);
+  background-color: var(--color-success);
+  color: var(--color-primary-dark);
 }
 
 .btn-delete-corner {
@@ -164,9 +168,9 @@
   width: clamp(28px, 5vw, 38px);
   height: clamp(28px, 5vw, 38px);
   border-radius: 50%;
-  background-color: var(--wrong-red);
-  color: var(--white);
-  border: 2px solid var(--dark-green);
+  background-color: var(--color-danger);
+  color: var(--color-surface);
+  border: 2px solid var(--color-primary-dark);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -186,11 +190,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(42, 157, 143, 0.1);
-  border: clamp(2px, 0.5vw, 4px) dashed var(--teal);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: clamp(2px, 0.5vw, 4px) dashed var(--color-primary);
   border-radius: clamp(12px, 2vw, 20px);
   height: clamp(160px, 26vh, 260px);
-  color: var(--teal);
+  color: var(--color-primary);
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
@@ -199,10 +203,10 @@
 }
 
 .test-add-box:hover {
-  background-color: rgba(42, 157, 143, 0.2);
+  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
   transform: scale(1.02);
-  color: var(--white);
-  border-color: var(--white);
+  color: var(--color-surface);
+  border-color: var(--color-accent);
 }
 
 .modal-overlay {
@@ -211,7 +215,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--dark-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -224,26 +228,26 @@
   top: 50%;
   left: 50%;
   /* translate(-50%, -50%) is handled by .animate-pop-in */
-  background-color: var(--dark-green);
-  border: 4px solid var(--teal);
+  background-color: var(--color-primary-container);
+  border: 4px solid var(--color-primary);
   border-radius: 20px;
   padding: clamp(20px, 4vw, 30px);
-  max-width: 90%;
-  width: 400px;
+  max-width: 92vw;
+  width: min(400px, 92vw);
   text-align: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
 }
 
 .modal-content h3 {
-  color: var(--yellow);
+  color: var(--color-surface);
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   margin-top: 0;
   margin-bottom: 15px;
 }
 
 .modal-content p {
-  color: var(--white);
+  color: var(--color-secondary);
   font-size: clamp(0.95rem, 2.5vw, 1.2rem);
   margin-bottom: 25px;
   line-height: 1.5;

@@ -57,14 +57,14 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
           maxWidth: '900px',
           width: '95%',
           maxHeight: '90vh',
-          backgroundColor: '#ffffff',
-          color: '#1a1a1a',
-          border: '2px solid #2a9d8f',
+          backgroundColor: 'var(--color-primary-container)',
+          color: 'var(--color-surface)',
+          border: '2px solid var(--color-primary)',
           borderRadius: '20px',
           padding: '30px',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+          boxShadow: '0 25px 50px color-mix(in srgb, var(--color-primary-dark) 50%, transparent)',
           overflowY: 'auto'
         }}
       >
@@ -129,10 +129,10 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
           }
         `}</style>
 
-        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #2a9d8f', paddingBottom: '15px' }}>
+        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid var(--color-primary)', paddingBottom: '15px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FileText size={28} color="#264653" />
-            <h2 style={{ margin: 0, color: '#264653', fontSize: '1.8rem', fontWeight: 900 }}>
+            <FileText size={28} color="var(--color-primary)" />
+            <h2 style={{ margin: 0, color: 'var(--color-surface)', fontSize: '1.8rem', fontWeight: 900 }}>
               Host Cheat Sheet & Answer Key
             </h2>
           </div>
@@ -140,8 +140,8 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
             <button 
               onClick={handlePrint}
               style={{
-                backgroundColor: '#2a9d8f',
-                color: '#ffffff',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-surface)',
                 border: 'none',
                 padding: '8px 18px',
                 borderRadius: '10px',
@@ -153,13 +153,13 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                 fontSize: '1rem'
               }}
             >
-              <Printer size={18} /> Print / Save PDF
+              <Printer size={18} color="var(--color-surface)" /> Print / Save PDF
             </button>
             <button 
               onClick={onClose}
               style={{
-                backgroundColor: '#e74c3c',
-                color: '#ffffff',
+                backgroundColor: 'var(--color-danger)',
+                color: 'var(--color-surface)',
                 border: 'none',
                 width: '38px',
                 height: '38px',
@@ -182,23 +182,23 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
               }}
               title="Close Modal"
             >
-              <X size={20} strokeWidth={2.5} />
+              <X size={20} strokeWidth={2.5} color="var(--color-surface)" />
             </button>
           </div>
         </div>
 
         {/* Printable Document Body */}
-        <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: 1.5 }}>
-          <div style={{ textAlign: 'center', marginBottom: '25px', borderBottom: '1px solid #ddd', paddingBottom: '15px' }}>
-            <h1 style={{ margin: 0, fontSize: '2rem', color: '#264653' }}>inQUIZitive Host Answer Key</h1>
-            <p style={{ margin: '5px 0 0', color: '#666', fontSize: '1.1rem' }}>Event: {subtitle} | Total Questions: {questions.length}</p>
+        <div style={{ fontFamily: 'inherit', lineHeight: 1.5 }}>
+          <div style={{ textAlign: 'center', marginBottom: '25px', borderBottom: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)', paddingBottom: '15px' }}>
+            <h1 style={{ margin: 0, fontSize: '2rem', color: 'var(--color-surface)' }}>inQUIZitive Host Answer Key</h1>
+            <p style={{ margin: '5px 0 0', color: 'var(--color-secondary)', fontSize: '1.1rem' }}>Event: {subtitle} | Total Questions: {questions.length}</p>
           </div>
 
           {Object.keys(questionsByRound).map((roundCode) => (
             <div key={roundCode} className="cheat-sheet-round-block" style={{ marginBottom: '30px' }}>
               <h3 style={{ 
-                backgroundColor: '#264653', 
-                color: '#e9c46a', 
+                backgroundColor: 'var(--color-primary-dark)', 
+                color: 'var(--color-accent)', 
                 padding: '8px 14px', 
                 borderRadius: '6px', 
                 margin: '0 0 15px', 
@@ -216,20 +216,20 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                     key={q.index}
                     className="cheat-sheet-q-card"
                     style={{
-                      border: '1px solid #e0e0e0',
+                      border: '1px solid color-mix(in srgb, var(--color-primary) 35%, transparent)',
                       borderRadius: '8px',
                       padding: '12px 16px',
-                      backgroundColor: '#f9f9f9'
+                      backgroundColor: 'color-mix(in srgb, var(--color-primary-container) 80%, transparent)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#e76f51' }}>Q{idx + 1}. Topic: {q.topic || 'General'}</span>
-                      <span style={{ fontSize: '0.85rem', color: '#555', backgroundColor: '#eee', padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontWeight: 'bold', color: 'var(--color-action)' }}>Q{idx + 1}. Topic: {q.topic || 'General'}</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-secondary)', backgroundColor: 'color-mix(in srgb, var(--color-primary-dark) 40%, transparent)', padding: '2px 8px', borderRadius: '4px' }}>
                         Points: {q.scoreVal}
                       </span>
                     </div>
 
-                    <p style={{ margin: '0 0 8px', fontWeight: 600, color: '#1a1a1a', fontSize: '1.05rem' }}>
+                    <p style={{ margin: '0 0 8px', fontWeight: 600, color: 'var(--color-surface)', fontSize: '1.05rem' }}>
                       {q.question}
                     </p>
 
@@ -238,7 +238,7 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                         <img 
                           src={q.image} 
                           alt={`Q${idx + 1} Image`} 
-                          style={{ maxHeight: '110px', maxWidth: '100%', borderRadius: '6px', border: '1px solid #ccc', objectFit: 'contain' }} 
+                          style={{ maxHeight: '110px', maxWidth: '100%', borderRadius: '6px', border: '1px solid color-mix(in srgb, var(--color-primary) 35%, transparent)', objectFit: 'contain' }} 
                         />
                       </div>
                     )}
@@ -252,17 +252,17 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
                             style={{
                               padding: '4px 8px',
                               borderRadius: '4px',
-                              backgroundColor: isCorrect ? '#e8f5e9' : 'transparent',
-                              border: isCorrect ? '1px solid #2ecc71' : '1px solid #eee',
+                              backgroundColor: isCorrect ? 'color-mix(in srgb, var(--color-success) 20%, transparent)' : 'transparent',
+                              border: isCorrect ? '1px solid var(--color-success)' : '1px solid color-mix(in srgb, var(--color-surface) 15%, transparent)',
                               fontWeight: isCorrect ? 'bold' : 'normal',
-                              color: isCorrect ? '#2e7d32' : '#333',
+                              color: isCorrect ? 'var(--color-success)' : 'var(--color-surface)',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px'
                             }}
                           >
                             <span>{String.fromCharCode(65 + oIdx)}. {opt}</span>
-                            {isCorrect && <CheckCircle2 size={14} color="#2e7d32" />}
+                            {isCorrect && <CheckCircle2 size={14} color="var(--color-success)" />}
                           </div>
                         );
                       })}

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuizStore } from './store/useQuizStore';
+import { PRESET_THEMES, findMatchingPreset } from './config/themes';
 import { fetchExcelData } from './utils/excelParser';
 import { useGameControls } from './hooks/useGameControls';
 import { Scoreboard } from './components/Scoreboard';
@@ -17,6 +18,8 @@ import { BuzzerScreen } from './components/BuzzerScreen';
 import trialSheetUrl from './assets/trial_iQz_sheet.xlsx?url';
 import { playBubblePopSequence } from './utils/soundEffects';
 import { playScreenBgm, startBgm } from './utils/bgmSynthesizer';
+import { loadGoogleFont } from './utils/fontLoader';
+import { ThemeOverlay } from './components/ThemeOverlay';
 
 import { useRapidFireStore } from './store/useRapidFireStore';
 import { useTicTacToeStore } from './store/useTicTacToeStore';
@@ -37,30 +40,89 @@ function App() {
     playScreenBgm(gameState, activeRound);
   }, [gameState, activeRound, init]);
 
-  /** Syncs Zustand theme colors to document root CSS variables */
+  /** Syncs Zustand theme colors & structural Design System Tokens to document root CSS variables */
   useEffect(() => {
     const root = document.documentElement;
-    // Semantic Tokens
-    root.style.setProperty('--color-primary-dark', theme.darkGreen);
-    root.style.setProperty('--color-primary', theme.teal);
-    root.style.setProperty('--color-primary-container', theme.darkTeal);
-    root.style.setProperty('--color-accent', theme.yellow);
-    root.style.setProperty('--color-secondary', theme.lightOrange);
-    root.style.setProperty('--color-action', theme.orange);
-    root.style.setProperty('--color-surface', theme.white);
-    root.style.setProperty('--color-success', theme.correctGreen);
-    root.style.setProperty('--color-danger', theme.wrongRed);
+    const primaryDark = theme.primaryDark || theme.darkGreen;
+    const primary = theme.primary || theme.teal;
+    const primaryContainer = theme.primaryContainer || theme.darkTeal;
+    const accent = theme.accent || theme.yellow;
+    const secondary = theme.secondary || theme.lightOrange;
+    const action = theme.action || theme.orange;
+    const surface = theme.surface || theme.white;
+    const success = theme.success || theme.correctGreen;
+    const danger = theme.danger || theme.wrongRed;
 
-    // Legacy Aliases
-    root.style.setProperty('--dark-green', theme.darkGreen);
-    root.style.setProperty('--teal', theme.teal);
-    root.style.setProperty('--dark-teal', theme.darkTeal);
-    root.style.setProperty('--yellow', theme.yellow);
-    root.style.setProperty('--light-orange', theme.lightOrange);
-    root.style.setProperty('--orange', theme.orange);
-    root.style.setProperty('--white', theme.white);
-    root.style.setProperty('--correct-green', theme.correctGreen);
-    root.style.setProperty('--wrong-red', theme.wrongRed);
+    // Semantic Color Tokens
+    root.style.setProperty('--color-primary-dark', primaryDark);
+    root.style.setProperty('--color-primary', primary);
+    root.style.setProperty('--color-primary-container', primaryContainer);
+    root.style.setProperty('--color-accent', accent);
+    root.style.setProperty('--color-secondary', secondary);
+    root.style.setProperty('--color-action', action);
+    root.style.setProperty('--color-surface', surface);
+    root.style.setProperty('--color-success', success);
+    root.style.setProperty('--color-danger', danger);
+
+    // Structural Design System Tokens (Typography, Geometry & Effects)
+    const activePreset = findMatchingPreset(theme);
+
+    const typography = activePreset?.typography || { headingFont: '"League Spartan", "Montserrat", sans-serif', bodyFont: '"League Spartan", "Inter", sans-serif' };
+    const geometry = activePreset?.geometry || { radiusSm: '6px', radiusMd: '12px', radiusLg: '20px', borderWidth: '2px' };
+    const effects = activePreset?.effects || { cardShadow: '0 8px 30px rgba(0,0,0,0.12)', buttonShadow: '0 4px 15px rgba(0,0,0,0.15)', bgTexture: 'none', textShadow: 'none', backdropBlur: 'none' };
+    const animation = activePreset?.animation || {
+      transitionSpeed: '0.2s ease-in-out',
+      hoverTransform: 'translateY(-2px)',
+      activeTransform: 'translateY(0) scale(0.98)'
+    };
+
+    root.style.setProperty('--font-heading', typography.headingFont);
+    root.style.setProperty('--font-body', typography.bodyFont);
+
+    root.style.setProperty('--radius-sm', geometry.radiusSm);
+    root.style.setProperty('--radius-md', geometry.radiusMd);
+    root.style.setProperty('--radius-lg', geometry.radiusLg);
+    root.style.setProperty('--border-width', geometry.borderWidth);
+
+    root.style.setProperty('--shadow-card', effects.cardShadow);
+    root.style.setProperty('--shadow-button', effects.buttonShadow);
+    root.style.setProperty('--bg-texture', effects.bgTexture);
+    root.style.setProperty('--text-shadow', effects.textShadow || 'none');
+    root.style.setProperty('--backdrop-blur', effects.backdropBlur || 'none');
+
+    root.style.setProperty('--transition-speed', animation.transitionSpeed);
+    root.style.setProperty('--hover-transform', animation.hoverTransform);
+    root.style.setProperty('--active-transform', animation.activeTransform);
+
+    root.setAttribute('data-theme-id', activePreset?.id || 'ariseClassic');
+
+    // Dynamic Google Font Loader
+    loadGoogleFont(typography.headingFont);
+    loadGoogleFont(typography.bodyFont);
+
+    // Legacy Aliases (retained for fallback)
+    root.style.setProperty('--dark-green', primaryDark);
+    root.style.setProperty('--teal', primary);
+    root.style.setProperty('--dark-teal', primaryContainer);
+    root.style.setProperty('--yellow', accent);
+    root.style.setProperty('--light-orange', secondary);
+    root.style.setProperty('--orange', action);
+    root.style.setProperty('--white', surface);
+    root.style.setProperty('--correct-green', success);
+    root.style.setProperty('--wrong-red', danger);
+
+    // Dynamic Theme-Following Cursor SVGs
+    const primaryEsc = encodeURIComponent(primary);
+    const accentEsc = encodeURIComponent(accent);
+    const actionEsc = encodeURIComponent(action);
+    const darkEsc = encodeURIComponent(primaryDark);
+
+    const defaultCursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="none" stroke="${primaryEsc}" stroke-width="3" opacity="0.85"/><circle cx="20" cy="20" r="5" fill="${accentEsc}"/><line x1="20" y1="0" x2="20" y2="8" stroke="${primaryEsc}" stroke-width="3"/><line x1="20" y1="32" x2="20" y2="40" stroke="${primaryEsc}" stroke-width="3"/><line x1="0" y1="20" x2="8" y2="20" stroke="${primaryEsc}" stroke-width="3"/><line x1="32" y1="20" x2="40" y2="20" stroke="${primaryEsc}" stroke-width="3"/></svg>`;
+
+    const pointerCursorSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="${actionEsc}" opacity="0.4" /><circle cx="24" cy="24" r="14" fill="${accentEsc}" stroke="${darkEsc}" stroke-width="4"/><circle cx="24" cy="24" r="5" fill="${darkEsc}"/></svg>`;
+
+    root.style.setProperty('--cursor-default', `url('${defaultCursorSvg}') 20 20, auto`);
+    root.style.setProperty('--cursor-pointer', `url('${pointerCursorSvg}') 24 24, pointer`);
   }, [theme]);
 
   /** Resets scroll position when navigating between screens */
@@ -243,10 +305,10 @@ function App() {
     return createPortal(
       <div className="modal-overlay">
         <div className="modal-box animate-pop-in">
-          <h2 className="modal-title" style={{ color: 'var(--orange)' }}>Exit Round?</h2>
-          <p className="modal-body">Are you sure you want to leave? Your current round progress will be lost.</p>
+          <h2 className="modal-title" style={{ color: 'var(--color-surface)' }}>Exit Round?</h2>
+          <p className="modal-body" style={{ color: 'var(--color-secondary)' }}>Are you sure you want to leave? Your current round progress will be lost.</p>
           <div className="modal-actions" style={{ flexDirection: 'column' }}>
-            <button className="menu-btn" style={{ padding: '15px', fontSize: '1.5rem', backgroundColor: 'var(--wrong-red)', borderColor: 'var(--wrong-red)' }} onClick={() => {
+            <button className="menu-btn" style={{ padding: '15px', fontSize: '1.5rem', backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => {
               setShowExitModal(false);
               setGameState('MENU');
             }}>Yes, Quit</button>
@@ -285,7 +347,7 @@ function App() {
         return (
           <div className="projector-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
             <h1 className="title">WORK IN PROGRESS</h1>
-            <p style={{ color: 'var(--yellow)', fontSize: '2rem' }}>{activeRound}</p>
+            <p style={{ color: 'var(--color-secondary)', fontSize: '2rem' }}>{activeRound}</p>
             <button className="menu-btn" onClick={() => setGameState('MENU')} style={{ marginTop: '40px' }}>Back to Menu</button>
           </div>
         );
@@ -293,7 +355,7 @@ function App() {
         return (
           <div className="projector-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
             <h1 className="title" style={{ fontSize: 'clamp(3rem, 10vw, 6rem)' }}>ROUND OVER</h1>
-            <p style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', color: 'var(--yellow)', marginBottom: '40px' }}>{activeRound}</p>
+            <p style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', color: 'var(--color-secondary)', marginBottom: '40px' }}>{activeRound}</p>
             
             <div style={{ transform: 'scale(1)', width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 'clamp(30px, 8vh, 100px)' }}>
               <Scoreboard />
@@ -310,11 +372,14 @@ function App() {
   };
 
   return (
-    <>
-      {renderScreen()}
+    <div className="app-theme-wrapper">
+      <ThemeOverlay />
+      <div className="app-screen-layer">
+        {renderScreen()}
+      </div>
       {renderExitModal()}
       {renderCrashModal()}
-    </>
+    </div>
   );
 }
 

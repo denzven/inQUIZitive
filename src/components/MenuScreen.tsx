@@ -148,7 +148,7 @@ export const MenuScreen: React.FC = () => {
 
   if (!hasLoaded) {
     return (
-      <div className="projector-container" style={{ backgroundColor: 'var(--dark-green)' }}>
+      <div className="projector-container" style={{ backgroundColor: 'transparent' }}>
         <img 
           src={QLogo} 
           alt="InQuizitive Logo" 
@@ -162,10 +162,10 @@ export const MenuScreen: React.FC = () => {
   /** Decorative background circles */
   const decorCircles = (
     <>
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '21%', left: '8%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }} />
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '42%', left: '97%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }} />
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '92%', left: '7%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }} />
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '115%', left: '87%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--orange)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '21%', left: '8%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--color-secondary)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.1s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '42%', left: '97%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--color-accent)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.2s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '92%', left: '7%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--color-accent)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.3s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '115%', left: '87%', width: 'clamp(350px, 80vw, 450px)', height: 'clamp(350px, 80vw, 450px)', borderRadius: '50%', backgroundColor: 'var(--color-action)', transform: 'translate(-50%, -50%)', zIndex: 0, animationDelay: '0.4s' }} />
     </>
   );
 
@@ -176,13 +176,13 @@ export const MenuScreen: React.FC = () => {
           className="btn-icon"
           onClick={handleInstallClick}
           style={{ 
-            backgroundColor: 'var(--yellow)',
-            border: '2px solid var(--orange)'
+            backgroundColor: 'var(--color-accent)',
+            border: '2px solid var(--color-action)'
           }}
           aria-label="Install App"
           title="Install App"
         >
-          <Download size={24} color="var(--dark-green)" />
+          <Download size={24} color="var(--color-primary-dark)" />
         </button>
       )}
 
@@ -190,13 +190,13 @@ export const MenuScreen: React.FC = () => {
         className="btn-icon"
         onClick={toggleFullScreen}
         style={{ 
-          backgroundColor: 'var(--dark-teal)',
-          border: '2px solid var(--teal)'
+          backgroundColor: 'var(--color-primary-container)',
+          border: '2px solid var(--color-primary)'
         }}
         aria-label="Toggle Fullscreen (Shortcut: F)"
         title="Toggle Fullscreen (Shortcut: F)"
       >
-        {isFullscreen ? <Minimize size={24} color="var(--white)" /> : <Maximize size={24} color="var(--white)" />}
+        {isFullscreen ? <Minimize size={24} color="var(--color-surface)" /> : <Maximize size={24} color="var(--color-surface)" />}
       </button>
     </>
   );
@@ -217,7 +217,7 @@ export const MenuScreen: React.FC = () => {
         style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
       >
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--white)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
+          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
           <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
         </div>
         

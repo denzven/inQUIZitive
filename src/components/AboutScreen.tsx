@@ -15,14 +15,14 @@ export const AboutScreen: React.FC = () => {
   /** Background decorative circle nodes */
   const decorCircles = (
     <>
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '15%', left: '15%', width: 'clamp(200px, 40vw, 400px)', height: 'clamp(200px, 40vw, 400px)', borderRadius: '50%', backgroundColor: 'var(--light-orange)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6 }} />
-      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '85%', left: '85%', width: 'clamp(200px, 50vw, 500px)', height: 'clamp(200px, 50vw, 500px)', borderRadius: '50%', backgroundColor: 'var(--yellow)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6, animationDelay: '0.2s' }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '15%', left: '15%', width: 'clamp(200px, 40vw, 400px)', height: 'clamp(200px, 40vw, 400px)', borderRadius: '50%', backgroundColor: 'var(--color-secondary)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6 }} />
+      <div className="animate-pop-in-absolute" style={{ position: 'absolute', top: '85%', left: '85%', width: 'clamp(200px, 50vw, 500px)', height: 'clamp(200px, 50vw, 500px)', borderRadius: '50%', backgroundColor: 'var(--color-accent)', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.6, animationDelay: '0.2s' }} />
     </>
   );
 
   const kbdBadgeStyle: React.CSSProperties = {
-    backgroundColor: 'var(--white)',
-    color: 'var(--dark-green)',
+    backgroundColor: 'var(--color-surface)',
+    color: 'var(--color-primary-dark)',
     padding: '4px 10px',
     borderRadius: '8px',
     fontWeight: 'bold',
@@ -63,32 +63,32 @@ export const AboutScreen: React.FC = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px', justifyContent: 'center', width: '100%', maxWidth: '1200px' }}>
           
           {/* Card 1: About */}
-          <div className="card animate-slide-up" style={{ flex: '1 1 400px', backgroundColor: 'var(--dark-teal)', border: '3px solid var(--teal)', padding: '30px', margin: 0, boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', color: 'var(--yellow)' }}>
+          <div className="card animate-slide-up" style={{ flex: '1 1 400px', backgroundColor: 'var(--color-primary-container)', border: '3px solid var(--color-primary)', padding: '30px', margin: 0, boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', color: 'var(--color-accent)' }}>
               <Info size={36} />
               <h2 style={{ margin: 0, fontSize: '2rem' }}>InQUIZitive</h2>
             </div>
-            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--white)' }}>
+            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--color-surface)' }}>
               Originally built in Python and Pygame for live projection, this application has been reimagined 
               as a modern Progressive Web App (PWA) using React and Vite.
             </p>
           </div>
 
           {/* Card 2: Features */}
-          <div className="card animate-slide-up" style={{ flex: '1 1 400px', backgroundColor: 'var(--dark-teal)', border: '3px solid var(--teal)', padding: '30px', margin: 0, boxSizing: 'border-box', animationDelay: '0.1s' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', color: 'var(--yellow)' }}>
+          <div className="card animate-slide-up" style={{ flex: '1 1 400px', backgroundColor: 'var(--color-primary-container)', border: '3px solid var(--color-primary)', padding: '30px', margin: 0, boxSizing: 'border-box', animationDelay: '0.1s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', color: 'var(--color-accent)' }}>
               <Rocket size={36} />
               <h2 style={{ margin: 0, fontSize: '2rem' }}>Features</h2>
             </div>
-            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--white)' }}>
+            <p style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--color-surface)' }}>
               Designed to handle multiple rounds (Rapid Fire, Spin Wheel, Buzzer) seamlessly 
               with robust global state management, offline support, and installability.
             </p>
           </div>
 
           {/* Card 3: Shortcuts */}
-          <div className="card animate-slide-up" style={{ flex: '1 1 100%', backgroundColor: 'var(--dark-teal)', border: '3px solid var(--teal)', padding: '30px', margin: 0, boxSizing: 'border-box', animationDelay: '0.2s' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', color: 'var(--yellow)' }}>
+          <div className="card animate-slide-up" style={{ flex: '1 1 100%', backgroundColor: 'var(--color-primary-container)', border: '3px solid var(--color-primary)', padding: '30px', margin: 0, boxSizing: 'border-box', animationDelay: '0.2s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', color: 'var(--color-accent)' }}>
               <Keyboard size={36} />
               <h2 style={{ margin: 0, fontSize: '2rem' }}>Presenter Keyboard Shortcuts</h2>
             </div>
@@ -99,12 +99,12 @@ export const AboutScreen: React.FC = () => {
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {item.keys.map((k, kIdx) => (
                       <React.Fragment key={kIdx}>
-                        {kIdx > 0 && <span style={{ color: 'var(--light-orange)', fontWeight: 'bold' }}>/</span>}
+                        {kIdx > 0 && <span style={{ color: 'var(--color-secondary)', fontWeight: 'bold' }}>/</span>}
                         <kbd style={kbdBadgeStyle}>{k}</kbd>
                       </React.Fragment>
                     ))}
                   </div>
-                  <div style={{ color: 'var(--white)', opacity: 0.95, fontSize: '1rem', lineHeight: 1.3 }}>{item.desc}</div>
+                  <div style={{ color: 'var(--color-surface)', opacity: 0.95, fontSize: '1rem', lineHeight: 1.3 }}>{item.desc}</div>
                 </div>
               ))}
             </div>

@@ -225,11 +225,11 @@ export const BuzzerScreen: React.FC = () => {
                 padding: 'clamp(16px, 2.5vh, 30px)' 
               }}
             >
-              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold' }}>
+              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--color-secondary)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold' }}>
                 Question {currentIdx + 1} / {buzzerQuestions.length}
               </div>
               {currentQ?.image && <QuestionImage src={currentQ.image} maxHeight="160px" style={{ marginTop: '24px' }} />}
-              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>
+              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', color: 'var(--color-surface)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>
                 {currentQ?.question}
               </h2>
             </div>

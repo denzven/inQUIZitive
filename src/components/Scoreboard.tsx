@@ -21,7 +21,8 @@ export const Scoreboard: React.FC = () => {
     }}>
       {teams.map((team) => (
         <div key={team.id} style={{
-          backgroundColor: 'var(--teal)',
+          backgroundColor: 'var(--color-primary-container)',
+          border: '2px solid var(--color-primary)',
           padding: 'clamp(8px, 1.5vh, 12px) clamp(12px, 3vw, 20px)',
           borderRadius: '15px',
           display: 'flex',
@@ -32,10 +33,10 @@ export const Scoreboard: React.FC = () => {
           flex: '1 1 auto',
           maxWidth: '200px'
         }}>
-          <span style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.2rem)', color: 'var(--yellow)', fontWeight: 'bold' }}>
+          <span style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.2rem)', color: 'var(--color-surface)', fontWeight: 'bold' }}>
             {team.name}
           </span>
-          <span style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', fontWeight: 900 }}>
+          <span style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', fontWeight: 900, color: 'var(--color-accent)' }}>
             {team.score}
           </span>
         </div>

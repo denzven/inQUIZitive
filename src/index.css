@@ -26,6 +26,22 @@
   --color-surface: #e8eddf;           /* Clean white text/surface */
   --color-success: #2ecc71;           /* Correct feedback green */
   --color-danger: #e74c3c;            /* Wrong feedback red */
+  --correct-green: var(--color-success);
+  --wrong-red: var(--color-danger);
+  --dark-teal: var(--color-primary-container);
+
+  /* Calculated Dynamic Hover, Focus & Active States (Theme Agnostic) */
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, var(--color-surface));
+  --color-primary-active: color-mix(in srgb, var(--color-primary) 80%, var(--color-primary-dark));
+
+  --color-action-hover: color-mix(in srgb, var(--color-action) 85%, var(--color-surface));
+  --color-action-active: color-mix(in srgb, var(--color-action) 80%, var(--color-primary-dark));
+
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 85%, var(--color-surface));
+  --color-accent-active: color-mix(in srgb, var(--color-accent) 80%, var(--color-primary-dark));
+
+  --color-container-hover: color-mix(in srgb, var(--color-primary-container) 85%, var(--color-surface));
+  --color-focus-ring: color-mix(in srgb, var(--color-accent) 60%, transparent);
 
   /* Legacy Color Aliases (for full backward compatibility) */
   --dark-green: var(--color-primary-dark);
@@ -38,32 +54,62 @@
   --correct-green: var(--color-success);
   --wrong-red: var(--color-danger);
   
-  /* Glassmorphism & UI Accents */
-  --dark-overlay: rgba(0, 0, 0, 0.85);
-  --glass-bg: rgba(38, 70, 83, 0.75);
-  --glass-border: rgba(42, 157, 143, 0.4);
-  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  /* Glassmorphism & UI Accents (Theme Agnostic) */
+  --dark-overlay: color-mix(in srgb, var(--color-primary-dark) 85%, transparent);
+  --glass-bg: color-mix(in srgb, var(--color-primary-container) 80%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  --glass-shadow: 0 10px 30px color-mix(in srgb, var(--color-primary-dark) 40%, transparent);
   
   /* Typography Tokens */
-  --font-main: 'League Spartan', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-heading: 'League Spartan', 'Montserrat', sans-serif;
+  --font-body: 'League Spartan', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-main: var(--font-body);
   
-  /* Border Radii */
-  --radius-sm: 8px;
-  --radius-md: 15px;
-  --radius-lg: 24px;
-  --radius-xl: 30px;
+  /* Geometry Tokens */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-pill: 9999px;
+  --border-width: 2px;
+
+  /* Effects Tokens */
+  --shadow-card: 0 8px 30px rgba(0,0,0,0.12);
+  --shadow-button: 0 4px 15px rgba(0,0,0,0.15);
+  --bg-texture: none;
+  --text-shadow: none;
+  --backdrop-blur: none;
   
-  /* Motion & Transitions */
+  /* Motion Kinetics & Transitions */
+  --transition-speed: 0.2s ease-in-out;
+  --hover-transform: translateY(-2px);
+  --active-transform: translateY(0) scale(0.98);
   --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --transition-normal: var(--transition-speed);
   --transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Headings Typography & Material Tokens */
+h1, h2, h3, h4, h5, h6, .score-text {
+  font-family: var(--font-heading);
+  text-shadow: var(--text-shadow);
+}
+
+/* Question Headings & Answer Option Text (Always Clean & Legible via Body Font) */
+.card h2,
+.screen-card h2,
+.question-card h2,
+.modal-content h2,
+.question-text,
+.option-card,
+.option-card span {
+  font-family: var(--font-body) !important;
 }
 
 /* Custom Simple & Minimal Theme Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--teal) transparent;
+  scrollbar-color: var(--color-primary) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -76,12 +122,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--teal);
+  background-color: var(--color-primary);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--yellow);
+  background-color: var(--color-accent);
 }
 
 ::-webkit-scrollbar-corner {
@@ -95,18 +141,29 @@ body {
   min-width: 320px;
   height: 100vh;
   height: 100dvh;
-  background-color: var(--dark-green);
-  color: var(--white);
-  font-family: var(--font-main);
+  background-color: var(--color-primary-dark);
+  background-image: var(--bg-texture);
+  background-attachment: fixed;
+  color: var(--color-surface);
+  font-family: var(--font-body);
   overflow-x: hidden;
   overflow-y: auto;
   
-  /* Prevent ugly blue highlights, text selection, and the text cursor (caret/I-beam) */
+  /* Prevent ugly blue highlights & text selection */
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="none" stroke="%232a9d8f" stroke-width="3" opacity="0.8"/><circle cx="20" cy="20" r="5" fill="%23e9c46a"/><line x1="20" y1="0" x2="20" y2="8" stroke="%232a9d8f" stroke-width="3"/><line x1="20" y1="32" x2="20" y2="40" stroke="%232a9d8f" stroke-width="3"/><line x1="0" y1="20" x2="8" y2="20" stroke="%232a9d8f" stroke-width="3"/><line x1="32" y1="20" x2="40" y2="20" stroke="%232a9d8f" stroke-width="3"/></svg>') 20 20, auto;
-  caret-color: transparent;
+  cursor: var(--cursor-default, auto);
+  caret-color: var(--color-accent);
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
+}
+::-moz-selection {
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
 }
 
 #root {
@@ -119,24 +176,65 @@ body {
   overflow-y: auto;
 }
 
-/* 
-  Projector Container adapts to screen size.
-  On large screens, it behaves like a letterboxed projector.
-  On mobile, it fills the viewport and scrolls if necessary.
-*/
+/* App Theme Wrapper & Stacking Context Architecture */
+.app-theme-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-primary-dark);
+  background-image: var(--bg-texture);
+  background-attachment: fixed;
+}
+
+.app-screen-layer {
+  position: relative;
+  z-index: 1; /* STRICTLY ABOVE THEME OVERLAY (z-index: 0) */
+  width: 100%;
+  height: 100%;
+}
+
 .projector-container {
   width: 100%;
   max-width: 1920px;
   height: 100%;
   margin: auto;
   position: relative;
-  background-color: var(--dark-green);
+  background-color: transparent;
   display: flex;
   flex-direction: column;
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* UI Stacking Layer: Guarantees UI cards, buttons, text, and modals sit above background theme animations (z-index: 1) */
+.projector-container > *,
+.screen-layout-content,
+.card,
+.modal-content,
+.screen-card,
+.settings-card,
+.team-card,
+.quiz-card,
+.option-card,
+.menu-btn,
+.btn,
+button,
+h1, h2, h3, h4, h5, h6,
+.title,
+.subtitle,
+.question-text,
+.score-text,
+.rules-container,
+.scoreboard-container,
+.options-grid,
+.spin-wheel-container,
+.tic-tac-toe-container {
+  position: relative;
+  z-index: 5;
 }
 
 @media (min-width: 1024px) {
@@ -146,21 +244,49 @@ body {
   }
 }
 
+/* Form Controls & Inputs (Theme Agnostic) */
+input, select, textarea {
+  font-family: var(--font-body);
+  background-color: var(--color-primary-container);
+  color: var(--color-surface);
+  border: var(--border-width) solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-focus-ring);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-secondary);
+  opacity: 0.8;
+}
+
+option {
+  background-color: var(--color-primary-container);
+  color: var(--color-surface);
+}
+
 /* ==========================================================================
    Reusable Component System - Buttons
    ========================================================================== */
 button, .btn {
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid transparent;
   padding: 0.8em 1.6em;
   font-size: clamp(1rem, 4vw, 1.5rem);
   font-weight: bold;
-  font-family: inherit;
-  background-color: var(--teal);
-  color: var(--white);
+  font-family: var(--font-heading);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-button);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -169,74 +295,106 @@ button, .btn {
 }
 
 button:hover, .btn:hover {
-  border-color: var(--yellow);
-  background-color: var(--dark-teal);
+  border-color: color-mix(in srgb, var(--color-primary) 80%, white);
+  background-color: var(--color-primary-hover);
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-button);
 }
 
-button:active, .btn:active {
+button:active, .btn:active, button.active, .btn.active {
+  border-color: var(--color-accent);
+  background-color: var(--color-primary-active);
   transform: translateY(1px) scale(0.98);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 0 12px var(--color-focus-ring);
 }
 
 button:focus-visible,
 .btn:focus-visible,
 .menu-btn:focus-visible,
 .option-card:focus-visible {
-  outline: 3px solid var(--yellow) !important;
+  outline: 3px solid var(--color-accent) !important;
   outline-offset: 2px !important;
+  box-shadow: 0 0 14px var(--color-focus-ring);
 }
 
 /* Button Variants */
 .btn-primary {
-  background-color: var(--teal);
-  color: var(--white);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: color-mix(in srgb, var(--color-primary) 85%, white);
+}
+.btn-primary:active {
+  background-color: var(--color-primary-active);
+  border-color: var(--color-accent);
 }
 
 .btn-secondary {
-  background-color: var(--dark-teal);
-  color: var(--white);
-  border-color: var(--teal);
+  background-color: var(--color-primary-container);
+  color: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+.btn-secondary:hover {
+  background-color: var(--color-container-hover);
+  border-color: var(--color-primary);
 }
 
 .btn-accent {
-  background-color: var(--yellow);
-  color: var(--dark-green);
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
+  border-color: var(--color-accent);
 }
 
 .btn-accent:hover {
-  background-color: var(--light-orange);
-  border-color: var(--orange);
+  background-color: var(--color-accent-hover);
+  border-color: color-mix(in srgb, var(--color-accent) 85%, white);
+}
+
+.btn-action {
+  background-color: var(--color-action);
+  color: var(--color-surface);
+  border-color: var(--color-action);
+}
+
+.btn-action:hover {
+  background-color: var(--color-action-hover);
+  border-color: color-mix(in srgb, var(--color-action) 85%, white);
+}
+
+.btn-action:active {
+  background-color: var(--color-action-active);
 }
 
 .btn-danger {
-  background-color: var(--wrong-red);
-  color: var(--white);
-  border-color: var(--wrong-red);
+  background-color: var(--color-danger);
+  color: var(--color-surface);
+  border-color: var(--color-danger);
 }
 
 .btn-danger:hover {
-  background-color: #c0392b;
-  border-color: var(--yellow);
+  background-color: color-mix(in srgb, var(--color-danger) 85%, black);
+  border-color: var(--color-accent);
 }
 
 .btn-success {
-  background-color: var(--correct-green);
-  color: var(--dark-green);
-  border-color: var(--correct-green);
+  background-color: var(--color-success);
+  color: var(--color-primary-dark);
+  border-color: var(--color-success);
 }
 
 .btn-ghost {
   background-color: transparent;
-  color: var(--white);
-  border-color: rgba(232, 237, 223, 0.3);
+  color: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-surface) 30%, transparent);
   box-shadow: none;
 }
 
 .btn-ghost:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: var(--yellow);
+  background-color: color-mix(in srgb, var(--color-surface) 10%, transparent);
+  border-color: var(--color-accent);
 }
 
 .btn-icon {
@@ -280,12 +438,12 @@ button:focus-visible,
    Reusable Component System - Cards & Panels
    ========================================================================== */
 .card {
-  background-color: var(--dark-teal);
-  border-radius: var(--radius-xl);
+  background-color: var(--color-primary-container);
+  border-radius: var(--radius-md);
   padding: clamp(1rem, 4vw, 2rem);
   margin: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  border: 2px solid var(--teal);
+  box-shadow: var(--shadow-card);
+  border: var(--border-width) solid var(--color-primary);
   animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
 }
 
@@ -299,8 +457,8 @@ button:focus-visible,
 }
 
 .card-flat {
-  background-color: var(--dark-green);
-  border: 2px solid var(--teal);
+  background-color: var(--color-primary-dark);
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
   box-shadow: none;
 }
@@ -312,13 +470,13 @@ button:focus-visible,
 
 .card-interactive:hover {
   transform: translateY(-4px) scale(1.01);
-  border-color: var(--yellow);
+  border-color: var(--color-accent);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
 }
 
 .jeopardy-tile-active:hover {
   transform: translateY(-2px) scale(1.02) !important;
-  border-color: var(--yellow) !important;
+  border-color: var(--color-accent) !important;
 }
 
 .jeopardy-tile-used:hover {
@@ -326,7 +484,7 @@ button:focus-visible,
 }
 
 .card-header {
-  border-bottom: 1px solid var(--teal);
+  border-bottom: 1px solid var(--color-primary);
   padding-bottom: 0.75rem;
   margin-bottom: 1rem;
   display: flex;
@@ -339,7 +497,7 @@ button:focus-visible,
 }
 
 .card-footer {
-  border-top: 1px solid rgba(42, 157, 143, 0.3);
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   padding-top: 0.75rem;
   margin-top: 1rem;
 }
@@ -357,34 +515,34 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  background-color: var(--teal);
-  color: var(--white);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .badge-teal {
-  background-color: var(--teal);
-  color: var(--white);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
 }
 
 .badge-yellow {
-  background-color: var(--yellow);
-  color: var(--dark-green);
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
 }
 
 .badge-orange {
-  background-color: var(--orange);
-  color: var(--white);
+  background-color: var(--color-action);
+  color: var(--color-surface);
 }
 
 .badge-green {
-  background-color: var(--correct-green);
-  color: var(--dark-green);
+  background-color: var(--color-success);
+  color: var(--color-primary-dark);
 }
 
 .badge-red {
-  background-color: var(--wrong-red);
-  color: var(--white);
+  background-color: var(--color-danger);
+  color: var(--color-surface);
 }
 
 /* ==========================================================================
@@ -407,19 +565,19 @@ button:focus-visible,
 }
 
 .modal-box {
-  background-color: var(--dark-green);
-  padding: clamp(20px, 4vh, 40px);
+  background-color: var(--color-primary-dark);
+  padding: clamp(16px, 4vh, 40px);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--teal);
+  border: 1px solid var(--color-primary);
   text-align: center;
-  max-width: 90%;
-  width: 450px;
+  max-width: 92vw;
+  width: min(450px, 92vw);
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   box-sizing: border-box;
 }
 
 .modal-title {
-  color: var(--yellow);
+  color: var(--color-accent);
   margin-top: 0;
   margin-bottom: 15px;
   font-size: clamp(1.8rem, 4vw, 2.8rem);
@@ -427,7 +585,7 @@ button:focus-visible,
 }
 
 .modal-body {
-  color: var(--white);
+  color: var(--color-surface);
   font-size: clamp(1rem, 2.5vw, 1.4rem);
   margin-bottom: 25px;
   line-height: 1.4;
@@ -579,7 +737,8 @@ input[type="text"], input[type="number"], input[type="password"], textarea {
 }
 
 .option-card {
-  border-radius: clamp(14px, 2vw, 24px);
+  font-family: var(--font-heading);
+  border-radius: var(--radius-md);
   padding: clamp(12px, 2vh, 22px) clamp(18px, 2.8vw, 32px);
   display: flex;
   align-items: center;
@@ -587,8 +746,8 @@ input[type="text"], input[type="number"], input[type="password"], textarea {
   font-weight: bold;
   transition: all var(--transition-normal);
   cursor: pointer;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border: var(--border-width) solid transparent;
+  box-shadow: var(--shadow-button);
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
@@ -605,14 +764,18 @@ input[type="text"], input[type="number"], input[type="password"], textarea {
 .option-card:nth-child(5) { animation-delay: 0.5s; }
 .option-card:nth-child(6) { animation-delay: 0.6s; }
 
-.option-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+.option-card:hover:not(:disabled) {
+  transform: var(--hover-transform);
 }
 
-.option-card:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+.option-card:active:not(:disabled) {
+  transform: var(--active-transform);
+}
+
+/* Glassmorphism & Frosted Backdrop Blur Tokens */
+.card, .modal-content, .screen-card, .settings-card, .team-card, .quiz-card {
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
 }
 
 .flex-center {
@@ -632,9 +795,9 @@ input[type="text"], input[type="number"], input[type="password"], textarea {
   flex-direction: column;
 }
 
-/* Custom interactive cursor */
-button, .btn, .menu-btn, a, [role="button"], .file-upload-label, input[type="checkbox"], input[type="radio"], .option-card {
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="%23e76f51" opacity="0.4" /><circle cx="24" cy="24" r="14" fill="%23e9c46a" stroke="%23264653" stroke-width="4"/><circle cx="24" cy="24" r="5" fill="%23264653"/></svg>') 24 24, pointer !important;
+/* Custom dynamic theme-following interactive cursor */
+button, .btn, .menu-btn, a, [role="button"], .file-upload-label, input[type="checkbox"], input[type="radio"], .option-card, .card-interactive {
+  cursor: var(--cursor-pointer, pointer) !important;
 }
 
 /* ==========================================================================
@@ -756,6 +919,665 @@ button, .btn, .menu-btn, a, [role="button"], .file-upload-label, input[type="che
     border: none !important;
     padding: 6px 0 !important;
     text-align: left !important;
+  }
+}
+
+/* --- NEON CATALYST BUBBLING TOXIC VAT BACKGROUND (SUBTLE & FAST) --- */
+.toxic-vat-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0; /* STRICTLY BEHIND app-screen-layer (z-index: 1) */
+  overflow: hidden;
+}
+
+/* Smooth Acid Liquid Base Gradient */
+.toxic-liquid-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 300px;
+  background: linear-gradient(0deg, 
+    rgba(57, 255, 20, 0.22) 0%, 
+    rgba(16, 185, 129, 0.12) 45%, 
+    rgba(6, 78, 59, 0.05) 80%, 
+    transparent 100%
+  );
+  filter: drop-shadow(0 -15px 35px rgba(57, 255, 20, 0.15));
+  animation: acidGradientPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes acidGradientPulse {
+  0% {
+    opacity: 0.75;
+    transform: scaleY(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1.05);
+  }
+}
+
+/* Translucent Subtle Viscous Droplets & Fast Morphing Bubbles */
+.toxic-vat-bubble {
+  position: absolute;
+  bottom: -30px;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.85) 0%, rgba(57, 255, 20, 0.45) 40%, rgba(16, 185, 129, 0.6) 80%, rgba(6, 78, 59, 0.7) 100%);
+  border: 1px solid rgba(57, 255, 20, 0.5);
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: liquidBubbleMorph 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.4));
+}
+
+.toxic-vat-bubble.bubble-1  { left: 6%;  width: 18px; height: 18px; animation-duration: 1.8s; animation-delay: 0s; }
+.toxic-vat-bubble.bubble-2  { left: 18%; width: 26px; height: 26px; animation-duration: 2.5s; animation-delay: 0.6s; }
+.toxic-vat-bubble.bubble-3  { left: 32%; width: 14px; height: 14px; animation-duration: 1.6s; animation-delay: 0.3s; }
+.toxic-vat-bubble.bubble-4  { left: 45%; width: 32px; height: 32px; animation-duration: 2.9s; animation-delay: 1.1s; }
+.toxic-vat-bubble.bubble-5  { left: 58%; width: 20px; height: 20px; animation-duration: 2.0s; animation-delay: 0.4s; }
+.toxic-vat-bubble.bubble-6  { left: 72%; width: 16px; height: 16px; animation-duration: 1.9s; animation-delay: 0.9s; }
+.toxic-vat-bubble.bubble-7  { left: 84%; width: 24px; height: 24px; animation-duration: 2.3s; animation-delay: 1.4s; }
+.toxic-vat-bubble.bubble-8  { left: 25%; width: 18px; height: 18px; animation-duration: 2.2s; animation-delay: 1.7s; }
+.toxic-vat-bubble.bubble-9  { left: 64%; width: 30px; height: 30px; animation-duration: 2.7s; animation-delay: 0.8s; }
+.toxic-vat-bubble.bubble-10 { left: 92%; width: 14px; height: 14px; animation-duration: 1.7s; animation-delay: 0.2s; }
+.toxic-vat-bubble.bubble-11 { left: 48%; width: 22px; height: 22px; animation-duration: 2.6s; animation-delay: 0.7s; }
+.toxic-vat-bubble.bubble-12 { left: 78%; width: 16px; height: 16px; animation-duration: 1.5s; animation-delay: 0.9s; }
+
+@keyframes liquidBubbleMorph {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.5);
+    border-radius: 50%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+    border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%;
+  }
+  35% {
+    transform: translateY(-25vh) translateX(15px) scale(1.02);
+    border-radius: 60% 40% 55% 45% / 45% 60% 40% 55%;
+  }
+  65% {
+    transform: translateY(-55vh) translateX(-12px) scale(1.15);
+    border-radius: 40% 60% 45% 55% / 55% 45% 60% 40%;
+  }
+  85% {
+    transform: translateY(-82vh) translateX(8px) scale(1.25);
+    border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
+    opacity: 0.55;
+  }
+  95% {
+    transform: translateY(-90vh) translateX(0px) scale(1.35);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-95vh) translateX(0px) scale(1.5);
+    border-radius: 50%;
+    opacity: 0;
+  }
+}
+
+/* --- RETRO CRT MONITOR SCANLINE & PHOSPHOR FLICKER FILTER --- */
+.crt-scanlines-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99; /* Overlay on top of background and UI elements */
+  overflow: hidden;
+  animation: crtFlicker 0.15s infinite alternate;
+}
+
+/* Horizontal Scanlines & Subpixel RGB Mesh Grid */
+.crt-scanlines-lines {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.32) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 6px 100%;
+}
+
+/* Rolling Cathode Phosphor Beam Line */
+.crt-beam-roll {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 20%;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
+  animation: scanBeamRoll 8s linear infinite;
+}
+
+/* Curved CRT Glass Tube Vignette & Ambient Glow */
+.crt-vignette-glass {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle at 50% 50%, transparent 65%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+@keyframes scanBeamRoll {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(600%);
+  }
+}
+
+@keyframes crtFlicker {
+  0% {
+    opacity: 0.96;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.97;
+  }
+}
+
+/* --- SPIDER-HERO WEBS OVERLAY (arachnidHero) --- */
+.spider-web-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.web-grid-radar {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.12) 0%, transparent 65%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 45px, rgba(255, 255, 255, 0.06) 46px, transparent 47px),
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 28deg, rgba(255, 255, 255, 0.05) 29deg, transparent 30deg);
+  animation: webPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes webPulse {
+  0% { transform: scale(0.98); opacity: 0.7; }
+  100% { transform: scale(1.02); opacity: 1; }
+}
+
+/* --- WIZARDING SCROLL LUMOS GLOW & GOLDEN SNITCH PARTICLES (wizardingScroll) --- */
+.lumos-glow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.snitch-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #FFFFFF 0%, #D3A625 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 12px #D3A625, 0 0 20px rgba(211, 166, 37, 0.6);
+  animation: snitchFloat 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.snitch-sparkle.sparkle-1 { top: 20%; left: 15%; animation-duration: 4.5s; animation-delay: 0s; }
+.snitch-sparkle.sparkle-2 { top: 60%; left: 75%; animation-duration: 6.0s; animation-delay: 1.5s; }
+.snitch-sparkle.sparkle-3 { top: 40%; left: 85%; animation-duration: 5.2s; animation-delay: 0.8s; }
+
+@keyframes snitchFloat {
+  0% { transform: translateY(0) translateX(0) scale(0.6); opacity: 0.2; }
+  50% { transform: translateY(-30px) translateX(25px) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-60px) translateX(0) scale(0.4); opacity: 0.1; }
+}
+
+/* --- MINECRAFT CRAFTING VOXEL GRID & THEME STYLING (blockBuilder) --- */
+.voxel-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.minecraft-bedrock-grid {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(85, 255, 255, 0.08) 0%, transparent 75%),
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(85, 255, 255, 0.04) 31px, rgba(85, 255, 255, 0.04) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(85, 255, 255, 0.04) 31px, rgba(85, 255, 255, 0.04) 32px);
+  opacity: 0.8;
+}
+
+/* Floating Minecraft Experience Orbs */
+.minecraft-xp-orb {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #FFFF55 0%, #55FF55 70%, #00AA00 100%);
+  box-shadow: 0 0 10px #55FF55;
+  border-radius: 2px;
+  animation: xpOrbFloat 4s ease-in-out infinite;
+}
+
+.minecraft-xp-orb.orb-1 { bottom: 40px; left: 15%; animation-duration: 3.5s; animation-delay: 0s; }
+.minecraft-xp-orb.orb-2 { bottom: 60px; left: 35%; animation-duration: 4.2s; animation-delay: 1.2s; }
+.minecraft-xp-orb.orb-3 { bottom: 50px; left: 55%; animation-duration: 3.8s; animation-delay: 0.6s; }
+.minecraft-xp-orb.orb-4 { bottom: 70px; left: 75%; animation-duration: 4.5s; animation-delay: 1.8s; }
+.minecraft-xp-orb.orb-5 { bottom: 45px; left: 90%; animation-duration: 3.2s; animation-delay: 0.4s; }
+
+@keyframes xpOrbFloat {
+  0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 0.2; }
+  50% { transform: translateY(-40px) scale(1.3) rotate(45deg); opacity: 0.9; }
+  100% { transform: translateY(-80px) scale(0.6) rotate(90deg); opacity: 0; }
+}
+
+/* Official 3D Stone Minecraft Title Logo (INQUIZITIVE) matching user image */
+[data-theme-id="blockBuilder"] .title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0px !important;
+}
+
+[data-theme-id="blockBuilder"] .title span {
+  font-family: "Silkscreen", "VT323", monospace !important;
+  font-weight: 900 !important;
+  font-size: clamp(2.2rem, 6.5vw, 4.8rem) !important;
+  color: #D8D8D8 !important;
+  text-shadow: 
+    -2px -2px 0 #000000, 
+     2px -2px 0 #000000, 
+    -2px  2px 0 #000000, 
+     2px  2px 0 #000000,
+    -2px  0px 0 #000000, 
+     2px  0px 0 #000000,
+     0px -2px 0 #000000, 
+     0px  2px 0 #000000,
+     0px  4px 0 #4A4D52,
+     2px  4px 0 #4A4D52,
+    -2px  4px 0 #4A4D52,
+     0px  7px 0 #1A1A1B,
+     2px  7px 0 #1A1A1B,
+    -2px  7px 0 #1A1A1B,
+     0px 10px 0 #000000,
+     3px 10px 0 #000000,
+    -3px 10px 0 #000000 !important;
+  letter-spacing: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Official Minecraft GUI Font & Bevel Styling for Containers */
+[data-theme-id="blockBuilder"] .card,
+[data-theme-id="blockBuilder"] .screen-card,
+[data-theme-id="blockBuilder"] .modal-content,
+[data-theme-id="blockBuilder"] .settings-card,
+[data-theme-id="blockBuilder"] .team-card,
+[data-theme-id="blockBuilder"] .quiz-card {
+  font-family: "Silkscreen", "VT323", monospace !important;
+  border-radius: 0px !important;
+}
+
+/* Official Minecraft Stone Slab Buttons & In-Game Click/Hover States (Excluding Theme Preset Cards) */
+[data-theme-id="blockBuilder"] button:not(.preset-theme-card),
+[data-theme-id="blockBuilder"] .menu-btn,
+[data-theme-id="blockBuilder"] .btn {
+  font-family: "Silkscreen", "VT323", monospace;
+  background-color: #737373;
+  color: #FFFFFF;
+  border-radius: 0px;
+  border: 2px solid #000000;
+  box-shadow: inset 3px 3px 0px #AFAFAF, inset -3px -3px 0px #373737, 0 4px 0px #000000;
+  text-shadow: 2px 2px 0px #000000;
+  transition: none;
+}
+
+[data-theme-id="blockBuilder"] .option-card {
+  font-family: "Silkscreen", "VT323", monospace;
+  background-color: #737373;
+  color: #FFFFFF;
+  border-radius: 0px;
+  border: 2px solid #000000;
+  box-shadow: inset 3px 3px 0px #AFAFAF, inset -3px -3px 0px #373737, 0 4px 0px #000000;
+  text-shadow: 2px 2px 0px #000000;
+  transition: none;
+}
+
+/* Global Option Card Feedback Rules for Correct and Wrong Answers */
+.option-card[style*="correct"],
+.option-card[style*="2ecc71"],
+.option-card[style*="2E7D32"],
+.option-card.correct {
+  background-color: #2ecc71 !important;
+  color: #ffffff !important;
+  border-color: #27ae60 !important;
+}
+
+.option-card[style*="wrong"],
+.option-card[style*="danger"],
+.option-card[style*="e74c3c"],
+.option-card[style*="C62828"],
+.option-card[style*="wrong-red"],
+.option-card.wrong,
+.option-card.incorrect {
+  background-color: #e74c3c !important;
+  color: #ffffff !important;
+  border-color: #c0392b !important;
+}
+
+/* Explicit Minecraft Bevel & Color Feedback for Correct & Wrong Option Cards */
+[data-theme-id="blockBuilder"] .option-card[style*="color-success"],
+[data-theme-id="blockBuilder"] .option-card[style*="55FF55"],
+[data-theme-id="blockBuilder"] .option-card[style*="2ecc71"],
+[data-theme-id="blockBuilder"] .option-card[style*="2E7D32"],
+[data-theme-id="blockBuilder"] .option-card[style*="correct-green"],
+[data-theme-id="blockBuilder"] .option-card.correct {
+  background-color: #2E7D32 !important; /* Minecraft Emerald Green */
+  color: #FFFF55 !important;
+  box-shadow: inset 3px 3px 0px #85FF85, inset -3px -3px 0px #1B4D1F, 0 4px 0px #000000 !important;
+}
+
+[data-theme-id="blockBuilder"] .option-card[style*="color-danger"],
+[data-theme-id="blockBuilder"] .option-card[style*="FF5555"],
+[data-theme-id="blockBuilder"] .option-card[style*="e74c3c"],
+[data-theme-id="blockBuilder"] .option-card[style*="C62828"],
+[data-theme-id="blockBuilder"] .option-card[style*="wrong-red"],
+[data-theme-id="blockBuilder"] .option-card.wrong,
+[data-theme-id="blockBuilder"] .option-card.incorrect {
+  background-color: #C62828 !important; /* Minecraft Redstone Red */
+  color: #FFFFFF !important;
+  box-shadow: inset 3px 3px 0px #FFAAAA, inset -3px -3px 0px #5F1010, 0 4px 0px #000000 !important;
+}
+
+/* Hover State (Official Minecraft Highlight Yellow Text) */
+[data-theme-id="blockBuilder"] button:not(.preset-theme-card):hover:not(:disabled),
+[data-theme-id="blockBuilder"] .option-card:hover:not(:disabled),
+[data-theme-id="blockBuilder"] .menu-btn:hover:not(:disabled),
+[data-theme-id="blockBuilder"] .btn:hover:not(:disabled) {
+  background-color: #8B8B8B;
+  color: #FFFF55; /* Official Minecraft Hover Yellow */
+  border-color: #000000;
+  box-shadow: inset 3px 3px 0px #FFFFFF, inset -3px -3px 0px #404040, 0 4px 0px #000000;
+}
+
+/* Active Click State (Minecraft Pressed Down Button) */
+[data-theme-id="blockBuilder"] button:not(.preset-theme-card):active:not(:disabled),
+[data-theme-id="blockBuilder"] .option-card:active:not(:disabled),
+[data-theme-id="blockBuilder"] .menu-btn:active:not(:disabled),
+[data-theme-id="blockBuilder"] .btn:active:not(:disabled) {
+  background-color: #555555;
+  color: #FFFF55;
+  box-shadow: inset 3px 3px 0px #373737, inset -3px -3px 0px #AFAFAF, 0 1px 0px #000000;
+  transform: translateY(3px);
+}
+
+/* Disabled State */
+[data-theme-id="blockBuilder"] button:not(.preset-theme-card):disabled,
+[data-theme-id="blockBuilder"] .option-card:disabled {
+  background-color: #3C3C3C;
+  color: #707070;
+  box-shadow: inset 2px 2px 0px #222222, inset -2px -2px 0px #555555;
+  text-shadow: 1px 1px 0px #000000;
+  opacity: 0.8;
+}
+
+/* --- OFFICIAL MINECRAFT JAVA EDITION TITLE SCREEN OVERLAY & STYLING --- */
+.minecraft-panorama-vignette {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(0, 0, 0, 0.1) 15px, rgba(0, 0, 0, 0.1) 16px),
+    repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(0, 0, 0, 0.1) 15px, rgba(0, 0, 0, 0.1) 16px);
+  opacity: 0.9;
+}
+
+/* Angled Yellow Bouncing Splash Text Banner */
+.minecraft-splash-container {
+  position: absolute;
+  top: clamp(65px, 12vh, 120px);
+  right: clamp(10%, 20vw, 30%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.minecraft-splash-banner {
+  font-family: "Silkscreen", "VT323", monospace !important;
+  font-size: clamp(0.9rem, 2.2vw, 1.4rem);
+  font-weight: bold;
+  color: #FFFF55;
+  text-shadow: 2px 2px 0px #3F3F00, 3px 3px 0px #000000;
+  transform: rotate(-18deg);
+  animation: minecraftSplashBounce 1.2s ease-in-out infinite alternate;
+  white-space: nowrap;
+}
+
+@keyframes minecraftSplashBounce {
+  0% {
+    transform: rotate(-18deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(-18deg) scale(1.12);
+  }
+}
+
+/* Footer Version & Copyright Labels */
+.minecraft-footer-left {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  font-family: "Silkscreen", "VT323", monospace;
+  font-size: 0.8rem;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 0px #000000;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.minecraft-footer-right {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-family: "Silkscreen", "VT323", monospace;
+  font-size: 0.8rem;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 0px #000000;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   Comprehensive Mobile & PWA Anti-Overflow System
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile Devices & Small Screens (<= 768px) */
+@media (max-width: 768px) {
+  .projector-container {
+    padding: clamp(8px, 2.5vw, 14px);
+    overflow-x: hidden;
+  }
+
+  .title {
+    letter-spacing: 0.5px;
+    font-size: clamp(1.8rem, 8vw, 3.5rem);
+    white-space: normal;
+  }
+
+  .subtitle {
+    font-size: clamp(0.95rem, 3.8vw, 1.4rem);
+  }
+
+  .menu-grid {
+    width: 95%;
+    max-width: 100%;
+    padding: 2px 4px;
+    gap: 10px;
+  }
+
+  .menu-btn {
+    padding: 0.7em 1.1em;
+    font-size: clamp(0.95rem, 3.8vw, 1.25rem);
+    width: 100%;
+  }
+
+  .settings-grid {
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .settings-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .modal-box,
+  .modal-content {
+    width: min(450px, 92vw) !important;
+    max-width: 92vw !important;
+    padding: 16px !important;
+    margin: auto;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important;
+    padding: 0 4px;
+    gap: 10px;
+  }
+
+  .option-card {
+    font-size: clamp(1rem, 3.6vw, 1.35rem);
+    padding: 12px 16px;
+    min-height: 52px;
+  }
+
+  /* Safe Area Padding for Notch & Home Bar on iOS/Android PWAs */
+  .app-theme-wrapper {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* Extra Small Mobile Devices (<= 480px) */
+@media (max-width: 480px) {
+  .projector-container {
+    padding: 6px;
+  }
+
+  .title {
+    font-size: clamp(1.4rem, 7vw, 2.6rem);
+  }
+
+  .btn, button {
+    padding: 0.6em 1em;
+    font-size: clamp(0.85rem, 3.4vw, 1.1rem);
+  }
+
+  /* Scoreboard header team score boxes wrap gracefully */
+  .scoreboard-container {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .team-score-card {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+}
+
+/* ==========================================================================
+   Question & Answer Mobile UI Anti-Overflow Architecture (< 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Question Header & Card Padding */
+  .card:has(h2),
+  .question-card,
+  div:has(> .options-grid) > .card {
+    margin: 6px 0 !important;
+    padding: 12px 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Question Text Clamping & Word Wrapping */
+  .card h2,
+  .screen-card h2,
+  .question-card h2,
+  .question-text {
+    font-size: clamp(1.15rem, 4.5vw, 1.7rem) !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+  }
+
+  /* Attached Question Image Scaling */
+  .question-image-container,
+  .question-image-container img {
+    max-width: 100% !important;
+    max-height: clamp(100px, 22vh, 180px) !important;
+    object-fit: contain !important;
+  }
+
+  /* Options Grid 1-Column Responsive Layout */
+  .options-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    margin: 8px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Option Card Tap Targets & Text Wrapping */
+  .option-card {
+    font-size: clamp(0.95rem, 3.8vw, 1.25rem) !important;
+    padding: 10px 14px !important;
+    min-height: 48px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .option-card span:first-child {
+    margin-right: 12px !important;
+    font-size: 1.1em !important;
+  }
+
+  /* Bottom Controls Bar (Prev / Reveal Answer / Next) */
+  div:has(> button[title*="Previous"]),
+  div:has(> button[title*="Reveal"]),
+  div:has(> button[title*="Next"]) {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  /* Jeopardy Board Touch Scroll Container */
+  .jeopardy-board,
+  div:has(> .jeopardy-tile-active),
+  div:has(> .jeopardy-tile-used) {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 }
 

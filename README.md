@@ -84,14 +84,42 @@ A quick-response buzzer screen that records team buzz-ins in order, ensuring fai
 
 ---
 
-## 🚀 How to Use inQUIZitive (Quick 4-Step Host Guide)
+## 🚀 Host Guide & Technical Operating Manual
 
-Conducting a live quiz event with inQUIZitive takes less than two minutes:
+Conducting a live quiz event with **inQUIZitive** is effortless and fail-safe. Follow this comprehensive host operating guide for pre-event preparation and live stage execution:
 
-1. **Launch the App**: Open [inQUIZitive Live Demo](https://denzven.github.io/inQUIZitive/) or run it locally.
-2. **Import Questions**: Go to **Settings** → **Question Bank Editor** or upload your custom `.xlsx` Excel question sheet. The app automatically validates your format using the **Spreadsheet Audit Tool**.
-3. **Configure Teams & Theme**: Add team names, choose team avatars, customize colors, and adjust scoring parameters.
-4. **Present the Event**: Use **Fullscreen Mode (`F`)** to project to your audience. Control options, timers, and scoring effortlessly using presenter hotkeys!
+### 1. Pre-Event Content Preparation & Audit Engine
+- **Excel Spreadsheet & JSON Ingestion**: Prepare your questions offline using Microsoft Excel, Google Sheets, or JSON. Upload `.xlsx` files directly via **Settings** → **Question Bank Editor**.
+- **Pre-Flight Audit Engine**: The built-in diagnostic engine automatically verifies your spreadsheet, flagging missing options, duplicate question strings across rounds, unassigned correct answer keys, invalid point weights, and default placeholder text (e.g. `Question 255`).
+- **1-Click Auto-Fix & Inline Editing**: Use **Auto-Fix All** to instantly repair formatting errors, or click any flagged question to edit choices, correct answers, or categories live inside the app.
+
+### 2. Single-Screen Broadcast & Stealth Presentation Mode
+- **Single Shared Display Architecture**: Designed for live stage setups where the host laptop screen is cloned or directly projected to the audience display.
+- **Stealth Mode (`H`)**: Press **`H`** or toggle Stealth Mode to fade top navigation bars, setup buttons, and admin indicators down to an 8% translucent opacity. Your screen instantly transforms into a pristine TV game show broadcast.
+- **Hover Illumination & Fullscreen (`F`)**: Move your cursor to screen edges or top corners to temporarily illuminate administrative controls. Press **`F`** to launch full-screen presentation mode.
+
+### 3. Mouse-Free Presenter Control & Emergency Protection
+- **Hotkey Control**: Host the entire show using only your keyboard or wireless presenter remote:
+  - **`1 - 4` / `A - D`**: Select multiple choice options A, B, C, or D.
+  - **`Spacebar`**: Primary trigger key — reveals correct answers, advances steps, or starts timers.
+  - **`Ctrl + Z` / `Cmd + Z`**: Global Undo Stack — instantly reverts accidental score edits or wrong answer clicks with visual toast confirmation.
+  - **`+` / `=`**: Emergency +5s Rapid Fire time buffer injection during stage disruptions or team clarifications.
+  - **`P` / `K`**: Pause / Resume active countdown timers.
+  - **`M`**: Instant mute/unmute audio toggle.
+
+### 4. Dynamic Scoreboard & Manual Score Overrides
+- **Real-Time Standings Tallying**: Team scores update dynamically after every question and round with animated tallies.
+- **Manual Score Override Modal**: Click any team's score card on the scoreboard to open the manual score override dialog. Add or deduct custom points with optional reason notes.
+- **Automatic Stage Baseline Reset**: Points reset to zero between qualifying and stage rounds per competition guidelines, maintaining a level playing field while preserving tournament logs.
+- **Sudden-Death Tiebreaker**: Launch the interactive 3x3 Tic-Tac-Toe grid duel directly from the standings screen whenever a round ends in a draw.
+
+### 5. Dual-Screen Strategy & Master Answer Key Export
+- **Printable Host Cheat Sheet**: Export a structured multi-page Host Cheat Sheet & Master Answer Key directly from the Question Bank Editor or Rules Screen.
+- **Secondary Display Setup**: Print to paper or view as a PDF on a secondary smartphone, tablet, or clipboard to reference answer keys, trivia hints, and stage notes without revealing them on the audience screen.
+
+### 6. 100% Offline PWA & Procedural Audio Engine
+- **Network Independence**: Built as an offline-first Progressive Web App (PWA). Functions completely without internet or venue Wi-Fi.
+- **Web Audio API Synthesizer**: All sound effects (timer ticks, correct chimes, wrong buzzers, drumrolls, applause, fanfare) and ambient background music are procedurally synthesized in real time via the Web Audio API without external MP3 dependencies.
 
 ---
 

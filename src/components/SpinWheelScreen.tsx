@@ -545,12 +545,12 @@ export const SpinWheelScreen: React.FC = () => {
                     maxWidth: '240px',
                     minWidth: 0,
                     height: `${slotH}px`, 
-                    backgroundColor: 'rgba(42, 157, 143, 0.2)', 
+                    backgroundColor: 'color-mix(in srgb, var(--color-primary-container) 80%, transparent)', 
                     borderRadius: 'clamp(10px, 2vw, 16px)',
-                    border: '1px solid rgba(42, 157, 143, 0.35)',
+                    border: '2px solid var(--color-primary)',
                     position: 'relative', 
                     overflow: 'hidden',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    boxShadow: '0 8px 25px color-mix(in srgb, var(--color-primary-dark) 40%, transparent)',
                     boxSizing: 'border-box'
                   }}>
                     
@@ -582,7 +582,7 @@ export const SpinWheelScreen: React.FC = () => {
                                 justifyContent: 'center',
                                 fontSize: isCenter ? 'clamp(0.75rem, 2.2vw, 1.8rem)' : 'clamp(0.6rem, 1.5vw, 1.3rem)',
                                 fontWeight: isCenter ? 900 : 700,
-                                color: isCenter ? 'var(--white)' : 'rgba(232, 237, 223, 0.65)',
+                                color: isCenter ? 'var(--color-surface)' : 'color-mix(in srgb, var(--color-surface) 65%, transparent)',
                                 textAlign: 'center',
                                 padding: '0 4px',
                                 lineHeight: 1.15,
@@ -590,7 +590,7 @@ export const SpinWheelScreen: React.FC = () => {
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 boxSizing: 'border-box',
-                                borderBottom: '1px solid rgba(42, 157, 143, 0.25)',
+                                borderBottom: '1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)',
                                 zIndex: isCenter ? 3 : 2
                               }}
                             >
@@ -606,21 +606,21 @@ export const SpinWheelScreen: React.FC = () => {
                       position: 'absolute',
                       top: `${centerY}px`, left: 0, right: 0,
                       height: `${itemH}px`,
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-surface) 10%, transparent)',
                       pointerEvents: 'none',
                       zIndex: 4
                     }} />
 
-                    {/* TOP YELLOW ACCENT LINE (3px) */}
+                    {/* TOP ACCENT LINE (3px) */}
                     <div style={{
                       position: 'absolute', top: `${centerY}px`, left: 0, right: 0,
-                      height: '3px', backgroundColor: 'var(--yellow)', zIndex: 10
+                      height: '3px', backgroundColor: 'var(--color-accent)', zIndex: 10
                     }} />
 
-                    {/* BOTTOM YELLOW ACCENT LINE (3px) */}
+                    {/* BOTTOM ACCENT LINE (3px) */}
                     <div style={{
                       position: 'absolute', top: `${centerY + itemH}px`, left: 0, right: 0,
-                      height: '3px', backgroundColor: 'var(--yellow)', zIndex: 10
+                      height: '3px', backgroundColor: 'var(--color-accent)', zIndex: 10
                     }} />
                   </div>
                 );
@@ -629,20 +629,20 @@ export const SpinWheelScreen: React.FC = () => {
 
             {totalUnusedSwjCount < 16 && (
               <div style={{
-                backgroundColor: 'rgba(231, 76, 60, 0.15)',
-                border: '2px solid var(--wrong-red)',
+                backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)',
+                border: '2px solid var(--color-danger)',
                 borderRadius: '16px',
                 padding: '10px 20px',
                 marginTop: '15px',
                 maxWidth: '650px',
                 textAlign: 'center',
-                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.25)'
+                boxShadow: '0 4px 15px color-mix(in srgb, var(--color-danger) 25%, transparent)'
               }}>
-                <div style={{ color: 'var(--yellow)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <div style={{ color: 'var(--color-accent)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   <span>⚠️</span>
                   <span>Question Quantity Warning</span>
                 </div>
-                <p style={{ color: 'var(--white)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                <p style={{ color: 'var(--color-surface)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
                   Only {totalUnusedSwjCount} unused SWJ question(s) available (16 required for 4 full categories). Used questions were excluded to prevent duplicates.
                 </p>
               </div>
@@ -666,10 +666,11 @@ export const SpinWheelScreen: React.FC = () => {
                   style={{ 
                     padding: 'clamp(10px, 2vh, 16px) clamp(24px, 5vw, 50px)', 
                     fontSize: 'clamp(1.1rem, 4vw, 2rem)', 
-                    backgroundColor: 'var(--orange)',
+                    backgroundColor: 'var(--color-action)',
+                    color: 'var(--color-surface)',
                     borderRadius: '16px',
                     fontWeight: 'bold',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                    boxShadow: '0 10px 25px color-mix(in srgb, var(--color-primary-dark) 40%, transparent)',
                     maxWidth: '100%'
                   }}
                 >
@@ -683,7 +684,8 @@ export const SpinWheelScreen: React.FC = () => {
                     style={{ 
                       padding: 'clamp(8px, 1.8vh, 12px) clamp(16px, 3.5vw, 35px)', 
                       fontSize: 'clamp(1rem, 3.5vw, 1.5rem)', 
-                      backgroundColor: 'var(--orange)',
+                      backgroundColor: 'var(--color-action)',
+                      color: 'var(--color-surface)',
                       borderRadius: '14px',
                       flex: '1 1 auto',
                       maxWidth: '200px'
@@ -696,8 +698,8 @@ export const SpinWheelScreen: React.FC = () => {
                     style={{ 
                       padding: 'clamp(8px, 1.8vh, 12px) clamp(16px, 3.5vw, 40px)', 
                       fontSize: 'clamp(1rem, 3.5vw, 1.5rem)', 
-                      backgroundColor: 'var(--yellow)', 
-                      color: 'var(--dark-green)',
+                      backgroundColor: 'var(--color-accent)', 
+                      color: 'var(--color-primary-dark)',
                       borderRadius: '14px',
                       flex: '1 1 auto',
                       maxWidth: '360px',
@@ -732,15 +734,15 @@ export const SpinWheelScreen: React.FC = () => {
               width: '100%',
               marginBottom: 'clamp(10px, 2vh, 18px)',
               padding: '8px 18px',
-              backgroundColor: 'var(--dark-teal)',
-              border: '2px solid var(--teal)',
+              backgroundColor: 'var(--color-primary-container)',
+              border: '2px solid var(--color-primary)',
               borderRadius: '18px',
               boxSizing: 'border-box',
               flexWrap: 'wrap',
               gap: '10px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--yellow)', fontWeight: 800, fontSize: 'clamp(0.95rem, 2vw, 1.25rem)' }}>
-                <Sparkles size={22} color="var(--yellow)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-accent)', fontWeight: 800, fontSize: 'clamp(0.95rem, 2vw, 1.25rem)' }}>
+                <Sparkles size={22} color="var(--color-accent)" />
                 <span>JEOPARDY BOARD</span>
               </div>
 
@@ -748,15 +750,15 @@ export const SpinWheelScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                backgroundColor: 'var(--dark-green)',
+                backgroundColor: 'var(--color-primary-dark)',
                 padding: '6px 18px',
                 borderRadius: '20px',
-                color: 'var(--white)',
+                color: 'var(--color-surface)',
                 fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
                 fontWeight: 'bold',
-                border: '1px solid var(--teal)'
+                border: '1px solid var(--color-primary)'
               }}>
-                <Award size={18} color="var(--yellow)" />
+                <Award size={18} color="var(--color-accent)" />
                 <span>Progress: {boardProgress.usedCount} / {boardProgress.totalTiles} Answered</span>
               </div>
 
@@ -766,8 +768,8 @@ export const SpinWheelScreen: React.FC = () => {
                 style={{
                   padding: '8px 20px',
                   fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
-                  backgroundColor: 'var(--orange)',
-                  color: 'var(--white)',
+                  backgroundColor: 'var(--color-action)',
+                  color: 'var(--color-surface)',
                   borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -785,8 +787,8 @@ export const SpinWheelScreen: React.FC = () => {
             {incompleteTopicsWarning.length > 0 && (
               <div style={{
                 width: '100%',
-                backgroundColor: 'rgba(231, 76, 60, 0.18)',
-                border: '2px solid var(--wrong-red)',
+                backgroundColor: 'color-mix(in srgb, var(--color-danger) 18%, transparent)',
+                border: '2px solid var(--color-danger)',
                 borderRadius: '14px',
                 padding: '10px 16px',
                 marginBottom: 'clamp(10px, 1.8vh, 16px)',
@@ -794,18 +796,18 @@ export const SpinWheelScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                color: 'var(--yellow)',
+                color: 'var(--color-accent)',
                 fontSize: 'clamp(0.85rem, 1.8vw, 1.05rem)',
                 fontWeight: 'bold',
-                boxShadow: '0 4px 15px rgba(231, 76, 60, 0.2)'
+                boxShadow: '0 4px 15px color-mix(in srgb, var(--color-danger) 20%, transparent)'
               }}>
-                <AlertTriangle size={22} color="var(--wrong-red)" style={{ flexShrink: 0 }} />
+                <AlertTriangle size={22} color="var(--color-danger)" style={{ flexShrink: 0 }} />
                 <div>
-                  <span style={{ color: 'var(--yellow)' }}>Category Question Warning: </span>
-                  <span style={{ color: 'var(--white)', fontWeight: 600 }}>
+                  <span style={{ color: 'var(--color-accent)' }}>Category Question Warning: </span>
+                  <span style={{ color: 'var(--color-surface)', fontWeight: 600 }}>
                     {incompleteTopicsWarning.map(w => `${w.topic} (${w.unusedCount} unused)`).join(', ')}.
                   </span>
-                  <span style={{ fontWeight: 400, color: 'rgba(255, 255, 255, 0.8)', marginLeft: '6px' }}>
+                  <span style={{ fontWeight: 400, color: 'var(--color-secondary)', marginLeft: '6px' }}>
                     Fewer than 4 questions were available; fallback questions are mapped to maintain 10-40 tiers.
                   </span>
                 </div>
@@ -826,10 +828,10 @@ export const SpinWheelScreen: React.FC = () => {
                 return (
                   <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.8vh, 18px)', flex: '1 1 0px', minWidth: 0, maxWidth: '300px' }}>
                     
-                    {/* SOLID YELLOW CATEGORY HEADER */}
+                    {/* SOLID CATEGORY HEADER */}
                     <div style={{ 
-                      backgroundColor: 'var(--yellow)', 
-                      color: 'var(--dark-green)', 
+                      backgroundColor: 'var(--color-accent)', 
+                      color: 'var(--color-primary-dark)', 
                       padding: 'clamp(10px, 1.8vh, 16px) clamp(6px, 1vw, 12px)', 
                       borderRadius: '16px', 
                       textAlign: 'center', 
@@ -842,7 +844,7 @@ export const SpinWheelScreen: React.FC = () => {
                       justifyContent: 'center',
                       wordBreak: 'break-word',
                       boxSizing: 'border-box',
-                      border: '2px solid var(--yellow)',
+                      border: '2px solid var(--color-accent)',
                       letterSpacing: '0.5px'
                     }}>
                       {topic}
@@ -864,11 +866,15 @@ export const SpinWheelScreen: React.FC = () => {
                             fontSize: 'clamp(1.4rem, 3.8vw, 3rem)', 
                             fontWeight: 900,
                             letterSpacing: '1px',
-                            backgroundColor: isTileUsed ? 'var(--dark-green)' : 'var(--teal)',
-                            color: isTileUsed ? 'var(--dark-teal)' : 'var(--white)',
+                            backgroundColor: isTileUsed 
+                              ? 'color-mix(in srgb, var(--color-primary-dark) 60%, transparent)' 
+                              : 'var(--color-primary-container)',
+                            color: isTileUsed 
+                              ? 'color-mix(in srgb, var(--color-surface) 35%, transparent)' 
+                              : 'var(--color-accent)',
                             border: isTileUsed 
-                              ? '2px solid var(--dark-teal)' 
-                              : '2px solid var(--light-orange)',
+                              ? '2px solid color-mix(in srgb, var(--color-primary) 30%, transparent)' 
+                              : '2px solid var(--color-primary)',
                             cursor: 'pointer',
                             borderRadius: '16px',
                             display: 'flex',
@@ -880,7 +886,7 @@ export const SpinWheelScreen: React.FC = () => {
                           {isTileUsed && (
                             <CheckCircle2 
                               size={18} 
-                              color="var(--correct-green)" 
+                              color="var(--color-success)" 
                               style={{ position: 'absolute', top: '8px', right: '10px', opacity: 0.85 }} 
                             />
                           )}
@@ -900,7 +906,7 @@ export const SpinWheelScreen: React.FC = () => {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1500px', height: '100%', boxSizing: 'border-box' }}>
             
             <div style={{ margin: '0 clamp(10px, 3vw, 50px)', flexShrink: 0 }}>
-              <p style={{ color: 'var(--light-orange)', fontSize: 'clamp(1rem, 2.2vw, 1.4rem)', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+              <p style={{ color: 'var(--color-secondary)', fontSize: 'clamp(1rem, 2.2vw, 1.4rem)', fontWeight: 'bold', margin: '0 0 8px 0' }}>
                 Topic: {currentQ.topic} | Points: {currentQ.scoreVal}
               </p>
             </div>
@@ -917,20 +923,20 @@ export const SpinWheelScreen: React.FC = () => {
               padding: 'clamp(16px, 3vh, 30px)' 
             }}>
               {currentQ.image && <QuestionImage src={currentQ.image} maxHeight="180px" style={{ marginBottom: '12px' }} />}
-              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.8rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
+              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.8rem)', color: 'var(--color-surface)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 
             <div className="options-grid">
               {currentQ.options.map((opt, i) => {
-                let bgColor = 'var(--dark-teal)';
+                let bgColor = 'var(--color-primary-container)';
                 const isSelected = i === selectedOptIdx;
                 const isRightAnswer = opt === currentQ.answer;
 
                 if (swState === 'FEEDBACK' || (currentQ.used && selectedOptIdx !== -1)) {
                   if (isSelected) {
-                    bgColor = isCorrect ? 'var(--correct-green)' : 'var(--wrong-red)';
+                    bgColor = isCorrect ? 'var(--color-success)' : 'var(--color-danger)';
                   } else if (!isCorrect && isRightAnswer) {
-                    bgColor = 'var(--correct-green)';
+                    bgColor = 'var(--color-success)';
                   }
                 }
 
@@ -941,7 +947,7 @@ export const SpinWheelScreen: React.FC = () => {
                     onClick={() => handleAnswer(i)}
                     style={{ backgroundColor: bgColor }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ color: 'var(--color-accent)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
@@ -954,8 +960,8 @@ export const SpinWheelScreen: React.FC = () => {
                 position: 'fixed', 
                 bottom: 'max(clamp(15px, 3vh, 30px), calc(env(safe-area-inset-bottom, 0px) + 12px))', 
                 right: 'max(clamp(15px, 3vw, 30px), env(safe-area-inset-right, 0px))', 
-                backgroundColor: 'var(--orange)',
-                color: 'var(--white)',
+                backgroundColor: 'var(--color-action)',
+                color: 'var(--color-surface)',
                 zIndex: 20,
                 width: 'auto',
                 fontSize: 'clamp(1rem, 3vw, 1.4rem)',

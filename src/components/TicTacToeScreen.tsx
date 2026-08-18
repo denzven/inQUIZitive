@@ -222,11 +222,11 @@ export const TicTacToeScreen: React.FC = () => {
             textAlign: 'center',
             boxShadow: '0 4px 15px rgba(231, 76, 60, 0.25)'
           }}>
-            <div style={{ color: 'var(--yellow)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <div style={{ color: 'var(--color-accent)', fontSize: 'clamp(0.95rem, 1.8vw, 1.15rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <span>⚠️</span>
               <span>Question Quantity Warning</span>
             </div>
-            <p style={{ color: 'var(--white)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+            <p style={{ color: 'var(--color-surface)', fontSize: 'clamp(0.8rem, 1.6vw, 0.95rem)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
               Only {unusedTttCount} unused TTT question(s) available (9 required). Used questions were excluded to prevent duplicates.
             </p>
           </div>
@@ -244,11 +244,11 @@ export const TicTacToeScreen: React.FC = () => {
           width: '100%', 
           textAlign: 'center' 
         }}>
-          <span style={{ color: 'var(--yellow)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <X size={22} strokeWidth={3} color="var(--yellow)" /> {teamX}
+          <span style={{ color: 'var(--color-accent)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <X size={22} strokeWidth={3} color="var(--color-accent)" /> {teamX}
           </span>
-          <span style={{ color: 'var(--orange)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Circle size={20} strokeWidth={3} color="var(--orange)" /> {teamO}
+          <span style={{ color: 'var(--color-action)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Circle size={20} strokeWidth={3} color="var(--color-action)" /> {teamO}
           </span>
         </div>
 
@@ -256,7 +256,7 @@ export const TicTacToeScreen: React.FC = () => {
         {winner && (
           <div style={{ 
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-            backgroundColor: 'rgba(0,0,0,0.88)', 
+            backgroundColor: 'var(--dark-overlay)', 
             zIndex: 200,
             backdropFilter: 'blur(8px)'
           }}>
@@ -265,9 +265,9 @@ export const TicTacToeScreen: React.FC = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              backgroundColor: 'var(--yellow)', 
-              color: 'var(--dark-green)',
-              border: '4px solid var(--orange)', 
+              backgroundColor: 'var(--color-accent)', 
+              color: 'var(--color-primary-dark)',
+              border: '4px solid var(--color-action)', 
               borderRadius: '32px', 
               width: 'min(90vw, 550px)', 
               padding: '40px 30px', 
@@ -281,18 +281,18 @@ export const TicTacToeScreen: React.FC = () => {
               boxSizing: 'border-box'
             }}>
               <div style={{ 
-                width: '85px', height: '85px', borderRadius: '50%', backgroundColor: 'var(--dark-green)',
+                width: '85px', height: '85px', borderRadius: '50%', backgroundColor: 'var(--color-primary-dark)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px',
                 boxShadow: '0 8px 20px rgba(0,0,0,0.3)'
               }}>
-                <Trophy size={48} color="var(--yellow)" strokeWidth={2} />
+                <Trophy size={48} color="var(--color-accent)" strokeWidth={2} />
               </div>
 
-              <h2 style={{ fontSize: 'clamp(1.3rem, 3.5vw, 2rem)', color: 'var(--dark-green)', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800 }}>
+              <h2 style={{ fontSize: 'clamp(1.3rem, 3.5vw, 2rem)', color: 'var(--color-primary-dark)', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 800 }}>
                 Tiebreaker Champion
               </h2>
 
-              <h1 style={{ fontSize: 'clamp(2.2rem, 5.5vw, 3.8rem)', color: 'var(--orange)', margin: '12px 0 25px 0', fontWeight: 900 }}>
+              <h1 style={{ fontSize: 'clamp(2.2rem, 5.5vw, 3.8rem)', color: 'var(--color-action)', margin: '12px 0 25px 0', fontWeight: 900 }}>
                 {winner === 'X' ? teamX : teamO}
               </h1>
 
@@ -300,13 +300,13 @@ export const TicTacToeScreen: React.FC = () => {
                 <button 
                   onClick={() => setBoard(Array(9).fill(null))} 
                   style={{ 
-                    padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--dark-green)', color: 'var(--white)', borderRadius: '16px',
+                    padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--color-primary-dark)', color: 'var(--color-surface)', borderRadius: '16px',
                     display: 'flex', alignItems: 'center', gap: '8px'
                   }}
                 >
                   <RotateCcw size={20} /> Play Again
                 </button>
-                <button className="menu-btn" onClick={() => { resetTtt(); setGameState('MENU'); }} style={{ flex: 1, backgroundColor: 'var(--orange)' }}>
+                <button className="menu-btn" onClick={() => { resetTtt(); setGameState('MENU'); }} style={{ flex: 1, backgroundColor: 'var(--color-action)' }}>
                   <Home size={24} /> Main Menu
                 </button>
               </div>
@@ -342,14 +342,14 @@ export const TicTacToeScreen: React.FC = () => {
                   aspectRatio: '1',
                   fontSize: 'clamp(2.8rem, min(9vw, 8vh), 5.5rem)',
                   fontWeight: 900,
-                  backgroundColor: tile === 'X' ? 'var(--orange)' : tile === 'O' ? 'var(--yellow)' : 'var(--teal)',
-                  color: tile === 'O' ? 'var(--dark-green)' : 'var(--white)',
+                  backgroundColor: tile === 'X' ? 'var(--color-action)' : tile === 'O' ? 'var(--color-accent)' : 'var(--color-primary)',
+                  color: tile === 'O' ? 'var(--color-primary-dark)' : 'var(--color-surface)',
                   borderRadius: 'clamp(14px, 3.5vw, 24px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                  border: isUsed ? '2px solid transparent' : '2px solid var(--light-orange)',
+                  border: isUsed ? '2px solid transparent' : '2px solid var(--color-secondary)',
                   cursor: 'pointer',
                   padding: 0,
                   transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
@@ -365,7 +365,7 @@ export const TicTacToeScreen: React.FC = () => {
         {activeQuestion && (
           <div style={{ 
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-            backgroundColor: 'rgba(0,0,0,0.85)', 
+            backgroundColor: 'var(--dark-overlay)', 
             zIndex: 100,
             backdropFilter: 'blur(5px)'
           }}>
@@ -374,20 +374,20 @@ export const TicTacToeScreen: React.FC = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              backgroundColor: 'var(--dark-green)', border: '3px solid var(--teal)', borderRadius: '28px', 
+              backgroundColor: 'var(--color-primary-dark)', border: '3px solid var(--color-primary)', borderRadius: '28px', 
               width: 'min(92vw, 850px)', padding: '35px clamp(20px, 4vw, 45px)', textAlign: 'center',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
               zIndex: 110,
               boxSizing: 'border-box'
             }}>
-              <h3 style={{ color: 'var(--light-orange)', fontSize: '1.3rem', marginTop: 0, marginBottom: '10px' }}>
+              <h3 style={{ color: 'var(--color-secondary)', fontSize: '1.3rem', marginTop: 0, marginBottom: '10px' }}>
                 Tile #{selectedIdx! + 1} Question
               </h3>
               
               {activeQuestion.image && <QuestionImage src={activeQuestion.image} maxHeight="180px" />}
 
-              <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', color: 'var(--white)', margin: '10px auto 25px auto', textAlign: 'center', width: '100%', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+              <h2 style={{ fontSize: 'clamp(1.6rem, 3.2vw, 2.4rem)', color: 'var(--color-surface)', margin: '10px auto 25px auto', textAlign: 'center', width: '100%', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {activeQuestion.question}
               </h2>
 
@@ -405,8 +405,8 @@ export const TicTacToeScreen: React.FC = () => {
                     key={i} 
                     className="option-card"
                     style={{ 
-                      backgroundColor: isAnswerRevealed && opt === activeQuestion.answer ? 'var(--correct-green)' : 'var(--dark-teal)',
-                      color: 'var(--white)',
+                      backgroundColor: isAnswerRevealed && opt === activeQuestion.answer ? 'var(--color-success)' : 'var(--color-primary-container)',
+                      color: 'var(--color-surface)',
                       fontSize: '1.3rem',
                       padding: '14px 18px',
                       display: 'flex',
@@ -414,7 +414,7 @@ export const TicTacToeScreen: React.FC = () => {
                       textAlign: 'left'
                     }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '15px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ color: 'var(--color-accent)', marginRight: '15px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
                     <span style={{ wordBreak: 'break-word' }}>{opt}</span>
                   </div>
                 ))}
@@ -423,7 +423,7 @@ export const TicTacToeScreen: React.FC = () => {
               {!isAnswerRevealed ? (
                 <button 
                   onClick={() => setIsAnswerRevealed(true)}
-                  style={{ padding: '14px 40px', fontSize: '1.4rem', backgroundColor: 'var(--yellow)', color: 'var(--dark-green)' }}
+                  style={{ padding: '14px 40px', fontSize: '1.4rem', backgroundColor: 'var(--color-accent)', color: 'var(--color-primary-dark)' }}
                 >
                   Reveal Answer
                 </button>
@@ -431,19 +431,19 @@ export const TicTacToeScreen: React.FC = () => {
                 <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button 
                     onClick={() => handleAssignTile('X')} 
-                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--orange)' }}
+                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--color-action)' }}
                   >
                     Assign to {teamX} (X)
                   </button>
                   <button 
                     onClick={() => handleAssignTile('O')} 
-                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--yellow)', color: 'var(--dark-green)' }}
+                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--color-accent)', color: 'var(--color-primary-dark)' }}
                   >
                     Assign to {teamO} (O)
                   </button>
                   <button 
                     onClick={() => handleAssignTile(null)} 
-                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--dark-teal)' }}
+                    style={{ padding: '14px 28px', fontSize: '1.2rem', backgroundColor: 'var(--color-primary-container)' }}
                   >
                     Unanswered / Pass
                   </button>

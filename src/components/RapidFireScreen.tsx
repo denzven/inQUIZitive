@@ -424,21 +424,21 @@ export const RapidFireScreen: React.FC = () => {
             </div>
 
             <div className="card" style={{ flex: '1 1 0px', margin: 'clamp(8px, 1.5vh, 18px) clamp(10px, 3vw, 50px)', minHeight: 'clamp(100px, 16vh, 220px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: 'clamp(16px, 2.5vh, 30px)' }}>
-              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--light-orange)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ position: 'absolute', top: '12px', left: '20px', color: 'var(--color-secondary)', fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>Question {currentIdx + 1} / {rfQuestions.length}</span>
                 {passedQuestions[currentIdx] && (
-                  <span style={{ backgroundColor: 'var(--orange)', color: 'var(--white)', padding: '2px 10px', borderRadius: '10px', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
+                  <span style={{ backgroundColor: 'var(--color-action)', color: 'var(--color-surface)', padding: '2px 10px', borderRadius: '10px', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                     PASSED - REVISIT
                   </span>
                 )}
               </div>
               {currentQ.image && <QuestionImage src={currentQ.image} maxHeight="160px" style={{ marginTop: '24px' }} />}
-              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
+              <h2 style={{ fontSize: 'clamp(1.4rem, 3.2vw, 2.6rem)', color: 'var(--color-surface)', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>{currentQ.question}</h2>
             </div>
 
             <div className="options-grid">
               {currentQ.options.map((opt, i) => {
-                let bgColor = 'var(--dark-teal)';
+                let bgColor = 'var(--color-primary-container)';
                 const isCurrentRevealed = !!revealedQuestions[currentIdx];
                 const currentSelectedOptIdx = userAnswers[currentIdx] ?? -1;
                 const isSelected = i === currentSelectedOptIdx;
@@ -446,9 +446,9 @@ export const RapidFireScreen: React.FC = () => {
 
                 if (isCurrentRevealed || (rfState === 'FEEDBACK' && currentSelectedOptIdx !== -1)) {
                   if (isSelected) {
-                    bgColor = isRightAnswer ? 'var(--correct-green)' : 'var(--wrong-red)';
+                    bgColor = isRightAnswer ? 'var(--color-success)' : 'var(--color-danger)';
                   } else if (isRightAnswer) {
-                    bgColor = 'var(--correct-green)';
+                    bgColor = 'var(--color-success)';
                   }
                 }
 
@@ -468,9 +468,9 @@ export const RapidFireScreen: React.FC = () => {
                       }
                     }}
                     title={`Option ${optLetter} (Shortcut: ${i + 1})`}
-                    style={{ backgroundColor: bgColor, cursor: 'pointer' }}
+                    style={{ backgroundColor: bgColor, color: 'var(--color-surface)', cursor: 'pointer' }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{optLetter}</span>
+                    <span style={{ color: 'var(--color-accent)', marginRight: '20px', flexShrink: 0 }}>{optLetter}</span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );
@@ -486,7 +486,7 @@ export const RapidFireScreen: React.FC = () => {
                 style={{ 
                   padding: 'clamp(8px, 1.4vh, 12px) clamp(14px, 2.5vw, 28px)', 
                   fontSize: 'clamp(0.95rem, 2vw, 1.4rem)', 
-                  backgroundColor: 'var(--dark-teal)',
+                  backgroundColor: 'var(--color-primary-container)',
                   opacity: currentIdx === 0 ? 0.5 : 1,
                   cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
                   borderRadius: '14px'
@@ -502,12 +502,12 @@ export const RapidFireScreen: React.FC = () => {
                 style={{ 
                   padding: 'clamp(10px, 1.6vh, 14px) clamp(18px, 3vw, 36px)', 
                   fontSize: 'clamp(1rem, 2.2vw, 1.5rem)', 
-                  backgroundColor: 'var(--yellow)',
-                  color: 'var(--dark-green)',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--color-primary-dark)',
                   borderRadius: '14px'
                 }}
               >
-                <Eye style={{ width: 'clamp(20px, 2.4vw, 26px)', height: 'clamp(20px, 2.4vw, 26px)', verticalAlign: 'middle', marginRight: '8px' }} />
+                <Eye style={{ width: 'clamp(20px, 2.4vw, 26px)', height: 'clamp(20px, 2.4vw, 26px)', verticalAlign: 'middle', marginRight: '8px' }} color="var(--color-primary-dark)" />
                 {revealedQuestions[currentIdx] || rfState === 'FEEDBACK' ? 'Answer Revealed' : 'Reveal Answer'}
               </button>
 

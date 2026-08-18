@@ -56,6 +56,17 @@ function createLiveStudioReverbBuffer(ctx: BaseAudioContext, duration = 1.0, dec
 }
 
 /**
+ * Returns the currently active theme preset ID safely from document data-theme-id.
+ */
+export function getActiveThemeId(): string {
+  if (typeof document !== 'undefined') {
+    const themeId = document.documentElement.getAttribute('data-theme-id');
+    if (themeId) return themeId;
+  }
+  return 'classicTheme';
+}
+
+/**
  * Returns the Master GainNode connected through a studio bass boost (+4.5dB Low-Shelf EQ),
  * spatial Convolver Reverb bus, and broadcast limiter to audio destination.
  */
@@ -511,7 +522,7 @@ export function playBuzzerLockout(ignoreDisabled = false): void {
 }
 
 /**
- * Synthesizes victorious C-major arpeggiated correct answer fanfare sound effect.
+ * Synthesizes victorious C-major arpeggiated correct answer fanfare sound effect (Theme-Adaptive).
  *
  * @param ignoreDisabled - If true, plays sound even if disabled.
  */
@@ -523,8 +534,104 @@ export function playCorrectFanfare(ignoreDisabled = false): void {
   if (!ctx || !master || currentIsMuted || currentVolume === 0) return;
 
   const now = ctx.currentTime;
+  const themeId = getActiveThemeId();
 
-  // Ascending C Major 5-tone chord arpeggio: C4 -> E4 -> G4 -> C5 -> E5
+  // Minecraft (blockBuilder): Authentic Minecraft XP Level Up Chime (Ascending 8-Bit Chiptune Square Waves)
+  if (themeId === 'blockBuilder') {
+    const xpNotes = [659.25, 830.61, 987.77, 1318.51, 1661.22, 1975.53]; // E5, G#5, B5, E6, G#6, B6
+    const step = 0.045;
+    xpNotes.forEach((freq, i) => {
+      const startTime = now + i * step;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.22, startTime + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.12);
+
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(startTime);
+      osc.stop(startTime + 0.14);
+    });
+    return;
+  }
+
+  // Cyber Terminal (cyberTerminal): Cyberpunk Resonant System Override Success Chime
+  if (themeId === 'cyberTerminal') {
+    const cyberNotes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+    cyberNotes.forEach((freq, i) => {
+      const startTime = now + i * 0.05;
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3200, startTime);
+      filter.Q.setValueAtTime(4.5, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.16, startTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.35);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      osc.start(startTime);
+      osc.stop(startTime + 0.38);
+    });
+    return;
+  }
+
+  // Wild West Wanted (wildWestWanted): Saloon Guitar Strum C-Major Chord
+  if (themeId === 'wildWestWanted') {
+    const westNotes = [261.63, 329.63, 392.00, 523.25, 659.25];
+    westNotes.forEach((freq, i) => {
+      const startTime = now + i * 0.035;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.24, startTime + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.52);
+
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(startTime);
+      osc.stop(startTime + 0.55);
+    });
+    return;
+  }
+
+  // Wizarding Scroll (wizardingScroll): Magical Wand Sparkle Fanfare
+  if (themeId === 'wizardingScroll') {
+    const magicNotes = [880.0, 1108.73, 1318.51, 1760.0, 2217.46];
+    magicNotes.forEach((freq, i) => {
+      const startTime = now + i * 0.05;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.18, startTime + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.45);
+
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(startTime);
+      osc.stop(startTime + 0.48);
+    });
+    return;
+  }
+
+  // Default: Ascending C Major 5-tone chord arpeggio
   const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
   const stepDelay = 0.07;
 
@@ -549,7 +656,7 @@ export function playCorrectFanfare(ignoreDisabled = false): void {
 }
 
 /**
- * Synthesizes wrong answer error buzz sound effect (dissonant minor 2nd double-buzz).
+ * Synthesizes wrong answer error buzz sound effect (Theme-Adaptive).
  *
  * @param ignoreDisabled - If true, plays sound even if disabled.
  */
@@ -561,7 +668,50 @@ export function playWrongBuzz(ignoreDisabled = false): void {
   if (!ctx || !master || currentIsMuted || currentVolume === 0) return;
 
   const now = ctx.currentTime;
+  const themeId = getActiveThemeId();
 
+  // Minecraft (blockBuilder): Minecraft Damage / Anvil Thud Impact Sound
+  if (themeId === 'blockBuilder') {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 0.18);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.38, now + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(now);
+    osc.stop(now + 0.22);
+    return;
+  }
+
+  // Cyber Terminal (cyberTerminal): Digital Glitch Alarm
+  if (themeId === 'cyberTerminal') {
+    [0, 0.08].forEach((offset) => {
+      const t = now + offset;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.linearRampToValueAtTime(80, t + 0.06);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(0.26, t + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(t);
+      osc.stop(t + 0.08);
+    });
+    return;
+  }
+
+  // Default: Dissonant minor 2nd double-buzz
   const playBurst = (offset: number) => {
     const burstStart = now + offset;
     const osc1 = ctx.createOscillator();
@@ -573,7 +723,7 @@ export function playWrongBuzz(ignoreDisabled = false): void {
     osc1.frequency.setValueAtTime(175, burstStart);
 
     osc2.type = 'sawtooth';
-    osc2.frequency.setValueAtTime(185, burstStart); // Minor 2nd dissonance
+    osc2.frequency.setValueAtTime(185, burstStart);
 
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(1200, burstStart);
@@ -659,6 +809,83 @@ export function playButtonClick(ignoreDisabled = false): void {
   if (playPreloadedBuffer('buttonClick')) return;
 
   const now = ctx.currentTime;
+  const themeId = getActiveThemeId();
+
+  // Minecraft (blockBuilder): Wood / Stone Block Placement Click
+  if (themeId === 'blockBuilder') {
+    const tapOsc = ctx.createOscillator();
+    const tapGain = ctx.createGain();
+    tapOsc.type = 'square';
+    tapOsc.frequency.setValueAtTime(320, now);
+    tapOsc.frequency.exponentialRampToValueAtTime(110, now + 0.025);
+
+    tapGain.gain.setValueAtTime(0.0001, now);
+    tapGain.gain.linearRampToValueAtTime(0.45, now + 0.002);
+    tapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.028);
+
+    tapOsc.connect(tapGain);
+    tapGain.connect(master);
+    tapOsc.start(now);
+    tapOsc.stop(now + 0.03);
+    return;
+  }
+
+  // Cyber Terminal (cyberTerminal): High-Tech Sci-Fi Key Click
+  if (themeId === 'cyberTerminal') {
+    const cyberOsc = ctx.createOscillator();
+    const cyberGain = ctx.createGain();
+    cyberOsc.type = 'sine';
+    cyberOsc.frequency.setValueAtTime(2400, now);
+    cyberOsc.frequency.exponentialRampToValueAtTime(1200, now + 0.015);
+
+    cyberGain.gain.setValueAtTime(0.0001, now);
+    cyberGain.gain.linearRampToValueAtTime(0.35, now + 0.001);
+    cyberGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.016);
+
+    cyberOsc.connect(cyberGain);
+    cyberGain.connect(master);
+    cyberOsc.start(now);
+    cyberOsc.stop(now + 0.02);
+    return;
+  }
+
+  // Wild West Wanted (wildWestWanted): Wooden Saloon Knock / Hammer Latch
+  if (themeId === 'wildWestWanted') {
+    const westOsc = ctx.createOscillator();
+    const westGain = ctx.createGain();
+    westOsc.type = 'triangle';
+    westOsc.frequency.setValueAtTime(220, now);
+    westOsc.frequency.exponentialRampToValueAtTime(80, now + 0.04);
+
+    westGain.gain.setValueAtTime(0.0001, now);
+    westGain.gain.linearRampToValueAtTime(0.5, now + 0.003);
+    westGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.042);
+
+    westOsc.connect(westGain);
+    westGain.connect(master);
+    westOsc.start(now);
+    westOsc.stop(now + 0.045);
+    return;
+  }
+
+  // Wizarding Scroll (wizardingScroll): Magic Wand Sparkle Pop
+  if (themeId === 'wizardingScroll') {
+    const wandOsc = ctx.createOscillator();
+    const wandGain = ctx.createGain();
+    wandOsc.type = 'sine';
+    wandOsc.frequency.setValueAtTime(1800, now);
+    wandOsc.frequency.exponentialRampToValueAtTime(3200, now + 0.02);
+
+    wandGain.gain.setValueAtTime(0.0001, now);
+    wandGain.gain.linearRampToValueAtTime(0.3, now + 0.002);
+    wandGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+
+    wandOsc.connect(wandGain);
+    wandGain.connect(master);
+    wandOsc.start(now);
+    wandOsc.stop(now + 0.03);
+    return;
+  }
 
   // Layer 1: Tactile Contact Snap
   const clickOsc = ctx.createOscillator();

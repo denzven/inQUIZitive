@@ -82,8 +82,8 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
           maxWidth: '820px',
           width: '95%',
           maxHeight: '90vh',
-          backgroundColor: 'var(--dark-green)',
-          border: '2px solid var(--teal)',
+          backgroundColor: 'var(--color-primary-container)',
+          border: '2px solid var(--color-primary)',
           borderRadius: '24px',
           padding: '24px',
           display: 'flex',
@@ -112,8 +112,8 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
             aspectRatio: '1 / 1',
             boxSizing: 'border-box',
             backgroundColor: 'rgba(255, 255, 255, 0.15)',
-            border: '1px solid var(--teal)',
-            color: 'var(--white)',
+            border: '1px solid var(--color-primary)',
+            color: 'var(--color-surface)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -136,21 +136,21 @@ export const SpreadsheetAuditModal: React.FC<SpreadsheetAuditModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: `1.5px solid ${errorCount > 0 ? 'var(--wrong-red)' : (warningCount > 0 ? 'var(--light-orange)' : 'var(--teal)')}`
+            border: `1.5px solid ${errorCount > 0 ? 'var(--color-danger)' : (warningCount > 0 ? 'var(--color-secondary)' : 'var(--color-primary)')}`
           }}>
             {errorCount > 0 ? (
-              <AlertOctagon size={28} color="var(--wrong-red)" />
+              <AlertOctagon size={28} color="var(--color-danger)" />
             ) : warningCount > 0 ? (
-              <AlertTriangle size={28} color="var(--yellow)" />
+              <AlertTriangle size={28} color="var(--color-accent)" />
             ) : (
-              <FileCheck size={28} color="var(--correct-green)" />
+              <FileCheck size={28} color="var(--color-success)" />
             )}
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.6rem', color: 'var(--yellow)' }}>
+            <h2 style={{ margin: 0, fontSize: '1.6rem', color: 'var(--color-surface)' }}>
               Spreadsheet Pre-Flight Audit
             </h2>
-            <p style={{ margin: '2px 0 0', fontSize: '0.88rem', color: 'var(--white)', opacity: 0.85 }}>
+            <p style={{ margin: '2px 0 0', fontSize: '0.88rem', color: 'var(--color-secondary)' }}>
               Automatically audited {totalRows} spreadsheet rows for fatal errors, embedded images & scores.
             </p>
           </div>

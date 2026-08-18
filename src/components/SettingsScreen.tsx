@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { useQuizStore, PRESET_THEMES } from '../store/useQuizStore';
+import { useQuizStore } from '../store/useQuizStore';
+import { PRESET_THEMES } from '../config/themes';
 import { fetchExcelData, exportProgressToExcel, auditExcelData, type AuditResult } from '../utils/excelParser';
 import { isNoShuffle } from '../utils/random';
 import { UploadCloud, RotateCcw, RefreshCw, FileSpreadsheet, Download, Sliders, Palette, Shuffle, Edit3, Volume2, VolumeX, Bell, AlertOctagon, CheckCircle2, XCircle, Clock, Play, Square, Sparkles, MousePointerClick, Music, RotateCw } from 'lucide-react';
@@ -12,6 +13,7 @@ import { useAudioStore, type SfxKey } from '../store/useAudioStore';
 import { playTickTock, playTileChime, playBuzzerLockout, playCorrectFanfare, playWrongBuzz, playButtonClick, playBubblePopSequence, playWheelTick, stopWheelTick } from '../utils/soundEffects';
 import { startBgmForKey, stopBgm, isBgmPlaying } from '../utils/bgmSynthesizer';
 import { playCustomSoundbite, stopCustomSoundbite } from '../utils/customAudioPlayer';
+import { loadGoogleFont } from '../utils/fontLoader';
 
 /**
  * SettingsScreen Component.
@@ -466,8 +468,8 @@ export const SettingsScreen: React.FC = () => {
                   width: '100%', 
                   borderRadius: '10px', 
                   overflow: 'hidden',
-                  border: `2px solid ${isNoShuffle(seed) ? 'var(--orange)' : 'var(--teal)'}`,
-                  backgroundColor: 'var(--white)',
+                  border: `2px solid ${isNoShuffle(seed) ? 'var(--color-action)' : 'var(--color-primary)'}`,
+                  backgroundColor: 'var(--color-primary-container)',
                   boxSizing: 'border-box'
                 }}>
                   <input 
@@ -481,7 +483,7 @@ export const SettingsScreen: React.FC = () => {
                       padding: '10px 14px', 
                       fontSize: '1rem', 
                       backgroundColor: 'transparent',
-                      color: 'var(--dark-green)',
+                      color: 'var(--color-surface)',
                       fontFamily: 'inherit',
                       fontWeight: 'bold',
                       minWidth: 0
@@ -490,35 +492,14 @@ export const SettingsScreen: React.FC = () => {
                   />
                   <button 
                     type="button"
-                    onClick={() => setSeed(isNoShuffle(seed) ? '12342026' : 'NOSHUFFLE')}
-                    title={isNoShuffle(seed) ? "Switch to Random Seed" : "Disable Option & Question Shuffling (NOSHUFFLE)"}
-                    style={{ 
-                      padding: '0 12px',
-                      backgroundColor: isNoShuffle(seed) ? 'var(--orange)' : 'var(--dark-teal)', 
-                      color: 'var(--white)',
-                      border: 'none',
-                      borderLeft: '2px solid var(--teal)',
-                      cursor: 'pointer',
-                      fontSize: '0.82rem',
-                      fontWeight: 'bold',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    {isNoShuffle(seed) ? 'NOSHUFFLE (ACTIVE)' : 'DISABLE SHUFFLE'}
-                  </button>
-                  <button 
-                    type="button"
                     onClick={handleRandomizeSeed}
                     title="Generate New Random Seed"
                     style={{ 
                       padding: '0 16px',
-                      backgroundColor: 'var(--yellow)', 
-                      color: 'var(--dark-green)',
+                      backgroundColor: 'var(--color-accent)', 
+                      color: 'var(--color-primary-dark)',
                       border: 'none',
-                      borderLeft: '2px solid var(--teal)',
+                      borderLeft: '2px solid var(--color-primary)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -526,8 +507,6 @@ export const SettingsScreen: React.FC = () => {
                       transition: 'all 0.15s ease',
                       flexShrink: 0
                     }}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--light-orange)'}
-                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--yellow)'}
                   >
                     <Shuffle size={20} strokeWidth={2.5} />
                   </button>
@@ -792,54 +771,160 @@ export const SettingsScreen: React.FC = () => {
                 </button>
               </div>
 
-              {/* Color Picker Swatches Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', textAlign: 'center', padding: '10px 0' }}>
-                <ColorPickerDot label="Canvas (Dark)" colorKey="primaryDark" />
-                <ColorPickerDot label="Primary Teal" colorKey="primary" />
-                <ColorPickerDot label="Container Teal" colorKey="primaryContainer" />
-                <ColorPickerDot label="Accent Gold" colorKey="accent" />
-                <ColorPickerDot label="Secondary Soft" colorKey="secondary" />
-                <ColorPickerDot label="Action Coral" colorKey="action" />
+              {/* Color Swatch Dots */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                <ColorPickerDot label="Canvas Base" colorKey="primaryDark" />
+                <ColorPickerDot label="Primary Fill" colorKey="primary" />
+                <ColorPickerDot label="Card Container" colorKey="primaryContainer" />
+                <ColorPickerDot label="Highlight Accent" colorKey="accent" />
+                <ColorPickerDot label="Secondary Subtext" colorKey="secondary" />
+                <ColorPickerDot label="Action Fill" colorKey="action" />
                 <ColorPickerDot label="Surface Text" colorKey="surface" />
-                <ColorPickerDot label="Success Green" colorKey="success" />
-                <ColorPickerDot label="Danger Red" colorKey="danger" />
+                <ColorPickerDot label="Success Feedback" colorKey="success" />
+                <ColorPickerDot label="Danger Feedback" colorKey="danger" />
               </div>
 
-              {/* Preset Palettes */}
-              <div style={{ marginTop: '12px', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--light-orange)', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
-                  Professional Theme Presets
+              {/* Categorized Theme Presets with Live Font & Design Token Previews */}
+              <div style={{ marginTop: '16px', borderTop: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)', paddingTop: '14px' }}>
+                <div style={{ fontSize: '0.95rem', color: 'var(--color-surface)', fontWeight: 800, marginBottom: '12px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <Sparkles size={18} color="var(--color-accent)" />
+                  <span>Design System Theme Presets</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {Object.values(PRESET_THEMES).map((preset) => (
-                    <button 
-                      key={preset.id}
-                      onClick={() => setTheme(preset.colors)}
-                      title={preset.description}
-                      style={{ 
-                        padding: '8px 10px', 
-                        fontSize: '0.8rem', 
-                        borderRadius: '10px', 
-                        backgroundColor: preset.colors.primaryDark, 
-                        color: preset.colors.accent, 
-                        border: `2px solid ${preset.colors.primary}`, 
-                        cursor: 'pointer', 
-                        fontWeight: 'bold',
-                        textAlign: 'left',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '2px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      <span style={{ fontSize: '0.85rem' }}>{preset.name}</span>
-                      <div style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.primaryDark, border: '1px solid #fff' }} />
-                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.primary, border: '1px solid #fff' }} />
-                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.accent, border: '1px solid #fff' }} />
-                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: preset.colors.action, border: '1px solid #fff' }} />
+
+                <div style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[
+                    {
+                      title: '✨ Signature Competition',
+                      subtitle: 'Default quiz show stage aesthetic',
+                      ids: ['ariseClassic']
+                    },
+                    {
+                      title: '🎮 Pop Culture & Gaming',
+                      subtitle: 'Superhero comics, voxel blocks, wizarding scrolls & Y2K plastic',
+                      ids: ['arachnidHero', 'blockBuilder', 'wizardingScroll', 'y2kPlastic']
+                    },
+                    {
+                      title: '♟️ Specialty & Strategy',
+                      subtitle: 'Hazardous labs, watchmaker chronos, tabletop brass, grandmaster chess & night metropolis',
+                      ids: ['neonCatalyst', 'titaniumChronograph', 'mysticArtificer', 'grandmasterChess', 'midnightMetropolis']
+                    },
+                    {
+                      title: '💥 Quirky & Highly Stylized Themes',
+                      subtitle: 'Custom fonts, halftone textures & retro geometry',
+                      ids: ['popArtComic', 'retroArcade', 'bubblegumPop', 'chalkboardScholar', 'wildWestWanted']
+                    },
+                    {
+                      title: '☀️ Radiant Light Modes',
+                      subtitle: 'High contrast light canvas presets',
+                      ids: ['alabasterMinimal', 'sunshineRadiance', 'sakuraBlossom', 'mintBreeze', 'ivoryAndRose', 'matchaLatte']
+                    },
+                    {
+                      title: '🔮 Synthwave, Cyber & Digital Voids',
+                      subtitle: 'Matrix greens, neon outrun & cyber grids',
+                      ids: ['cyberTerminal', 'vaporwaveHorizon', 'cosmicNebula', 'neonSunset', 'tacticalLazer', 'tokyoPastel']
+                    },
+                    {
+                      title: '🌲 Nature, Earth & Dark Metals',
+                      subtitle: 'Deep botanicals, OLED black & ocean trenches',
+                      ids: ['emeraldPrestige', 'autumnHarvest', 'obsidianRuby', 'midnightGold', 'monochromeOnyx', 'analogResin', 'nordicDusk', 'royalSapphire', 'abyssalTrench', 'coralReef']
+                    }
+                  ].map((category, catIdx) => (
+                    <div key={catIdx}>
+                      <div style={{ marginBottom: '8px', borderBottom: '1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)', paddingBottom: '4px' }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-accent)' }}>
+                          {category.title}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--color-secondary)' }}>
+                          {category.subtitle}
+                        </div>
                       </div>
-                    </button>
+
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', 
+                        gap: '10px' 
+                      }}>
+                        {category.ids.map(id => {
+                          const preset = PRESET_THEMES[id];
+                          if (!preset) return null;
+
+                          // Load Google Fonts into DOM for live typography preview in settings cards
+                          if (preset.typography?.headingFont) loadGoogleFont(preset.typography.headingFont);
+                          if (preset.typography?.bodyFont) loadGoogleFont(preset.typography.bodyFont);
+
+                          const isSelected = (theme.primaryDark || theme.darkGreen) === preset.colors.primaryDark &&
+                                             (theme.primary || theme.teal) === preset.colors.primary;
+
+                          return (
+                            <button 
+                              key={preset.id}
+                              className="preset-theme-card"
+                              onClick={() => setTheme(preset.colors)}
+                              title={preset.description}
+                              style={{ 
+                                padding: '10px 12px', 
+                                fontSize: '0.82rem', 
+                                borderRadius: preset.geometry?.radiusSm || '12px', 
+                                backgroundColor: preset.colors.primaryDark, 
+                                color: preset.colors.surface, 
+                                border: isSelected 
+                                  ? '3px solid var(--color-accent)' 
+                                  : `${preset.geometry?.borderWidth || '2px'} solid color-mix(in srgb, ${preset.colors.primary} 60%, transparent)`, 
+                                cursor: 'pointer', 
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                                boxShadow: isSelected 
+                                  ? '0 0 14px color-mix(in srgb, var(--color-accent) 70%, transparent)' 
+                                  : (preset.effects?.buttonShadow || '0 3px 8px rgba(0,0,0,0.3)'),
+                                transform: isSelected ? 'scale(1.02)' : 'none',
+                                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                position: 'relative',
+                                backgroundImage: preset.effects?.bgTexture !== 'none' ? preset.effects?.bgTexture : undefined
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '6px' }}>
+                                <span style={{ 
+                                  fontSize: '0.88rem', 
+                                  fontWeight: 900, 
+                                  fontFamily: preset.typography?.headingFont || 'inherit', 
+                                  color: isSelected ? 'var(--color-accent)' : preset.colors.surface,
+                                  lineHeight: 1.15
+                                }}>
+                                  {preset.name}
+                                </span>
+                                {isSelected && (
+                                  <CheckCircle2 size={16} color="var(--color-accent)" style={{ flexShrink: 0 }} />
+                                )}
+                              </div>
+
+                              <span style={{ 
+                                fontSize: '0.72rem', 
+                                fontFamily: preset.typography?.bodyFont || 'inherit', 
+                                color: `color-mix(in srgb, ${preset.colors.surface} 80%, transparent)`, 
+                                lineHeight: 1.25, 
+                                display: '-webkit-box', 
+                                WebkitLineClamp: 2, 
+                                WebkitBoxOrient: 'vertical', 
+                                overflow: 'hidden' 
+                              }}>
+                                {preset.description}
+                              </span>
+
+                              {/* Color Swatch Strip */}
+                              <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'center' }}>
+                                <span title={`Canvas: ${preset.colors.primaryDark}`} style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: preset.colors.primaryDark, border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
+                                <span title={`Container: ${preset.colors.primaryContainer}`} style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: preset.colors.primaryContainer, border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
+                                <span title={`Primary: ${preset.colors.primary}`} style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: preset.colors.primary, border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
+                                <span title={`Accent: ${preset.colors.accent}`} style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: preset.colors.accent, border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
+                                <span title={`Action: ${preset.colors.action}`} style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: preset.colors.action, border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }} />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -850,9 +935,9 @@ export const SettingsScreen: React.FC = () => {
           {/* RIGHT COLUMN: Dataset Manager */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div className="card" style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--yellow)' }}>
-                <FileSpreadsheet size={24} />
-                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Dataset Manager</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-surface)' }}>
+                <FileSpreadsheet size={24} color="var(--color-surface)" />
+                <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--color-surface)' }}>Dataset Manager</h2>
               </div>
 
               {/* Status Counters */}
@@ -860,26 +945,26 @@ export const SettingsScreen: React.FC = () => {
                 backgroundColor: 'rgba(0,0,0,0.25)', 
                 padding: '12px 15px', 
                 borderRadius: '12px', 
-                border: '1px solid var(--teal)' 
+                border: '1px solid var(--color-primary)' 
               }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center', marginBottom: '10px' }}>
-                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--light-orange)' }}>Total</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{totalQuestions}</div>
+                  <div style={{ backgroundColor: 'var(--color-primary-dark)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)' }}>Total</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-surface)' }}>{totalQuestions}</div>
                   </div>
-                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--correct-green)' }}>Available</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{unusedQuestions}</div>
+                  <div style={{ backgroundColor: 'var(--color-primary-dark)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-success)' }}>Available</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-success)' }}>{unusedQuestions}</div>
                   </div>
-                  <div style={{ backgroundColor: 'var(--dark-green)', padding: '8px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--wrong-red)' }}>Used</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{usedQuestions}</div>
+                  <div style={{ backgroundColor: 'var(--color-primary-dark)', padding: '8px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>Used</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-danger)' }}>{usedQuestions}</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
                   {Object.entries(roundCounts).map(([code, count]) => (
-                    <span key={code} style={{ backgroundColor: 'var(--teal)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                    <span key={code} style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-surface)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
                       {code}: {count} Qs
                     </span>
                   ))}
@@ -892,8 +977,8 @@ export const SettingsScreen: React.FC = () => {
                 style={{
                   width: '100%',
                   padding: '12px 16px',
-                  backgroundColor: 'var(--yellow)',
-                  color: 'var(--dark-green)',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--color-primary-dark)',
                   borderRadius: '12px',
                   border: 'none',
                   fontWeight: 900,
@@ -906,7 +991,7 @@ export const SettingsScreen: React.FC = () => {
                   boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
                 }}
               >
-                <Edit3 size={20} />
+                <Edit3 size={20} color="var(--color-primary-dark)" />
                 {showQuestionEditor ? 'Close Question Bank Editor' : 'Open Question Bank Editor (Password Protected)'}
               </button>
 
