@@ -139,6 +139,7 @@ jobs:
           name: inQUIZitive-desktop-${{ matrix.name }}
           path: |
             dist/desktop/*.exe
+            dist/desktop/*.msi
             dist/desktop/*.AppImage
             dist/desktop/*.dmg
             dist/desktop/*.deb
@@ -147,3 +148,56 @@ jobs:
             dist/desktop/*.tar.gz
             dist/desktop/*.zip
           if-no-files-found: ignore
+
+  bundle-all-artifacts:
+    name: Package All Formats into 1 Master Zip
+    needs: [build-web-bundle, build-android, build-desktop]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: master-dist
+
+      - name: Organize master distribution folder
+        run: |
+          mkdir -p inQUIZitive-all-platforms/windows
+          mkdir -p inQUIZitive-all-platforms/macos
+          mkdir -p inQUIZitive-all-platforms/linux
+          mkdir -p inQUIZitive-all-platforms/android
+          mkdir -p inQUIZitive-all-platforms/web
+
+          if [ -d "master-dist/inQUIZitive-desktop-windows" ]; then
+            cp -r master-dist/inQUIZitive-desktop-windows/* inQUIZitive-all-platforms/windows/ 2>/dev/null || true
+          fi
+
+          if [ -d "master-dist/inQUIZitive-desktop-macos" ]; then
+            cp -r master-dist/inQUIZitive-desktop-macos/* inQUIZitive-all-platforms/macos/ 2>/dev/null || true
+          fi
+
+          if [ -d "master-dist/inQUIZitive-desktop-linux" ]; then
+            cp -r master-dist/inQUIZitive-desktop-linux/* inQUIZitive-all-platforms/linux/ 2>/dev/null || true
+          fi
+
+          if [ -d "master-dist/inQUIZitive-android-debug-apk" ]; then
+            cp -r master-dist/inQUIZitive-android-debug-apk/* inQUIZitive-all-platforms/android/ 2>/dev/null || true
+          fi
+          if [ -d "master-dist/inQUIZitive-android-release-unsigned-apk" ]; then
+            cp -r master-dist/inQUIZitive-android-release-unsigned-apk/* inQUIZitive-all-platforms/android/ 2>/dev/null || true
+          fi
+          if [ -d "master-dist/inQUIZitive-android-release-aab" ]; then
+            cp -r master-dist/inQUIZitive-android-release-aab/* inQUIZitive-all-platforms/android/ 2>/dev/null || true
+          fi
+
+          if [ -d "master-dist/inQUIZitive-web-static-zip" ]; then
+            cp -r master-dist/inQUIZitive-web-static-zip/* inQUIZitive-all-platforms/web/ 2>/dev/null || true
+          fi
+
+          zip -r inQUIZitive-all-platforms-bundle.zip inQUIZitive-all-platforms
+
+      - name: Upload Master Single Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inQUIZitive-all-platforms-bundle
+          path: inQUIZitive-all-platforms-bundle.zip

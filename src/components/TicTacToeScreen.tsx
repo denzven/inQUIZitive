@@ -24,9 +24,10 @@ export const TicTacToeScreen: React.FC = () => {
 
   /** Prepares 9 questions allocated for the 3x3 Tic-Tac-Toe grid */
   const tttQuestions = useMemo(() => {
-    const available = questions.filter(q => q.roundCode === 'TTT' && !q.used);
-    const shuffled = seededShuffle(available, `${seed}_ttt`);
-    // Fill up to 9 with dummy if needed
+    const matchTtt = questions.filter(q => q.roundCode?.toUpperCase() === 'TTT' && !q.used);
+    const otherUnused = questions.filter(q => q.roundCode?.toUpperCase() !== 'TTT' && !q.used);
+    const availablePool = [...matchTtt, ...otherUnused];
+    const shuffled = seededShuffle(availablePool, `${seed}_ttt`);
     const list = [...shuffled];
     let i = 1;
     while (list.length < 9) {

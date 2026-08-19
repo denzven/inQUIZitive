@@ -1,6 +1,8 @@
 import { getAudioContext, getMasterGain, isSfxDisabled, onAudioUnlocked, getActiveThemeId } from './soundEffects';
 import { playCustomSoundbite, playMp3Url, stopAllCustomBgms } from './customAudioPlayer';
 import type { SfxKey } from '../store/useAudioStore';
+import { findMatchingPreset } from '../config/themes';
+import { useQuizStore } from '../store/useQuizStore';
 
 let isBgmRunning = false;
 let bgmTimer: number | null = null;
@@ -115,10 +117,18 @@ export function playScreenBgm(
 
   currentActiveScreenBgmKey = targetKey;
 
+  // 1. Check active theme preset audioProfile BGM path first
+  const activePreset = findMatchingPreset(useQuizStore.getState().theme);
+  if (activePreset?.audioProfile?.themeBgmPath) {
+    if (playMp3Url(targetKey, activePreset.audioProfile.themeBgmPath, ignore, preview)) {
+      return;
+    }
+  }
+
   const currentThemeId = getActiveThemeId();
   const themeMp3Candidates = THEME_MP3_MAP[currentThemeId] || [];
 
-  // 1. If an MP3 audio file exists for the active theme, play it!
+  // 2. If an MP3 audio file exists in theme map, play it!
   for (const mp3Path of themeMp3Candidates) {
     if (playMp3Url(targetKey, mp3Path, ignore, preview)) {
       return;

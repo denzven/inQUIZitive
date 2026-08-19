@@ -72,6 +72,15 @@ export interface QuizState {
     wrongRed: string;
   };
 
+  /** User-created custom preset themes */
+  customPresets: PresetTheme[];
+  /** Saves current active palette or custom theme object to customPresets */
+  saveCustomPreset: (preset: PresetTheme) => void;
+  /** Deletes a custom preset by ID */
+  deleteCustomPreset: (id: string) => void;
+  /** Imports a custom preset object and applies it */
+  importCustomPreset: (preset: PresetTheme) => void;
+
   /** Sets entire theme object or single color token */
   setTheme: (theme: Partial<QuizState['theme']>) => void;
   /** Resets theme to default palette */
@@ -84,7 +93,7 @@ export interface QuizState {
   hasLoaded: boolean;
   /** Admin quizmaster passcode for question bank access */
   adminPasscode: string;
-
+  
   /** Undo history stack for Ctrl+Z emergency recovery */
   undoStack: Array<{ teams: Team[]; questions: Question[] }>;
   /** Stealth mode flag for single-screen presentation (hides administrative UI overlays) */
@@ -172,10 +181,32 @@ export const useQuizStore = create<QuizState>()(
   isStealthMode: false,
 
   theme: defaultTheme,
+  customPresets: [],
   seed: '12342026',
   subtitle: 'ARISE 2k26',
   hasLoaded: false,
   adminPasscode: 'ARISE2026',
+
+  saveCustomPreset: (preset) => set((state) => {
+    const existingIndex = state.customPresets.findIndex(p => p.id === preset.id);
+    let updated;
+    if (existingIndex >= 0) {
+      updated = [...state.customPresets];
+      updated[existingIndex] = preset;
+    } else {
+      updated = [...state.customPresets, preset];
+    }
+    return { customPresets: updated };
+  }),
+
+  deleteCustomPreset: (id) => set((state) => ({
+    customPresets: state.customPresets.filter(p => p.id !== id)
+  })),
+
+  importCustomPreset: (preset) => {
+    get().saveCustomPreset(preset);
+    get().setTheme(preset.colors);
+  },
 
   toggleStealthMode: () => set((state) => ({ isStealthMode: !state.isStealthMode })),
 

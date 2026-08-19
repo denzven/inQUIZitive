@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { useBuzzerStore } from '../store/useBuzzerStore';
 import { ScreenLayout } from './ScreenLayout';
@@ -26,8 +26,9 @@ export const BuzzerScreen: React.FC = () => {
 
   /** Data Setup: allocates up to 20 unused Buzzer round questions */
   useEffect(() => {
-    if (buzzerQuestions.length === 0) {
-      const available = questions.filter(q => q.roundCode === 'B' && !q.used);
+    if (buzzerQuestions.length === 0 && questions.length > 0) {
+      const matchBuzzer = questions.filter(q => q.roundCode?.toUpperCase() === 'B' && !q.used);
+      const available = matchBuzzer.length > 0 ? matchBuzzer : questions.filter(q => !q.used);
       const shuffled = seededShuffle(available, `${seed}_buzzer`);
       const selected = shuffled.slice(0, 20);
       setBuzzerQuestions(selected);
@@ -134,6 +135,21 @@ export const BuzzerScreen: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [buzzerState, currentQ, handleOptionClick, handleReveal, handlePrev, handleNext, handleReturnToMenu, setBuzzerState]);
 
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) handleNext();
+      else handlePrev();
+    }
+    touchStartX.current = null;
+  };
+
   const isCurrentRevealed = !!revealedQuestions[currentIdx];
 
   return (
@@ -207,7 +223,11 @@ export const BuzzerScreen: React.FC = () => {
           </div>
         ) : (
           /* PLAYING / QUESTION DISPLAY STATE */
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}>
+          <div 
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}
+          >
             
             {/* QUESTION CARD */}
             <div 
@@ -268,7 +288,10 @@ export const BuzzerScreen: React.FC = () => {
                     title={`Option ${optLetter} (Shortcut: ${i + 1})`}
                     style={{ backgroundColor: bgColor, cursor: 'pointer' }}
                   >
-                    <span style={{ color: 'var(--yellow)', marginRight: '20px', flexShrink: 0 }}>{optLetter}</span>
+                    <span style={{ color: 'var(--yellow)', marginRight: '14px', flexShrink: 0 }}>
+                      {optLetter}
+                      <span className="option-kbd-badge">{i + 1}</span>
+                    </span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );

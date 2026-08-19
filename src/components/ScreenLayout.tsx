@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
-import { Home, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Home, Settings, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { useAudioStore } from '../store/useAudioStore';
 import { playButtonClick, stopWheelTick } from '../utils/soundEffects';
 
@@ -47,6 +47,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   const { subtitle, gameState, isStealthMode } = useQuizStore();
   const { isMuted, toggleMute } = useAudioStore();
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   /** Automatically scroll main content view back to top on gameState screen transitions */
   React.useEffect(() => {
@@ -55,6 +56,27 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       scrollRef.current.scrollTop = 0;
     }
   }, [gameState]);
+
+  /** Listens to document fullscreen change events */
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  /** Toggles browser document full screen view on/off */
+  const toggleFullScreen = () => {
+    playButtonClick();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(console.error);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(console.error);
+      }
+    }
+  };
 
   const actionContainerClass = `animate-fade-in ${isStealthMode ? 'ghost-zone' : ''}`;
 
@@ -112,7 +134,7 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
         )}
       </div>
 
-      {/* Top Right Action Buttons (Mute Icon Button + Custom Actions) */}
+      {/* Top Right Action Buttons (Fullscreen + Mute + Custom Actions) */}
       <div 
         className={actionContainerClass}
         style={{ 
@@ -126,6 +148,19 @@ export const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           animationDelay: '0.5s' 
         }}
       >
+        <button 
+          className="btn-icon"
+          onClick={toggleFullScreen}
+          style={{ 
+            backgroundColor: 'var(--color-primary-container)',
+            border: '2px solid var(--color-primary)'
+          }}
+          aria-label="Toggle Fullscreen (Shortcut: F)"
+          title="Toggle Fullscreen (Shortcut: F)"
+        >
+          {isFullscreen ? <Minimize size={24} color="var(--color-surface)" /> : <Maximize size={24} color="var(--color-surface)" />}
+        </button>
+
         <button 
           className="btn-icon"
           onClick={() => {

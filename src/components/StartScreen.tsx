@@ -2,24 +2,24 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import { ScreenLayout } from './ScreenLayout';
 import { playButtonClick } from '../utils/soundEffects';
+import { getAllRounds } from '../config/rounds';
 
 /**
  * StartScreen Component.
- * Displays the list of selectable quiz rounds (Aptitude, Rapid Fire, Jeopardy, Tic-Tac-Toe, Buzzer)
+ * Displays selectable quiz rounds dynamically registered in ROUND_REGISTRY
  * with keyboard focus and accessibility arrow key navigation.
  */
 export const StartScreen: React.FC = () => {
-  const { setGameState, startRound } = useQuizStore();
-  const [focusedIndex, setFocusedIndex] = useState<number>(1); // Default focus to Round 2 (Rapid Fire)
+  const { setGameState, startRound, subtitle } = useQuizStore();
+  const [focusedIndex, setFocusedIndex] = useState<number>(1);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  /** Data array defining available round titles and round codes */
   const roundsData = [
     { name: "Round 1: Aptitude (Offline)", code: null },
-    { name: "Round 2: Rapid Fire", code: "RF" },
-    { name: "Round 3: Jeopardy", code: "SWJ" },
-    { name: "Round 4: Buzzer", code: "B" },
-    { name: "Tie-Breaker: Tic-Tac-Toe", code: "TTT" }
+    ...getAllRounds().map((r, i) => ({
+      name: `Round ${i + 2}: ${r.title}`,
+      code: r.code
+    }))
   ];
 
   /** Auto-focus first enabled round button on mount */
@@ -112,7 +112,7 @@ export const StartScreen: React.FC = () => {
         style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
       >
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
+          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{subtitle}</h2>
           <a href="https://denzven.github.io/inQUIZitive/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
           </a>

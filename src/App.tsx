@@ -84,10 +84,10 @@ function App() {
     root.style.setProperty('--radius-lg', geometry.radiusLg);
     root.style.setProperty('--border-width', geometry.borderWidth);
 
-    root.style.setProperty('--shadow-card', effects.cardShadow);
-    root.style.setProperty('--shadow-button', effects.buttonShadow);
+    root.style.setProperty('--shadow-card', 'none');
+    root.style.setProperty('--shadow-button', 'none');
     root.style.setProperty('--bg-texture', effects.bgTexture);
-    root.style.setProperty('--text-shadow', effects.textShadow || 'none');
+    root.style.setProperty('--text-shadow', 'none');
     root.style.setProperty('--backdrop-blur', effects.backdropBlur || 'none');
 
     root.style.setProperty('--transition-speed', animation.transitionSpeed);

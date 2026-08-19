@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useQuizStore } from '../store/useQuizStore';
 import QLogo from '../assets/Q.png';
-import { Maximize, Minimize, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { ScreenLayout } from './ScreenLayout';
 import { playButtonClick, playBubblePopSequence } from '../utils/soundEffects';
 
@@ -12,7 +12,6 @@ import { playButtonClick, playBubblePopSequence } from '../utils/soundEffects';
  */
 export const MenuScreen: React.FC = () => {
   const { setGameState, hasLoaded, setHasLoaded } = useQuizStore();
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -51,15 +50,6 @@ export const MenuScreen: React.FC = () => {
       playBubblePopSequence();
     }
   }, [hasLoaded]);
-
-  /** Listens to browser document fullscreen change events */
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
 
   /** Listens to beforeinstallprompt event to offer PWA installation button */
   useEffect(() => {
@@ -130,16 +120,6 @@ export const MenuScreen: React.FC = () => {
     }
   };
 
-  /** Toggles browser document full screen view on/off */
-  const toggleFullScreen = () => {
-    playButtonClick();
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(console.error);
-    } else {
-      document.exitFullscreen().catch(console.error);
-    }
-  };
-
   /** Helper for menu button clicks with SFX */
   const handleNavClick = (nextState: any) => {
     playButtonClick();
@@ -169,37 +149,20 @@ export const MenuScreen: React.FC = () => {
     </>
   );
 
-  const renderTopRightActions = (
-    <>
-      {deferredPrompt && (
-        <button 
-          className="btn-icon"
-          onClick={handleInstallClick}
-          style={{ 
-            backgroundColor: 'var(--color-accent)',
-            border: '2px solid var(--color-action)'
-          }}
-          aria-label="Install App"
-          title="Install App"
-        >
-          <Download size={24} color="var(--color-primary-dark)" />
-        </button>
-      )}
-
-      <button 
-        className="btn-icon"
-        onClick={toggleFullScreen}
-        style={{ 
-          backgroundColor: 'var(--color-primary-container)',
-          border: '2px solid var(--color-primary)'
-        }}
-        aria-label="Toggle Fullscreen (Shortcut: F)"
-        title="Toggle Fullscreen (Shortcut: F)"
-      >
-        {isFullscreen ? <Minimize size={24} color="var(--color-surface)" /> : <Maximize size={24} color="var(--color-surface)" />}
-      </button>
-    </>
-  );
+  const renderTopRightActions = deferredPrompt ? (
+    <button 
+      className="btn-icon"
+      onClick={handleInstallClick}
+      style={{ 
+        backgroundColor: 'var(--color-accent)',
+        border: '2px solid var(--color-action)'
+      }}
+      aria-label="Install App"
+      title="Install App"
+    >
+      <Download size={24} color="var(--color-primary-dark)" />
+    </button>
+  ) : null;
 
   return (
     <ScreenLayout 
@@ -217,9 +180,9 @@ export const MenuScreen: React.FC = () => {
         style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
       >
         <div className="animate-slide-up" style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-          <h2 style={{ fontSize: 'clamp(1.2rem, min(5vw, 4vh), 2.5rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
+          <h2 style={{ fontSize: 'clamp(1.1rem, min(4.5vw, 3.5vh), 2.2rem)', color: 'var(--color-surface)', margin: 0, zIndex: 1 }}>{useQuizStore.getState().subtitle}</h2>
           <a href="https://denzven.github.io/inQUIZitive/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(20px, 4vh, 40px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
+            <h1 className="title" style={{ marginTop: '0px', marginBottom: 'clamp(12px, 2.5vh, 32px)' }}><span>IN</span><span>QUIZ</span><span>ITIVE</span></h1>
           </a>
         </div>
         

@@ -35,8 +35,9 @@ export const RapidFireScreen: React.FC = () => {
 
   /** Initializes Rapid Fire questions array from available unused RF round questions */
   useEffect(() => {
-    if (rfQuestions.length === 0) {
-      const available = questions.filter(q => q.roundCode === 'RF' && !q.used);
+    if (rfQuestions.length === 0 && questions.length > 0) {
+      const matchRf = questions.filter(q => q.roundCode?.toUpperCase() === 'RF' && !q.used);
+      const available = matchRf.length > 0 ? matchRf : questions.filter(q => !q.used);
       const shuffled = seededShuffle(available, `${seed}_rf`);
       const selected = shuffled.slice(0, 10);
       setRfQuestions(selected);
@@ -255,6 +256,21 @@ export const RapidFireScreen: React.FC = () => {
     setGameState('MENU');
   }, [resetRf, setGameState]);
 
+  const touchStartX = React.useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) handleNext();
+      else handlePrev();
+    }
+    touchStartX.current = null;
+  };
+
   /** Binds keyboard shortcuts (1-4 for options, X to pass, K to pause/resume, Space to reveal, Arrows to navigate, Enter to start, Esc to return) */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -383,7 +399,11 @@ export const RapidFireScreen: React.FC = () => {
 
         {/* PLAYING / FEEDBACK STATE */}
         {(rfState === 'PLAYING' || rfState === 'FEEDBACK') && currentQ && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}>
+          <div 
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1400px', boxSizing: 'border-box', borderRadius: '24px', padding: '10px' }}
+          >
             
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 clamp(10px, 3vw, 50px)', alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -470,7 +490,10 @@ export const RapidFireScreen: React.FC = () => {
                     title={`Option ${optLetter} (Shortcut: ${i + 1})`}
                     style={{ backgroundColor: bgColor, color: 'var(--color-surface)', cursor: 'pointer' }}
                   >
-                    <span style={{ color: 'var(--color-accent)', marginRight: '20px', flexShrink: 0 }}>{optLetter}</span>
+                    <span style={{ color: 'var(--color-accent)', marginRight: '14px', flexShrink: 0 }}>
+                      {optLetter}
+                      <span className="option-kbd-badge">{i + 1}</span>
+                    </span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );

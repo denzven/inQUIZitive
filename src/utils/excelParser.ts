@@ -67,8 +67,13 @@ const isPlaceholderText = (text: string): boolean => {
  * Helper to resolve round code from Round Code column or descriptive Round column.
  */
 const resolveRoundCode = (row: any): string => {
-  const code = getCellValue(row['Round Code']) || getCellValue(row['RoundCode']);
-  if (code) return code;
+  const rawCode = getCellValue(row['Round Code']) || getCellValue(row['RoundCode']);
+  if (rawCode && rawCode.trim()) {
+    const code = rawCode.trim();
+    const upper = code.toUpperCase();
+    if (['RF', 'SWJ', 'TTT', 'B'].includes(upper)) return upper;
+    return code;
+  }
   const roundName = getCellValue(row['Round']) || getCellValue(row['Round Name']);
   if (!roundName) return 'RF';
   const lower = roundName.toLowerCase();
@@ -76,7 +81,7 @@ const resolveRoundCode = (row: any): string => {
   if (lower.includes('jeopardy') || lower.includes('spin')) return 'SWJ';
   if (lower.includes('buzzer')) return 'B';
   if (lower.includes('tic') || lower.includes('tac')) return 'TTT';
-  return roundName;
+  return roundName.trim();
 };
 
 /**
@@ -218,6 +223,8 @@ export type AuditCategory =
   | 'DUPLICATE_QUESTION' 
   | 'INVALID_SCORE' 
   | 'MISSING_ROUND_CODE'
+  | 'MISSPELLED_ROUND_CODE'
+  | 'NON_DEFAULT_ROUND_CODE'
   | 'UNEDITED_TEMPLATE_PLACEHOLDER';
 
 export interface AuditIssue {
@@ -235,6 +242,8 @@ export interface AuditResult {
   placeholderCount: number;
   warningCount: number;
   imageCount: number;
+  healthScore: number; // Quality percentage 0-100
+  roundBreakdown: Record<string, number>; // Question counts per round code
   issues: AuditIssue[];
   cleanQuestions: Question[];
 }
@@ -257,6 +266,28 @@ export const auditExcelData = async (
 };
 
 /**
+ * Helper to compute Levenshtein edit distance for typo detection in round codes.
+ */
+const levenshteinDistance = (a: string, b: string): number => {
+  const s1 = a.toLowerCase();
+  const s2 = b.toLowerCase();
+  const track = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
+  for (let i = 0; i <= s1.length; i += 1) track[0][i] = i;
+  for (let j = 0; j <= s2.length; j += 1) track[j][0] = j;
+  for (let j = 1; j <= s2.length; j += 1) {
+    for (let i = 1; i <= s1.length; i += 1) {
+      const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      track[j][i] = Math.min(
+        track[j][i - 1] + 1,
+        track[j - 1][i] + 1,
+        track[j - 1][i - 1] + indicator,
+      );
+    }
+  }
+  return track[s2.length][s1.length];
+};
+
+/**
  * Internal helper to audit workbook rows, track issues, and generate clean Question objects.
  */
 const processAuditWorkbook = (
@@ -276,6 +307,7 @@ const processAuditWorkbook = (
   const issues: AuditIssue[] = [];
   const cleanQuestions: Question[] = [];
   const questionTextsSeen = new Map<string, number>(); // text -> rowIndex
+  const roundCodeOccurrences = new Map<string, Array<{ rowIndex: number; snippet: string }>>();
 
   let totalRows = 0;
 
@@ -289,10 +321,16 @@ const processAuditWorkbook = (
     const rawOpt2 = getCellValue(row['2']);
     const rawOpt3 = getCellValue(row['3']);
     const rawOpt4 = getCellValue(row['4']);
-    const rawRoundCode = getCellValue(row['Round Code']);
+    const rawRoundCode = getCellValue(row['Round Code']) || getCellValue(row['RoundCode']);
     const rawTopic = getCellValue(row['Topic']);
     const rawCost = row['Cost (Score)'];
     const snippet = rawQuestionText ? (rawQuestionText.length > 45 ? rawQuestionText.substring(0, 45) + '...' : rawQuestionText) : `Row ${excelRowIndex}`;
+
+    if (rawRoundCode && rawRoundCode.trim() !== '') {
+      const codeKey = rawRoundCode.trim();
+      if (!roundCodeOccurrences.has(codeKey)) roundCodeOccurrences.set(codeKey, []);
+      roundCodeOccurrences.get(codeKey)!.push({ rowIndex: excelRowIndex, snippet });
+    }
 
     const expectedOpenXmlRow = rangeOffset === 0 ? idx + 1 : idx + 3;
     const extractedImage = 
@@ -441,11 +479,68 @@ const processAuditWorkbook = (
     }
   });
 
+  // Post-Pass: Analyze Round Code Typos, Misspellings & Outliers
+  const STANDARD_DEFAULT_CODES = ['RF', 'SWJ', 'TTT', 'B'];
+  
+  roundCodeOccurrences.forEach((occurrences, code) => {
+    const upper = code.toUpperCase();
+    const isStandard = STANDARD_DEFAULT_CODES.includes(upper);
+
+    if (!isStandard) {
+      let closest = STANDARD_DEFAULT_CODES[0];
+      let minDistance = levenshteinDistance(upper, closest);
+      STANDARD_DEFAULT_CODES.forEach(std => {
+        const dist = levenshteinDistance(upper, std);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closest = std;
+        }
+      });
+
+      const isOutlier = occurrences.length <= 2 && totalRows >= 5;
+      const isTypo = minDistance <= 2;
+
+      if (isTypo || isOutlier) {
+        occurrences.forEach(item => {
+          issues.push({
+            rowIndex: item.rowIndex,
+            questionSnippet: item.snippet,
+            type: 'warning',
+            category: 'MISSPELLED_ROUND_CODE',
+            message: `Outlier or potential misspelled round code "${code}" detected (used on only ${occurrences.length} question${occurrences.length > 1 ? 's' : ''}). Did you mean default code "${closest}"?`
+          });
+        });
+      } else {
+        issues.push({
+          rowIndex: occurrences[0].rowIndex,
+          questionSnippet: occurrences[0].snippet,
+          type: 'warning',
+          category: 'NON_DEFAULT_ROUND_CODE',
+          message: `Non-default round code "${code}" detected (used on ${occurrences.length} questions). Standard built-in codes are RF (Rapid Fire), SWJ (Jeopardy Wheel), TTT (Tic-Tac-Toe), B (Buzzer).`
+        });
+      }
+    }
+  });
+
   const errorCount = issues.filter(i => i.type === 'error').length;
   const placeholderCount = issues.filter(i => i.type === 'placeholder').length;
   const warningCount = issues.filter(i => i.type === 'warning').length;
   const validCount = cleanQuestions.length;
   const imageCount = cleanQuestions.filter(q => Boolean(q.image)).length || extractedImageCount;
+
+  // Compute round breakdown statistics
+  const roundBreakdown: Record<string, number> = {};
+  cleanQuestions.forEach(q => {
+    const code = (q.roundCode || 'RF').toUpperCase();
+    roundBreakdown[code] = (roundBreakdown[code] || 0) + 1;
+  });
+
+  // Calculate Health Score (0 - 100%)
+  const maxPossibleScore = 100;
+  const penalty = totalRows > 0 
+    ? Math.min(100, Math.round(((errorCount * 1.5 + placeholderCount * 0.5 + warningCount * 0.2) / totalRows) * 100)) 
+    : 0;
+  const healthScore = Math.max(0, maxPossibleScore - penalty);
 
   return {
     totalRows,
@@ -454,6 +549,8 @@ const processAuditWorkbook = (
     placeholderCount,
     warningCount,
     imageCount,
+    healthScore,
+    roundBreakdown,
     issues,
     cleanQuestions,
   };
@@ -563,6 +660,77 @@ export const exportProgressToExcel = async (questions: Question[], teams: any[])
   } catch (err) {
     console.error("Export progress failed:", err);
     XLSX.writeFile(wb, "InQUIZitive_Progress.xlsx");
+  }
+};
+
+/**
+ * Exports the clean Question Bank into a standalone downloadable .xlsx spreadsheet workbook.
+ */
+export const exportQuestionBankToExcel = async (questions: Question[], customFilename?: string) => {
+  const rows = questions.map((q, idx) => {
+    const incorrectOptions = q.options.filter(o => o !== q.answer);
+    const textCellValue = q.image && !q.image.startsWith('data:image/') ? q.image : '';
+
+    return {
+      'SrNo.': idx + 1,
+      'Round Code': q.roundCode || 'RF',
+      'Round Name': getRoundLabel(q.roundCode),
+      'Topic': q.topic || 'General',
+      'Questions': q.question,
+      'Image': textCellValue,
+      'Answer': q.answer,
+      'Option 2': incorrectOptions[0] || '',
+      'Option 3': incorrectOptions[1] || '',
+      'Option 4': incorrectOptions[2] || '',
+      'Cost (Score)': q.scoreVal,
+      'Used': q.used ? 'Yes' : 'No'
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  ws['!cols'] = [
+    { wch: 8 },   // SrNo.
+    { wch: 14 },  // Round Code
+    { wch: 20 },  // Round Name
+    { wch: 18 },  // Topic
+    { wch: 45 },  // Questions
+    { wch: 25 },  // Image
+    { wch: 22 },  // Answer
+    { wch: 22 },  // Option 2
+    { wch: 22 },  // Option 3
+    { wch: 22 },  // Option 4
+    { wch: 14 },  // Cost
+    { wch: 8 }    // Used
+  ];
+
+  const rowHeights = [{ hpt: 28 }];
+  questions.forEach(q => {
+    rowHeights.push({ hpt: q.image ? 65 : 24 });
+  });
+  ws['!rows'] = rowHeights;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Question_Bank");
+
+  const filename = customFilename || `InQUIZitive_QuestionBank_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  try {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = await injectImagesToWorkbookZip(wbout, questions.map((q, idx) => ({ image: q.image, index: idx })));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  } catch (err) {
+    console.error("Export question bank failed:", err);
+    XLSX.writeFile(wb, filename);
   }
 };
 

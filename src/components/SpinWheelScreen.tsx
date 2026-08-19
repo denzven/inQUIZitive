@@ -81,11 +81,13 @@ export const SpinWheelScreen: React.FC = () => {
     return selected;
   }, []);
 
-  /** Data grouping: filters SWJ round questions into topic mappings, auto-partitioning if < 4 distinct topics exist */
+  /** Data grouping: filters SWJ round questions into topic mappings directly from Excel sheet */
   const { allTopics, topicMap } = useMemo(() => {
-    const swj = questions.filter(q => q.roundCode === 'SWJ');
+    const matchSwj = questions.filter(q => q.roundCode?.toUpperCase() === 'SWJ');
+    const swjPool = matchSwj.length > 0 ? matchSwj : questions;
     const rawMap = new Map<string, Question[]>();
-    swj.forEach(q => {
+
+    swjPool.forEach(q => {
       const t = (q.topic && q.topic.trim()) || 'General Quiz';
       if (!rawMap.has(t)) rawMap.set(t, []);
       rawMap.get(t)!.push(q);
@@ -97,7 +99,7 @@ export const SpinWheelScreen: React.FC = () => {
     if (rawTopics.length >= 4) {
       rawTopics.forEach(t => map.set(t, rawMap.get(t)!));
     } else if (rawTopics.length > 0) {
-      // Partition available questions into 4 sub-categories so all 4 columns are populated with real questions
+      // Partition available questions into sub-categories so columns are populated with real questions
       rawTopics.forEach(baseTopic => {
         const topicQs = rawMap.get(baseTopic)!;
         if (topicQs.length >= 8) {
@@ -119,17 +121,24 @@ export const SpinWheelScreen: React.FC = () => {
 
     let topics = Array.from(map.keys());
 
-    // Ensure at least 4 topics exist with valid 10-40 fallback questions
+    // Ensure at least 4 topics exist using remaining questions from Excel sheet if available
     let fallbackIdx = 1;
+    const remainingUnusedExcelQs = questions.filter(q => !q.used);
+
     while (topics.length < 4) {
       const dummyTopic = `Bonus Tier ${fallbackIdx++}`;
       topics.push(dummyTopic);
-      map.set(dummyTopic, [
-        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 10 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 10 },
-        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 20 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 20 },
-        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 30 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 30 },
-        { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 40 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 40 },
-      ]);
+      const sliceQs = remainingUnusedExcelQs.slice((fallbackIdx - 2) * 4, (fallbackIdx - 1) * 4);
+      if (sliceQs.length >= 4) {
+        map.set(dummyTopic, sliceQs);
+      } else {
+        map.set(dummyTopic, [
+          { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 10 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 10 },
+          { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 20 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 20 },
+          { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 30 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 30 },
+          { index: -1, roundCode: 'SWJ', topic: dummyTopic, used: false, question: 'Bonus 40 Pt Question', answer: 'Option A', options: ['Option A','Option B','Option C','Option D'], scoreVal: 40 },
+        ]);
+      }
     }
 
     return { allTopics: topics, topicMap: map };
@@ -940,6 +949,8 @@ export const SpinWheelScreen: React.FC = () => {
                   }
                 }
 
+                const optLetter = String.fromCharCode(65 + i);
+
                 return (
                   <div 
                     key={i} 
@@ -947,7 +958,10 @@ export const SpinWheelScreen: React.FC = () => {
                     onClick={() => handleAnswer(i)}
                     style={{ backgroundColor: bgColor }}
                   >
-                    <span style={{ color: 'var(--color-accent)', marginRight: '20px', flexShrink: 0 }}>{String.fromCharCode(65 + i)}</span>
+                    <span style={{ color: 'var(--color-accent)', marginRight: '14px', flexShrink: 0 }}>
+                      {optLetter}
+                      <span className="option-kbd-badge">{i + 1}</span>
+                    </span>
                     <span style={{ flex: 1, textAlign: 'left' }}>{opt}</span>
                   </div>
                 );

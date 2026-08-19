@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Question } from './useQuizStore';
+import { useGameRulesStore } from './useGameRulesStore';
 
 /** Sub-states for Rapid Fire gameplay phase */
 export type RFState = 'READY' | 'PLAYING' | 'FEEDBACK' | 'END';
@@ -64,10 +65,10 @@ export interface RapidFireState {
   resetRf: () => void;
 }
 
-const initialState = {
+const getInitialState = () => ({
   rfQuestions: [],
   rfState: 'READY' as RFState,
-  timer: 60,
+  timer: useGameRulesStore.getState().rapidFireDuration || 60,
   isPaused: false,
   currentIdx: 0,
   score: 0,
@@ -77,7 +78,7 @@ const initialState = {
   userAnswers: {},
   revealedQuestions: {},
   passedQuestions: {},
-};
+});
 
 /**
  * Global Zustand store hook with local storage persistence for Rapid Fire state.
@@ -85,7 +86,7 @@ const initialState = {
 export const useRapidFireStore = create<RapidFireState>()(
   persist(
     (set) => ({
-      ...initialState,
+      ...getInitialState(),
       setRfQuestions: (questions) => set({ rfQuestions: questions }),
       setRfState: (state) => set({ rfState: state }),
       setTimer: (updater) => set((state) => ({ 
@@ -117,7 +118,7 @@ export const useRapidFireStore = create<RapidFireState>()(
         delete nextPassed[qIdx];
         return { passedQuestions: nextPassed };
       }),
-      resetRf: () => set(initialState),
+      resetRf: () => set(getInitialState()),
     }),
     {
       name: 'inquizitive-rf-storage',

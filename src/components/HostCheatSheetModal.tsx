@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { useQuizStore, type Question } from '../store/useQuizStore';
 import { Printer, X, FileText, CheckCircle2 } from 'lucide-react';
+import { getRoundDefinition } from '../config/rounds';
 
 interface HostCheatSheetModalProps {
   isOpen: boolean;
@@ -36,13 +37,9 @@ export const HostCheatSheetModal: React.FC<HostCheatSheetModalProps> = ({ isOpen
   }, {} as Record<string, Question[]>);
 
   const getRoundLabel = (code: string) => {
-    switch (code) {
-      case 'RF': return 'Round 2: Rapid Fire';
-      case 'SWJ': return 'Round 3: Jeopardy / Spin Wheel';
-      case 'B': return 'Round 4: Buzzer Round';
-      case 'TTT': return 'Tie-Breaker: Tic-Tac-Toe Grid';
-      default: return `Round: ${code}`;
-    }
+    const def = getRoundDefinition(code);
+    if (def) return `${def.title} (${def.subtitle})`;
+    return `Round: ${code}`;
   };
 
   const handlePrint = () => {
